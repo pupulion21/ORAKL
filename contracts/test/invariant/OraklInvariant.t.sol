@@ -47,6 +47,12 @@ contract OraklHandler is OraklTestBase {
         uint256 amount;
         bool claimed;
     }
+
+    struct RoleMutation {
+        address wallet;
+        bytes originalCode;
+        uint160 originalOwner;
+    }
     address[8] public actors;
     uint64 public ghostEpoch;
     mapping(uint64 => uint64) public epochBreak;
@@ -450,22 +456,15 @@ contract OraklHandler is OraklTestBase {
         bool restoreAfterDeadline
     ) public {
         if (!config.financialActive() || config.paused()) return;
+        actorSeed %= 8;
         uint256 id = seed % factory.marketCount();
         GMarket storage g = ghost[id];
-        address who = actors[actorSeed % 8];
+        address who = actors[actorSeed];
         if (
             g.creationEpoch != ghostEpoch || g.state != T.State.PROPOSED || block.timestamp >= g.challengeAt
                 || who == bonds[id][1].owner
         ) return;
-        uint256 role = roleSeed % 3;
-        address wallet = role == 0 ? governance : role == 1 ? compliance : arbitrator;
-        bytes memory originalCode = wallet.code;
-        StatefulCodeVm(address(vm)).etch(wallet, mutableTemplate.code);
-        MutableMultisig changed = MutableMultisig(wallet);
-        uint8 mode = modeSeed % 7;
-        if (mode == 0) changed.setOwner(0, address(uint160(1000 + role)));
-        else if (mode == 1) changed.setThreshold(1);
-        else changed.setFault(mode - 1);
+        RoleMutation memory mutation = _faultRole(roleSeed, modeSeed);
         submitEvidence(id, actorSeed, HASH);
         vm.prank(who);
         (bool accepted,) =
@@ -477,16 +476,33 @@ contract OraklHandler is OraklTestBase {
             bonds[id][2] = GBond(who, g.terms.challengeBond, false);
             deposits += g.terms.challengeBond;
         }
-        submitEvidence(id, (actorSeed % 8 + 1) % 8, HASH);
+        submitEvidence(id, actorSeed + 1, HASH);
         if (restoreAfterDeadline && block.timestamp < g.challengeAt) vm.warp(g.challengeAt);
-        changed.setOwner(0, address(uint160(100 + 100 * role)));
-        changed.setThreshold(2);
-        changed.setFault(0);
-        StatefulCodeVm(address(vm)).etch(wallet, originalCode);
+        _restoreRole(mutation);
         if (restoreAfterDeadline) {
             (bool finalized,) = address(factory).call(abi.encodeCall(factory.finalizeResult, (id)));
             roleCensorship = roleCensorship || finalized;
         }
+    }
+
+    function _faultRole(uint8 roleSeed, uint8 modeSeed) private returns (RoleMutation memory mutation) {
+        uint256 role = roleSeed % 3;
+        address wallet = role == 0 ? governance : role == 1 ? compliance : arbitrator;
+        mutation = RoleMutation(wallet, wallet.code, uint160(100 + 100 * role));
+        StatefulCodeVm(address(vm)).etch(wallet, mutableTemplate.code);
+        MutableMultisig changed = MutableMultisig(wallet);
+        uint8 mode = modeSeed % 7;
+        if (mode == 0) changed.setOwner(0, address(uint160(1000 + role)));
+        else if (mode == 1) changed.setThreshold(1);
+        else changed.setFault(mode - 1);
+    }
+
+    function _restoreRole(RoleMutation memory mutation) private {
+        MutableMultisig changed = MutableMultisig(mutation.wallet);
+        changed.setOwner(0, address(mutation.originalOwner));
+        changed.setThreshold(2);
+        changed.setFault(0);
+        StatefulCodeVm(address(vm)).etch(mutation.wallet, mutation.originalCode);
     }
 
     function _evidenceFingerprint(uint256 id) private view returns (bytes32) {

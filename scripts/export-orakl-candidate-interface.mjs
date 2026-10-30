@@ -86,7 +86,7 @@ const manifest = {
   financialActivationAuthorized: false, deploymentAuthorized: false,
   baselineCommit: '8d850ae42ebc77acaf2323cd50f63f08e57f1b66',
   protocolRevision: 'P0.3', securityCandidateRequiresFinalProtocolApproval: true,
-  scope: 'Current P0.2 candidate interface and unpatched artifact templates; not a deployed-address manifest',
+  scope: 'Current P0.3 candidate interface and unpatched artifact templates; not a deployed-address manifest',
   productionNetworkConfiguration: null, productionAddresses: null,
   enums,
   sourceSha256: Object.fromEntries(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b))),
