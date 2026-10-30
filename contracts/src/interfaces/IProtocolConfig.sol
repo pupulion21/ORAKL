@@ -5,6 +5,7 @@ import {ProtocolTypes as T} from "../libraries/ProtocolTypes.sol";
 interface IProtocolConfig {
     function parameters() external view returns (T.Parameters memory);
     function requireFinancialActivity(address facade) external view;
+    function requireChallengeActivity(address facade) external view;
     function activityEpoch() external view returns (uint64);
     function interruptedAt(uint64 epoch) external view returns (uint64);
     function roleFingerprint(address wallet) external view returns (bytes32);

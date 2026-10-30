@@ -144,11 +144,20 @@ contract ProtocolConfig is IProtocolConfig {
     }
 
     function requireFinancialActivity(address facade) external view override {
+        _requireActiveFacade(facade);
+        _requireUnchangedRoles();
+    }
+
+    /// @notice Existing proposals remain challengeable during role-view faults; explicit emergency controls still apply.
+    function requireChallengeActivity(address facade) external view override {
+        _requireActiveFacade(facade);
+    }
+
+    function _requireActiveFacade(address facade) private view {
         if (
             !financialActive || paused || facade != factory || factory == address(0)
                 || block.chainid != deploymentChainId
         ) revert FinancialActivityDisabled();
-        _requireUnchangedRoles();
     }
 
     function requireUncontestedSettlement() external view override {

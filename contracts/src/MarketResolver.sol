@@ -19,6 +19,18 @@ abstract contract MarketResolver is PredictionPool {
     );
     event MarketFinalized(uint256 indexed marketId, T.Outcome outcome, bool refundable);
     event MarketCancelled(uint256 indexed marketId, address indexed caller, uint8 reasonCode);
+    /// @notice Event-only commitment; does not grant a bond entitlement, objection state or settlement authority.
+    event DisputeEvidenceSubmitted(uint256 indexed marketId, address indexed contributor, bytes32 indexed evidenceHash);
+
+    /// @notice Independent evidence intake stays open for the original window, including during an emergency.
+    /// @dev No role getter, evidence storage/cap/deduplication, financial allocation or deadline mutation.
+    function submitEvidence(uint256 id, bytes32 evidenceHash) external nonReentrant {
+        T.Market storage m = _market(id);
+        if (m.storedState != T.State.PROPOSED && m.storedState != T.State.DISPUTED) revert InvalidState();
+        if (block.timestamp >= m.challengeDeadline) revert InvalidTime();
+        if (evidenceHash == bytes32(0)) revert InvalidEvidence();
+        emit DisputeEvidenceSubmitted(id, msg.sender, evidenceHash);
+    }
 
     function proposeResult(uint256 id, T.Outcome outcome, bytes32 evidenceHash)
         external
@@ -46,7 +58,8 @@ abstract contract MarketResolver is PredictionPool {
         emit MarketOutcomeProposed(id, msg.sender, outcome, evidenceHash, m.challengeDeadline);
     }
 
-    function challengeResult(uint256 id, bytes32 evidenceHash) external payable nonReentrant financialEntry {
+    function challengeResult(uint256 id, bytes32 evidenceHash) external payable nonReentrant {
+        protocolConfig.requireChallengeActivity(address(this));
         T.Market storage m = _market(id);
         _requireCurrentMarket(m);
         if (m.storedState != T.State.PROPOSED) revert InvalidState();
@@ -76,7 +89,7 @@ abstract contract MarketResolver is PredictionPool {
         if (m.storedState != T.State.DISPUTED) revert InvalidState();
         if (msg.sender != m.terms.arbitrator) revert Unauthorized();
         protocolConfig.requireArbitrator(m.terms.arbitrator, m.arbitratorFingerprint);
-        if (block.timestamp >= m.arbitrationDeadline) revert InvalidTime();
+        if (block.timestamp < m.challengeDeadline || block.timestamp >= m.arbitrationDeadline) revert InvalidTime();
         if (decision == T.Outcome.UNRESOLVED) revert InvalidOutcome();
         if (evidenceHash == bytes32(0)) revert InvalidEvidence();
         m.decisionEvidence = evidenceHash;
