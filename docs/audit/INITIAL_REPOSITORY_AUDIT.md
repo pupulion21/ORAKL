@@ -20,8 +20,8 @@ Scope: every tracked first-party source, contract test/helper, frontend integrat
 | `contracts/src/QiePredictionMarket.sol:176`, `:184` | Permissionless creation with immutable metadata, resolver and deadlines; byte-length validation. |
 | `contracts/src/QiePredictionMarket.sol:205`, `:219` | Nonreentrant native staking; checked nonzero amount, close boundary, uint128 total-pool cap and independent YES/NO positions. |
 | `contracts/src/QiePredictionMarket.sol:238`, `:253` | Resolver-only result in a bounded window; permissionless expiry cancellation. Trusted resolver can choose the real-world answer; this is an explicit trust assumption, not proof of truth. |
-| `contracts/src/QiePredictionMarket.sol:392`, `:413` | Full-precision floor `Math.mulDiv`, once-only settlement and effects before native transfer. |
-| `contracts/src/QiePredictionMarket.sol:426`, `:449` | Invalid/cancelled/zero-winner refunds; recipient redirection owned by the claimant; failed transfer reverts all accounting. |
+| `contracts/src/QiePredictionMarket.sol:426`, `:429` | Full-precision floor `Math.mulDiv`, once-only settlement and effects before native transfer. |
+| `contracts/src/QiePredictionMarket.sol:404`, `:437`, `:457` | Invalid/cancelled/zero-winner refunds; recipient redirection owned by the claimant; failed transfer reverts all accounting. |
 | `contracts/src/QiePredictionMarket.sol:356`, `:362`, `:463` | Accounted escrow separated from unsolicited balance; direct receive/fallback rejected; no administrator withdrawal, upgrade or sweep. |
 | `contracts/test/QiePredictionMarket.t.sol:654`, `:688`, `:736`, `:770`, `:790` | Reentrancy, malicious recipient, cross-market isolation, forced balance and payout fuzz tests. |
 | `contracts/test/QiePredictionMarketInvariant.t.sol:18`, `:227` | Independent ghost pool/position/settlement accounting and five executable invariants. |
@@ -54,6 +54,6 @@ Heuristic scan of all tracked files found zero private-key assignments, PEM priv
 
 ## Planned modular boundary and breaking changes
 
-Before code changes: keep the legacy deployment intact. Implement `MarketFactory` as the new deployable facade inheriting audited-at-source `MarketResolver` and `PredictionPool` modules over a shared internal ledger. A separate noncustodial `ProtocolConfig` owns governance, guardian, approval and future-market parameters. This avoids payable cross-contract bond forwarding, mutable module wiring and duplicated solvency calculations. No proxy, delegatecall or upgrade mechanism is planned.
+Before code changes: keep the legacy deployment intact. Implement `MarketFactory` as the new deployable facade inheriting `MarketResolver` and `PredictionPool` source modules over a shared internal ledger. A separate noncustodial `ProtocolConfig` owns governance, guardian, approval and future-market parameters. This avoids payable cross-contract bond forwarding, mutable module wiring and duplicated solvency calculations. No proxy, delegatecall or upgrade mechanism is planned.
 
 New functions, events, structs, result lifecycle, content commitments, payable creation/bonds and configuration identity cannot be used with the legacy ABI. Detailed migration instructions belong in `docs/migration/FRONTEND_ABI_MIGRATION.md`. Production network parameters will be independently checked; no Mainnet broadcast, deployment, activation, push or pull request is authorized by this task.

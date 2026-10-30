@@ -1,0 +1,52 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/invariant/OraklInvariant.t.sol:OraklInvariantTest
+[PASS]
+OraklInvariantTest invariants:
+[PASS] invariant_A_Solvency
+[PASS] invariant_B_NoDoubleClaim
+[PASS] invariant_C_PayoutBound
+[PASS] invariant_D_RefundBound
+[PASS] invariant_E_FeeIsolation
+[PASS] invariant_F_BondIsolation
+[PASS] invariant_G_TerminalConsistency
+[PASS] invariant_H_Finality
+[PASS] invariant_I_UserAccounting
+[PASS] invariant_J_Conservation
+ OraklInvariantTest invariants (runs: 64, calls: 2048, reverts: 0)
+
+╭--------------+-------------+-------+---------+----------╮
+| Contract     | Selector    | Calls | Reverts | Discards |
++=========================================================+
+| OraklHandler | advance     | 151   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | arbitrate   | 159   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | cancel      | 149   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | challenge   | 161   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | claim       | 152   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | claimBond   | 138   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | create      | 167   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | fees        | 136   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | finalize    | 131   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | forceNative | 157   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | futureTerms | 133   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | predict     | 142   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | propose     | 118   | 0       | 0        |
+|--------------+-------------+-------+---------+----------|
+| OraklHandler | togglePause | 154   | 0       | 0        |
+╰--------------+-------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 17.27s (17.26s CPU time)
+
+Ran 1 test suite in 17.27s (17.27s CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

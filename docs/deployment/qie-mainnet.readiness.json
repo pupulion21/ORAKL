@@ -1,0 +1,20 @@
+{
+  "kind": "READINESS_RECORD_NOT_DEPLOYMENT_MANIFEST",
+  "network": "QIE Mainnet",
+  "status": "BLOCKED",
+  "deploymentEnabled": false,
+  "financialActivationAuthorized": false,
+  "documentedChainId": 1990,
+  "observedChainId": 1990,
+  "nativeCurrency": null,
+  "approvedRpcConfiguration": null,
+  "deploymentAddresses": null,
+  "blockers": [
+    "Resolve authoritative native symbol and decimals",
+    "Verify v1 creation, opcode, gas, wallet and explorer compatibility",
+    "Approve economics, role control and dispute incentives",
+    "Complete independent audit and applicable compliance authorization",
+    "Complete operational services and explicit deployment authorization"
+  ],
+  "evidence": "evidence/mainnet-rpc-observation.json"
+}

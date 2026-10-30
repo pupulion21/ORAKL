@@ -1,0 +1,58 @@
+[
+  {
+    "name": "slither",
+    "command": "slither . --filter-paths test/|lib/|script/ --json ../docs/testing/evidence/slither.json",
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T07:10:31.054739+00:00",
+    "finishedAt": "2026-10-30T07:10:34.074374+00:00"
+  },
+  {
+    "name": "forge-build",
+    "command": "forge build",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:10:34.074728+00:00",
+    "finishedAt": "2026-10-30T07:10:35.347393+00:00"
+  },
+  {
+    "name": "forge-test",
+    "command": "forge test -vvv",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:10:35.347815+00:00",
+    "finishedAt": "2026-10-30T07:10:53.129064+00:00"
+  },
+  {
+    "name": "forge-invariant",
+    "command": "forge test --match-path test/invariant/* -vvv",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:10:53.129451+00:00",
+    "finishedAt": "2026-10-30T07:11:10.491118+00:00"
+  },
+  {
+    "name": "forge-coverage",
+    "command": "forge coverage",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:11:10.491620+00:00",
+    "finishedAt": "2026-10-30T07:11:33.768301+00:00"
+  },
+  {
+    "name": "forge-fmt",
+    "command": "forge fmt --check",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:11:33.768728+00:00",
+    "finishedAt": "2026-10-30T07:11:33.791066+00:00"
+  },
+  {
+    "name": "forge-sizes",
+    "command": "forge build --sizes --skip test --skip script",
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T07:11:33.791400+00:00",
+    "finishedAt": "2026-10-30T07:11:33.896054+00:00"
+  }
+]

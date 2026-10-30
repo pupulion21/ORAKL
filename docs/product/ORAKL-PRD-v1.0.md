@@ -1,12 +1,19 @@
 # ORAKL
 ## Product Requirements Document (PRD)
-**Version:** 1.0  
-**Status:** Draft — Engineering Specification  
-**Target Blockchain:** QIE Mainnet (EVM)  
-**Product Type:** Decentralized Prediction Market  
-**Architecture:** Hybrid On-Chain / Off-Chain  
-**Market Mechanism:** Binary Pari-Mutuel Pool  
-**Target Audience:** Global, subject to jurisdictional eligibility  
+**Version:** 1.0
+
+**Status:** Draft — Engineering Specification
+
+**Target Blockchain:** QIE Mainnet (EVM)
+
+**Product Type:** Decentralized Prediction Market
+
+**Architecture:** Hybrid On-Chain / Off-Chain
+
+**Market Mechanism:** Binary Pari-Mutuel Pool
+
+**Target Audience:** Global, subject to jurisdictional eligibility
+
 **Document Date:** October 30, 2026
 
 ---

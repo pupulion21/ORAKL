@@ -1,0 +1,59 @@
+
+Detector: arbitrary-send-eth
+ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#126-130) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#128)
+QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: timestamp
+MarketFactory.createMarket(bytes32,string,uint64,uint64,uint64) (src/MarketFactory.sol#25-58) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp || closeTime > block.timestamp + 31536000 || resolutionTime < closeTime || uint256(maxResolutionTime) <= uint256(resolutionTime) + terms.challengePeriod + terms.arbitrationPeriod || uint256(maxResolutionTime) > uint256(closeTime) + 31536000 (src/MarketFactory.sol#39-42)
+MarketResolver.proposeResult(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#23-46) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolutionTime || block.timestamp >= latest (src/MarketResolver.sol#33)
+MarketResolver.challengeResult(uint256,bytes32) (src/MarketResolver.sol#48-60) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.challengeDeadline (src/MarketResolver.sol#51)
+MarketResolver.finalizeResult(uint256) (src/MarketResolver.sol#62-69) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime (src/MarketResolver.sol#67)
+MarketResolver.settleDispute(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#71-81) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.arbitrationDeadline (src/MarketResolver.sol#75)
+MarketResolver.cancelExpiredMarket(uint256) (src/MarketResolver.sol#83-92) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < expiry (src/MarketResolver.sol#87)
+ProtocolStorage.marketState(uint256) (src/ProtocolStorage.sol#71-75) uses timestamp for comparisons
+	Dangerous comparisons:
+	- m.storedState == ProtocolTypes.State.OPEN && block.timestamp >= m.closeTime (src/ProtocolStorage.sol#73)
+QiePredictionMarket.createMarket(string,string,string,address,uint64,uint64) (src/QiePredictionMarket.sol#176-198) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp (src/QiePredictionMarket.sol#187)
+QiePredictionMarket.stake(uint256,QiePredictionMarket.Side) (src/QiePredictionMarket.sol#205-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.closeTime (src/QiePredictionMarket.sol#207)
+QiePredictionMarket.resolve(uint256,QiePredictionMarket.Outcome) (src/QiePredictionMarket.sol#238-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.closeTime (src/QiePredictionMarket.sol#241)
+	- block.timestamp >= m.resolveDeadline (src/QiePredictionMarket.sol#242)
+QiePredictionMarket.cancelIfExpired(uint256) (src/QiePredictionMarket.sol#253-261) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolveDeadline (src/QiePredictionMarket.sol#255)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in ProtocolConfig.bindFactory(address) (src/ProtocolConfig.sol#60-67):
+	- (ok,data) = facade.staticcall(abi.encodeWithSignature(protocolConfig())) (src/ProtocolConfig.sol#63)
+Low level call in ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#126-130):
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#128)
+Low level call in QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466):
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+. analyzed (13 contracts with 102 detectors), 16 result(s) found
+'forge clean' running (wd: /home/pupulion/prediction-market-mvp/contracts)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: /home/pupulion/prediction-market-mvp/contracts)

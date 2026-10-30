@@ -1,0 +1,46 @@
+[
+  {
+    "path": "frontend",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/src/QiePredictionMarket.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/test/QiePredictionMarket.t.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/test/QiePredictionMarketInvariant.t.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/test/helpers/TestBase.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/test/helpers/Vm.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/test/doubles/NativeReentrancy.sol",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/lib",
+    "unchanged": true
+  },
+  {
+    "path": "contracts/abi",
+    "unchanged": true
+  },
+  {
+    "path": "scripts",
+    "unchanged": true
+  },
+  {
+    "path": "results/deployment/live-deployment.json",
+    "unchanged": true
+  }
+]

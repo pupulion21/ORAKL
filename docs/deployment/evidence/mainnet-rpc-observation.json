@@ -1,0 +1,272 @@
+{
+  "observedAt": "2026-10-30T06:46:59.936755+00:00",
+  "source": "https://docs.qie.digital/getting-started-with-qie-blockchain/4.-access-mainnet-or-testnet",
+  "purpose": "Read-only identity and RPC probes; no signing/broadcast",
+  "endpoints": [
+    {
+      "url": "https://rpc1mainnet.qie.digital/",
+      "methods": {
+        "eth_chainId": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x7c6"
+          },
+          "elapsedMs": 2410
+        },
+        "eth_blockNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0xb02433"
+          },
+          "elapsedMs": 2119
+        },
+        "eth_gasPrice": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x430e2340"
+          },
+          "elapsedMs": 2118
+        },
+        "eth_getBlockByNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+              "number": "0xb02434",
+              "hash": "0x7883da3802615ba710f068a940a2baabfc0f45cb8500cbcf36011ef2a95225b9",
+              "parentHash": "0xb2bb12ea2140b75a4c692625dbbc7deb7d742f073f4aeb7b6c01e64ffae96086",
+              "timestamp": "0x6ae43d5b",
+              "gasLimit": "0xffffffff",
+              "gasUsed": "0x0",
+              "baseFeePerGas": "0x3b9aca00"
+            }
+          },
+          "elapsedMs": 2079
+        },
+        "eth_estimateGas": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x5244"
+          },
+          "elapsedMs": 2077
+        }
+      }
+    },
+    {
+      "url": "https://rpc2mainnet.qie.digital/",
+      "methods": {
+        "eth_chainId": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x7c6"
+          },
+          "elapsedMs": 2651
+        },
+        "eth_blockNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0xb02433"
+          },
+          "elapsedMs": 2114
+        },
+        "eth_gasPrice": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x430e2340"
+          },
+          "elapsedMs": 2039
+        },
+        "eth_getBlockByNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+              "number": "0xb02434",
+              "hash": "0x7883da3802615ba710f068a940a2baabfc0f45cb8500cbcf36011ef2a95225b9",
+              "parentHash": "0xb2bb12ea2140b75a4c692625dbbc7deb7d742f073f4aeb7b6c01e64ffae96086",
+              "timestamp": "0x6ae43d5b",
+              "gasLimit": "0xffffffff",
+              "gasUsed": "0x0",
+              "baseFeePerGas": "0x3b9aca00"
+            }
+          },
+          "elapsedMs": 2124
+        },
+        "eth_estimateGas": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x5244"
+          },
+          "elapsedMs": 2040
+        }
+      }
+    },
+    {
+      "url": "https://rpc3mainnet.qie.digital/",
+      "methods": {
+        "eth_chainId": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x7c6"
+          },
+          "elapsedMs": 2569
+        },
+        "eth_blockNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0xb02433"
+          },
+          "elapsedMs": 2030
+        },
+        "eth_gasPrice": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x430e2340"
+          },
+          "elapsedMs": 2040
+        },
+        "eth_getBlockByNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+              "number": "0xb02434",
+              "hash": "0x7883da3802615ba710f068a940a2baabfc0f45cb8500cbcf36011ef2a95225b9",
+              "parentHash": "0xb2bb12ea2140b75a4c692625dbbc7deb7d742f073f4aeb7b6c01e64ffae96086",
+              "timestamp": "0x6ae43d5b",
+              "gasLimit": "0xffffffff",
+              "gasUsed": "0x0",
+              "baseFeePerGas": "0x3b9aca00"
+            }
+          },
+          "elapsedMs": 2086
+        },
+        "eth_estimateGas": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x5244"
+          },
+          "elapsedMs": 2085
+        }
+      }
+    },
+    {
+      "url": "https://rpc4mainnet.qie.digital/",
+      "methods": {
+        "eth_chainId": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x7c6"
+          },
+          "elapsedMs": 2621
+        },
+        "eth_blockNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0xb02433"
+          },
+          "elapsedMs": 2103
+        },
+        "eth_gasPrice": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x430e2340"
+          },
+          "elapsedMs": 2045
+        },
+        "eth_getBlockByNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+              "number": "0xb02434",
+              "hash": "0x7883da3802615ba710f068a940a2baabfc0f45cb8500cbcf36011ef2a95225b9",
+              "parentHash": "0xb2bb12ea2140b75a4c692625dbbc7deb7d742f073f4aeb7b6c01e64ffae96086",
+              "timestamp": "0x6ae43d5b",
+              "gasLimit": "0xffffffff",
+              "gasUsed": "0x0",
+              "baseFeePerGas": "0x3b9aca00"
+            }
+          },
+          "elapsedMs": 2026
+        },
+        "eth_estimateGas": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x5244"
+          },
+          "elapsedMs": 2054
+        }
+      }
+    },
+    {
+      "url": "https://rpc5mainnet.qie.digital/",
+      "methods": {
+        "eth_chainId": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x7c6"
+          },
+          "elapsedMs": 2266
+        },
+        "eth_blockNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0xb02433"
+          },
+          "elapsedMs": 1732
+        },
+        "eth_gasPrice": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x430e2340"
+          },
+          "elapsedMs": 1741
+        },
+        "eth_getBlockByNumber": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+              "number": "0xb02434",
+              "hash": "0x7883da3802615ba710f068a940a2baabfc0f45cb8500cbcf36011ef2a95225b9",
+              "parentHash": "0xb2bb12ea2140b75a4c692625dbbc7deb7d742f073f4aeb7b6c01e64ffae96086",
+              "timestamp": "0x6ae43d5b",
+              "gasLimit": "0xffffffff",
+              "gasUsed": "0x0",
+              "baseFeePerGas": "0x3b9aca00"
+            }
+          },
+          "elapsedMs": 1748
+        },
+        "eth_estimateGas": {
+          "response": {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": "0x5244"
+          },
+          "elapsedMs": 1746
+        }
+      }
+    }
+  ]
+}

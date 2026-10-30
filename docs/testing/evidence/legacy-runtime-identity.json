@@ -1,0 +1,9 @@
+{
+  "baseline": "b555a87e82d40560e50c8ce102239b10eb3bd365",
+  "legacyRuntime": {
+    "expected": "0x0d478010629faa5104f39d3e3ede0343f47ac2996affb676c7a6be6e499b256b",
+    "observed": "0x0d478010629faa5104f39d3e3ede0343f47ac2996affb676c7a6be6e499b256b",
+    "match": true
+  },
+  "compiler": "0.8.37+commit.f401782d"
+}
