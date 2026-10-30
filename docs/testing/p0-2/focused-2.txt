@@ -1,0 +1,38 @@
+Compiling 1 files with Solc 0.8.37
+Solc 0.8.37 finished in 631.35ms
+Compiler run successful with warnings:
+Warning (5159): "selfdestruct" has been deprecated. Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and data associated with an account and only transfers its Ether to the beneficiary, unless executed in the same transaction in which the contract was created (see EIP-6780). Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. Future changes to the EVM might further reduce the functionality of the opcode.
+  --> test/unit/BondsAndTransfers.t.sol:42:9:
+   |
+42 |         selfdestruct(target);
+   |         ^^^^^^^^^^^^
+
+
+Ran 2 tests for test/economics/P0_2GasBounds.t.sol:P0_2GasBoundsTest
+[PASS] testClaimGasDoesNotGrowWithUnrelatedMarketCount() (gas: 20570910)
+[PASS] testMaximumDeclaredOwnerSetsAndMetadataFitLocalAdmissionBudget() (gas: 13688766)
+Logs:
+  local max-owners max-metadata create gas: 1941865
+  local max-owners predict gas: 1398610
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 2.12s (215.99ms CPU time)
+
+Ran 15 tests for test/economics/P0_2Economics.t.sol:P0_2EconomicsTest
+[PASS] testAllTermsAndEvidenceRemainCommittedThroughEmergencyArbitration() (gas: 1570738)
+[PASS] testArbitratorMayResolveImmediatelyAfterCapturedChallenge_RESIDUAL() (gas: 1458692)
+[PASS] testFirstChallengerCapturesSlotButCannotBypassArbitrator_RESIDUAL() (gas: 1981417)
+[PASS] testFullReturnMatrixAllProposalAndArbitrationOutcomes() (gas: 18103686)
+[PASS] testFuzzSameBlockPauseAndCancellationOrder(uint8,bool) (runs: 2048, μ: 1449914, ~: 1545152)
+[PASS] testFuzzZeroAndPositiveBondMatrix(uint8,uint8,uint8) (runs: 2048, μ: 2116980, ~: 2130319)
+[PASS] testNonzeroCommitmentDoesNotProveEvidenceAvailability_RESIDUAL() (gas: 758696)
+[PASS] testOneSidedValidResultPaysFeeWhileInvalidRefundsAll_RESIDUAL() (gas: 2593740)
+[PASS] testPerMarketCapDoesNotEnforceAggregateExposure_RESIDUAL() (gas: 3100025)
+[PASS] testRejectedBondTransferThenCrossMarketReentrancyRemainsIsolated() (gas: 3553872)
+[PASS] testRepeatedEmptyCreationRecyclesBondWithoutPermanentSpamCost_RESIDUAL() (gas: 3805834)
+[PASS] testRevertingArbitratorCannotBlockParticipantOrBondRefundAfterTimeout() (gas: 3092603)
+[PASS] testSmallestUnitRoundingReservesDustAcrossMixedMarkets() (gas: 3105418)
+[PASS] testTinyFalseWinningPositionCanReceiveAlmostEntirePool_RESIDUAL() (gas: 1713108)
+[PASS] testUint128CapBoundaryAndMultipleBothSideContributions() (gas: 1936517)
+Suite result: ok. 15 passed; 0 failed; 0 skipped; finished in 2.12s (4.34s CPU time)
+
+Ran 2 test suites in 2.12s (4.25s CPU time): 17 tests passed, 0 failed, 0 skipped (17 total tests)

@@ -1,0 +1,33 @@
+Compiling 2 files with Solc 0.8.37
+Solc 0.8.37 finished in 905.33ms
+Compiler run successful with warnings:
+Warning (5159): "selfdestruct" has been deprecated. Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and data associated with an account and only transfers its Ether to the beneficiary, unless executed in the same transaction in which the contract was created (see EIP-6780). Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. Future changes to the EVM might further reduce the functionality of the opcode.
+  --> test/unit/BondsAndTransfers.t.sol:42:9:
+   |
+42 |         selfdestruct(target);
+   |         ^^^^^^^^^^^^
+
+
+Ran 1 test for test/economics/P0_2Economics.t.sol:P0_2EconomicsTest
+[FAIL: `testFail*` has been removed. Consider changing to test_Revert[If|When]_Condition and expecting a revert] testFailedBondTransferThenCrossMarketReentrancyRemainsIsolated() (gas: 0)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 2.66ms (0.00ns CPU time)
+
+Ran 2 tests for test/economics/P0_2GasBounds.t.sol:P0_2GasBoundsTest
+[PASS] testClaimGasDoesNotGrowWithUnrelatedMarketCount() (gas: 20570910)
+[PASS] testMaximumDeclaredOwnerSetsAndMetadataFitLocalAdmissionBudget() (gas: 13688766)
+Logs:
+  local max-owners max-metadata create gas: 1941865
+  local max-owners predict gas: 1398610
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 90.26ms (114.65ms CPU time)
+
+Ran 2 test suites in 91.05ms (92.92ms CPU time): 2 tests passed, 1 failed, 0 skipped (3 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/economics/P0_2Economics.t.sol:P0_2EconomicsTest
+[FAIL: `testFail*` has been removed. Consider changing to test_Revert[If|When]_Condition and expecting a revert] testFailedBondTransferThenCrossMarketReentrancyRemainsIsolated() (gas: 0)
+
+Encountered a total of 1 failing tests, 2 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 1 failed test
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger

@@ -1,0 +1,50 @@
+
+Detector: arbitrary-send-eth
+ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: timestamp
+MarketFactory.createMarket(bytes32,string,uint64,uint64,uint64) (src/MarketFactory.sol#25-60) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp || closeTime > block.timestamp + 31536000 || resolutionTime < closeTime || uint256(maxResolutionTime) <= uint256(resolutionTime) + terms.challengePeriod + terms.arbitrationPeriod || uint256(maxResolutionTime) > uint256(closeTime) + 31536000 (src/MarketFactory.sol#39-42)
+MarketResolver.proposeResult(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#23-47) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolutionTime || block.timestamp >= latest (src/MarketResolver.sol#34)
+MarketResolver.challengeResult(uint256,bytes32) (src/MarketResolver.sol#49-62) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.challengeDeadline (src/MarketResolver.sol#53)
+MarketResolver.finalizeResult(uint256) (src/MarketResolver.sol#64-72) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime (src/MarketResolver.sol#69)
+MarketResolver.settleDispute(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#74-85) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.arbitrationDeadline (src/MarketResolver.sol#79)
+MarketResolver.cancelExpiredMarket(uint256) (src/MarketResolver.sol#87-96) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < expiry (src/MarketResolver.sol#91)
+MarketResolver.cancelInterruptedMarket(uint256) (src/MarketResolver.sol#107-116) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < readyAt (src/MarketResolver.sol#111)
+ProtocolStorage.marketState(uint256) (src/ProtocolStorage.sol#71-75) uses timestamp for comparisons
+	Dangerous comparisons:
+	- m.storedState == ProtocolTypes.State.OPEN && block.timestamp >= m.closeTime (src/ProtocolStorage.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134):
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+src/MarketFactory.sol analyzed (10 contracts with 102 detectors), 10 result(s) found
+'forge config --json' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 --version' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/ src/MarketFactory.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize-runs 200 --evm-version paris --allow-paths .,/home/pupulion/prediction-market-mvp/contracts/src' running
+Compilation warnings/errors on src/MarketFactory.sol:
+Warning: Contract code size is 26928 bytes and exceeds 24576 bytes (a limit introduced in Spurious Dragon). This contract may not be deployable on Mainnet. Consider enabling the optimizer (with a low "runs" value!), turning off revert strings, or using libraries.
+ --> src/MarketFactory.sol:9:1:
+  |
+9 | contract MarketFactory is MarketResolver {
+  | ^ (Relevant source part starts here and spans across multiple lines).
+
+

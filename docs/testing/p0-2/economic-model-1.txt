@@ -1,0 +1,1 @@
+Offline economic model self-checks PASS; docs/testing/p0-2/economic-model.json

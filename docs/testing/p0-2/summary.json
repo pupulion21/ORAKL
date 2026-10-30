@@ -1,0 +1,74 @@
+{
+  "status": "VERIFICATION_COMPLETE_WITH_OPEN_POLICY_AND_TRUST_BLOCKERS",
+  "financialActivationAuthorized": false,
+  "protocolFreezeComplete": false,
+  "finalFoundryTests": {
+    "passed": 168,
+    "failed": 0,
+    "skipped": 0,
+    "suites": 18
+  },
+  "fuzz": {
+    "functions": 10,
+    "runsPerFunction": 2048
+  },
+  "namedInvariants": {
+    "legacy": 5,
+    "current": 14
+  },
+  "intensive": {
+    "runs": 256,
+    "depth": 128,
+    "calls": 32768,
+    "reverts": 0,
+    "seed": "0x4f52414b4c503032"
+  },
+  "v1Coverage": {
+    "lines": [
+      384,
+      387
+    ],
+    "statements": [
+      555,
+      564
+    ],
+    "branches": [
+      79,
+      86
+    ],
+    "functions": [
+      64,
+      65
+    ]
+  },
+  "frontendTestsPassed": 39,
+  "interfaceTestsPassed": 4,
+  "slither": {
+    "slither": {
+      "High": 4,
+      "Low": 13,
+      "Informational": 4,
+      "Optimization": 2
+    },
+    "slither-factory": {
+      "High": 1,
+      "Low": 8,
+      "Informational": 1
+    },
+    "slither-config": {
+      "Low": 1,
+      "Informational": 2,
+      "Optimization": 1
+    },
+    "slither-legacy": {
+      "High": 1,
+      "Low": 4,
+      "Informational": 1
+    }
+  },
+  "rawCommandOutputsSha256Verified": 22,
+  "localMarkdownTargetsVerified": 189,
+  "productionSolidityCompilerFrontendAndLegacyChanged": false,
+  "protectedFiles": 127,
+  "sourceTestCommit": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403"
+}

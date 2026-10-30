@@ -1,0 +1,381 @@
+[
+  {
+    "step": "focused",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:42:59.541736+00:00",
+    "elapsed_seconds": 1.202,
+    "head_at_execution": "d46452479b9ce08dea77dd45730276c26fa50894",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/p0-2/focused-1.txt",
+    "output_sha256": "3e98693a7fcaf0c9e66b30bb325ef161913455f1d014a62ce4ee6a4c625965cc"
+  },
+  {
+    "step": "focused",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:43:13.866729+00:00",
+    "elapsed_seconds": 2.973,
+    "head_at_execution": "d46452479b9ce08dea77dd45730276c26fa50894",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/focused-2.txt",
+    "output_sha256": "b11578847c6337344bcdfae478ae1d2e8c1ba0488216d5a17b4edafe2c332b1d"
+  },
+  {
+    "step": "economic-model",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/model-orakl-p0-2-economics.py",
+      "--output",
+      "docs/testing/p0-2/economic-model.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:44:05.114498+00:00",
+    "elapsed_seconds": 0.078,
+    "head_at_execution": "d46452479b9ce08dea77dd45730276c26fa50894",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/economic-model-1.txt",
+    "output_sha256": "613b268972915a28f57f97719857f51d3b8ec7e4d78ec3d9ba6ce3734b4edd83"
+  },
+  {
+    "step": "build",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:44:18.820924+00:00",
+    "elapsed_seconds": 0.862,
+    "head_at_execution": "d46452479b9ce08dea77dd45730276c26fa50894",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/p0-2/build-1.txt",
+    "output_sha256": "e855144685b62c5d3e19b701d68fd98850182591c34571f5b24ca823ebf66d01"
+  },
+  {
+    "step": "build",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "build"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:44:58.441705+00:00",
+    "elapsed_seconds": 1.224,
+    "head_at_execution": "d46452479b9ce08dea77dd45730276c26fa50894",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/build-2.txt",
+    "output_sha256": "b7707d81c2c2da656099f35a726f73d425740f50dd004d1e6f287c7e5997e9f2"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:47:52.874851+00:00",
+    "elapsed_seconds": 107.759,
+    "head_at_execution": "2a097f5fd5bc0b1e6ac80623555f6839b0aaaf2a",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/forge-test-1.txt",
+    "output_sha256": "a979467baf51c55f9146c303921ed4e63144979b440ab9b4f82ffd1698ffcabb"
+  },
+  {
+    "step": "invariant-intensive",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {
+      "FOUNDRY_INVARIANT_RUNS": "256",
+      "FOUNDRY_INVARIANT_DEPTH": "128",
+      "FOUNDRY_FUZZ_SEED": "0x4f52414b4c503032"
+    },
+    "start_utc": "2026-10-30T10:49:49.410428+00:00",
+    "elapsed_seconds": 486.609,
+    "head_at_execution": "0a2255ec3523a61f3fe2b076ea41ba0b1c03b9e0",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/invariant-intensive-1.txt",
+    "output_sha256": "deed7588d592fbe9558d83602f55f5072ee437a3aec1dfe80a8dc42a90300993"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T10:58:36.499170+00:00",
+    "elapsed_seconds": 104.118,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/forge-test-2.txt",
+    "output_sha256": "8f4ae0e003a4d417430b2281ce59ebe192b9171d45328f275a791b1446a8203d"
+  },
+  {
+    "step": "coverage",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:00:20.702269+00:00",
+    "elapsed_seconds": 143.891,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/coverage-1.txt",
+    "output_sha256": "718cb24d45bb619353e444d9c775e659993ca11cfa395c129c53ea24983bd4f3"
+  },
+  {
+    "step": "fmt",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:44.680056+00:00",
+    "elapsed_seconds": 0.027,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/fmt-1.txt",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "step": "slither",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/p0-2/slither.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:44.788074+00:00",
+    "elapsed_seconds": 5.395,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-2/slither-1.txt",
+    "output_sha256": "7995b69bf77d49fd9a8a58483a723d5d8dec75fffaaa759ec93ac277b2ef1092"
+  },
+  {
+    "step": "slither-factory",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/MarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-2/slither-factory.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:50.272229+00:00",
+    "elapsed_seconds": 2.15,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-2/slither-factory-1.txt",
+    "output_sha256": "3e0ffa6eef5aab08fbf591a27f82d7470f76b97853b2ce1e6bf40fbafb733e4a"
+  },
+  {
+    "step": "slither-config",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/ProtocolConfig.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-2/slither-config.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:52.500725+00:00",
+    "elapsed_seconds": 0.847,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-2/slither-config-1.txt",
+    "output_sha256": "7b004b479242f4047e5b8b747f7db7c121d2e9cad1a0424b1b7a7202151e66b9"
+  },
+  {
+    "step": "slither-legacy",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/QiePredictionMarket.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none",
+      "--json",
+      "../docs/testing/p0-2/slither-legacy.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:53.436841+00:00",
+    "elapsed_seconds": 1.477,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-2/slither-legacy-1.txt",
+    "output_sha256": "57d6bb52f1c04d835a22bf529ddb48b5fb15d46861af4128bfcf1ec3307f3206"
+  },
+  {
+    "step": "build-final",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:02:54.994996+00:00",
+    "elapsed_seconds": 6.654,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/build-final-1.txt",
+    "output_sha256": "ff15c5c1f1c7df7cc98962014d6cf10b704a9bdebcde08b8c1b27a7b22ff7791"
+  },
+  {
+    "step": "artifact-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/check-orakl-artifacts.mjs",
+      "docs/testing/p0-2/artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:03:01.732767+00:00",
+    "elapsed_seconds": 0.324,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/artifact-check-1.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "interface-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-candidate-interface.mjs",
+      "--check"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:03:02.144393+00:00",
+    "elapsed_seconds": 0.32,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/interface-check-1.txt",
+    "output_sha256": "2677b3f4d025ae2047fa7c740a0c9b91b5fa702668953e8dae5db7a8dd682933"
+  },
+  {
+    "step": "interface-tests",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-candidate-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:03:02.555545+00:00",
+    "elapsed_seconds": 1.426,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/interface-tests-1.txt",
+    "output_sha256": "c8b7c81e17acbf9c691cf89658c3e4548fd79bfa792a8fb2a6ea9a43bca0dbb7"
+  },
+  {
+    "step": "preservation",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/check-orakl-p0-2-preservation.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:03:04.076067+00:00",
+    "elapsed_seconds": 0.86,
+    "head_at_execution": "2b5ca567342ed6f5b89a5fc8a728d7bd28cc4403",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-2/preservation-1.txt",
+    "output_sha256": "0db1b73301da1c9cde48f3e69e8b5829282809256ee55939898d946e12c1fdc1"
+  }
+]
