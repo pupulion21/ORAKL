@@ -1,0 +1,18 @@
+# ORAKL P1 — local-only Postgres. No published ports beyond 127.0.0.1.
+# Stop with `docker compose down -v`; the volume is disposable local state.
+services:
+  orakl-p1-db:
+    image: postgres:16-alpine
+    container_name: orakl-p1-db
+    restart: "no"
+    environment:
+      POSTGRES_USER: orakl
+      POSTGRES_PASSWORD: orakl_local_p1
+      POSTGRES_DB: orakl_p1
+    ports:
+      - "127.0.0.1:5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orakl -d orakl_p1"]
+      interval: 2s
+      timeout: 3s
+      retries: 20

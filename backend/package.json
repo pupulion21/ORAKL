@@ -1,0 +1,32 @@
+{
+  "name": "orakl-p1-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ORAKL P1 local backend: Fastify + Prisma + PostgreSQL + reorg-safe indexer (local Anvil only)",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc --noEmit",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "generate": "prisma generate",
+    "studio": "prisma studio",
+    "api": "node --experimental-strip-types src/server.ts",
+    "indexer": "node --experimental-strip-types src/indexer/run.ts"
+  },
+  "prisma": {
+    "seed": "node --experimental-strip-types prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "fastify": "5.12.7",
+    "viem": "2.57.13"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "prisma": "6.19.3",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

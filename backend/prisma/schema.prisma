@@ -1,0 +1,519 @@
+// ORAKL P1 — Prisma schema (PostgreSQL).
+//
+// LOCAL SIMULATION ONLY. This database indexes the isolated Anvil chain
+// (chain id 31337) driven by scripts/p1/deploy-local-selected.mjs. Nothing in
+// here represents a public deployment or an approved production ledger.
+//
+// Model count: 21 (requirement: "Prisma schema with 21 models").
+//   1  User                 12 IndexedEvent
+//   2  Category             13 IndexerRollback
+//   3  Market               14 MarketActivity
+//   4  MarketPosition       15 Prediction
+//   5  Contribution         16 Resolution
+//   6  Bond                 17 Dispute
+//   7  Claim                18 EvidenceRecord
+//   8  AccountingSnapshot   19 AuthNonce
+//   9  ContractDeployment   20 AuthSession
+//   10 IndexerCheckpoint    21 ModerationReport
+//   11 IndexedBlock
+//
+// Reorg safety: IndexedBlock + IndexedEvent are the raw, canonical-only log
+// store. Every projection above is derived by deterministic replay of those
+// events, so a chain reorganisation is handled by pruning non-canonical
+// blocks/events, resetting projections and replaying (see src/indexer/replay.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------- enums
+
+enum MarketStatus {
+  OPEN
+  CLOSED
+  PROPOSED
+  DISPUTED
+  FINALIZED
+  CANCELLED
+}
+
+enum Side {
+  YES
+  NO
+}
+
+enum Outcome {
+  UNRESOLVED
+  YES
+  NO
+  INVALID
+}
+
+enum BondType {
+  CREATION
+  PROPOSAL
+  CHALLENGE
+}
+
+enum ClaimType {
+  PAYOUT
+  REFUND
+  BOND_RETURN
+  BOND_SLASH
+}
+
+enum ResolutionStatus {
+  NONE
+  PROPOSED
+  CHALLENGED
+  FINALIZED
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
+enum EvidenceKind {
+  SOURCE
+  ATTESTATION
+  ANALYSIS
+  DATASET
+  OTHER
+}
+
+enum AuthSessionStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum ModerationStatus {
+  OPEN
+  REVIEWING
+  DISMISSED
+  ACTIONED
+}
+
+// ------------------------------------------------------------- identity
+
+/// 1. users — wallet address is the primary external identity (PRD 13.1).
+model User {
+  id           String    @id @default(cuid())
+  walletAddress String   @unique
+  displayName  String?
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime  @default(now())
+
+  positions     MarketPosition[]
+  predictions   Prediction[]
+  claims        Claim[]
+  contributions Contribution[]
+  bonds         Bond[]
+  reports       ModerationReport[]
+  authNonces    AuthNonce[]
+  authSessions  AuthSession[]
+  activities    MarketActivity[]
+  createdMarkets Market[]
+
+  @@index([walletAddress])
+}
+
+/// 2. categories — market taxonomy (PRD 13.8).
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+
+  markets Market[]
+}
+
+// ---------------------------------------------------------------- chain raw
+
+/// 11. indexed_blocks — canonical block identity, the reorg detector's anchor.
+model IndexedBlock {
+  id          String   @id @default(cuid())
+  chainId     Int
+  blockNumber BigInt   @unique
+  blockHash   String
+  parentHash  String
+  timestamp   BigInt
+  indexedAt   DateTime @default(now())
+
+  events IndexedEvent[]
+
+  @@unique([chainId, blockHash])
+  @@index([chainId, blockNumber])
+}
+
+/// 12. indexed_events — raw decoded logs, unique by (chain, tx, log index).
+model IndexedEvent {
+  id          String   @id @default(cuid())
+  chainId     Int
+  blockNumber BigInt
+  blockHash   String
+  txHash      String
+  logIndex    Int
+  address     String
+  eventName   String
+  args        Json
+  timestamp   BigInt
+  indexedAt   DateTime @default(now())
+
+  block IndexedBlock? @relation(fields: [blockNumber], references: [blockNumber])
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([chainId, eventName, blockNumber])
+  @@index([chainId, blockNumber, logIndex])
+}
+
+/// 13. indexer_rollbacks — audit trail of every detected reorganisation.
+model IndexerRollback {
+  id               String   @id @default(cuid())
+  chainId          Int
+  fromBlock        BigInt
+  toBlock          BigInt
+  reason           String
+  removedBlocks    Int
+  removedEvents    Int
+  replayedEvents   Int
+  detectedAt       DateTime @default(now())
+
+  @@index([chainId, detectedAt])
+}
+
+/// 10. indexer_checkpoints — restart-safe sync cursor (PRD 13.9).
+model IndexerCheckpoint {
+  id                    String   @id @default(cuid())
+  chainId               Int      @unique
+  contractAddress       String
+  lastProcessedBlock    BigInt
+  lastProcessedBlockHash String
+  eventsIndexed         BigInt   @default(0)
+  updatedAt             DateTime @updatedAt
+
+  @@index([chainId])
+}
+
+// ------------------------------------------------------------- projections
+
+/// 3. markets — market projection (PRD 13.2).
+model Market {
+  id              String       @id @default(cuid())
+  chainId         Int
+  onchainMarketId BigInt       @unique
+  contractAddress String
+  creatorAddress  String
+  creator         User?        @relation(fields: [creatorAddress], references: [walletAddress])
+  metadataHash    String
+  metadataURI     String
+  question        String       @default("")
+  description     String?
+  categoryId      String?
+  category        Category?    @relation(fields: [categoryId], references: [id])
+  closeTime       BigInt
+  resolutionTime  BigInt
+  maxResolutionTime BigInt
+  status          MarketStatus @default(OPEN)
+  finalOutcome    Outcome      @default(UNRESOLVED)
+  proposerAddress String?
+  challengerAddress String?
+  proposalEvidenceHash String?
+  challengeEvidenceHash String?
+  challengeDeadline BigInt?
+  createdAtBlock  BigInt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  positions     MarketPosition[]
+  predictions   Prediction[]
+  contributions Contribution[]
+  bonds         Bond[]
+  claims        Claim[]
+  resolutions   Resolution[]
+  disputes      Dispute[]
+  evidences     EvidenceRecord[]
+  activities    MarketActivity[]
+  reports       ModerationReport[]
+
+  @@index([chainId, status])
+  @@index([closeTime])
+  @@index([creatorAddress])
+}
+
+/// 4. market_positions — indexed projection, not the authoritative ledger.
+model MarketPosition {
+  id            String   @id @default(cuid())
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User     @relation(fields: [walletAddress], references: [walletAddress])
+  yesContribution BigInt @default(0)
+  noContribution  BigInt @default(0)
+  claimedAmount   BigInt @default(0)
+  refundedAmount  BigInt @default(0)
+  updatedBlock    BigInt
+  updatedAt       DateTime @updatedAt
+
+  @@unique([marketId, walletAddress])
+  @@index([walletAddress])
+}
+
+/// 5. contributions — per-market, per-side pool aggregate.
+model Contribution {
+  id            String   @id @default(cuid())
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User     @relation(fields: [walletAddress], references: [walletAddress])
+  side          Side
+  amount        BigInt   @default(0)
+  predictCount  Int      @default(0)
+  updatedBlock  BigInt
+  updatedAt     DateTime @updatedAt
+
+  @@unique([marketId, walletAddress, side])
+  @@index([marketId, side])
+}
+
+/// 6. bonds — creation/proposal/challenge bond ledger per market+account.
+model Bond {
+  id            String   @id @default(cuid())
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User     @relation(fields: [walletAddress], references: [walletAddress])
+  bondType      BondType
+  deposited     BigInt   @default(0)
+  returned      BigInt   @default(0)
+  slashed       BigInt   @default(0)
+  updatedBlock  BigInt
+  updatedAt     DateTime @updatedAt
+
+  @@unique([marketId, walletAddress, bondType])
+  @@index([walletAddress, bondType])
+}
+
+/// 7. claims — payout / refund / bond-return events (PRD 13.7).
+model Claim {
+  id            String    @id @default(cuid())
+  marketId      String
+  market        Market    @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User      @relation(fields: [walletAddress], references: [walletAddress])
+  claimType     ClaimType
+  amount        BigInt
+  txHash        String
+  logIndex      Int
+  blockNumber   BigInt
+  blockHash     String
+  createdAt     DateTime  @default(now())
+
+  @@unique([txHash, logIndex])
+  @@index([walletAddress, claimType])
+  @@index([marketId])
+}
+
+/// 14. market_activity — chronological feed per market (PRD "activity" API).
+model MarketActivity {
+  id          String   @id @default(cuid())
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  actor       String
+  actorUser   User?    @relation(fields: [actor], references: [walletAddress])
+  kind        String
+  summary     String
+  amount      BigInt?
+  side        Side?
+  outcome     Outcome?
+  txHash      String
+  logIndex    Int
+  blockNumber BigInt
+  blockHash   String
+  timestamp   BigInt
+  createdAt   DateTime @default(now())
+
+  @@unique([txHash, logIndex])
+  @@index([marketId, blockNumber, logIndex])
+}
+
+/// 15. predictions — one row per Predict event (PRD 13.4).
+model Prediction {
+  id            String   @id @default(cuid())
+  chainId       Int
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User     @relation(fields: [walletAddress], references: [walletAddress])
+  side          Side
+  amount        BigInt
+  txHash        String
+  logIndex      Int
+  blockNumber   BigInt
+  blockHash     String
+  timestamp     BigInt
+  createdAt     DateTime @default(now())
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([walletAddress])
+  @@index([marketId, blockNumber])
+}
+
+/// 16. resolutions — proposal / challenge / finalization state (PRD 13.5).
+model Resolution {
+  id                String         @id @default(cuid())
+  marketId          String         @unique
+  market            Market         @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  status            ResolutionStatus @default(NONE)
+  proposerAddress   String?
+  proposedOutcome   Outcome        @default(UNRESOLVED)
+  proposalEvidenceHash String?
+  proposalBond      BigInt         @default(0)
+  challengeDeadline BigInt?
+  challengerAddress String?
+  challengeEvidenceHash String?
+  challengeBond     BigInt         @default(0)
+  finalOutcome      Outcome        @default(UNRESOLVED)
+  finalizedTxHash   String?
+  finalizedAtBlock  BigInt?
+  updatedAt         DateTime       @updatedAt
+}
+
+/// 17. disputes — arbitration record per challenge (PRD 13.6).
+model Dispute {
+  id                String       @id @default(cuid())
+  marketId          String
+  market            Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  challengerAddress String
+  evidenceHash      String?
+  bondAmount        BigInt       @default(0)
+  status            DisputeStatus @default(OPEN)
+  decision          Outcome?
+  settledTxHash     String?
+  settledAtBlock    BigInt?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([marketId, status])
+  @@index([challengerAddress])
+}
+
+/// 18. evidence — deterministic evidence commitments (RFC 8785 JCS + Keccak).
+model EvidenceRecord {
+  id                String       @id @default(cuid())
+  marketId          String
+  market            Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  kind              EvidenceKind
+  publisher         String
+  contentHash       String
+  evidenceHash      String
+  manifestJson      String
+  source            String?
+  claim             Outcome?
+  proposedOutcome   Outcome?
+  contentMediaType  String       @default("text/plain")
+  txHash            String?
+  logIndex          Int?
+  blockNumber       BigInt?
+  createdAt         DateTime     @default(now())
+
+  @@unique([marketId, evidenceHash])
+  @@index([evidenceHash])
+  @@index([publisher])
+}
+
+/// 8. accounting_snapshot — global accounting state at a block.
+model AccountingSnapshot {
+  id                     String   @id @default(cuid())
+  chainId                Int
+  blockNumber            BigInt   @unique
+  marketCount            BigInt
+  totalContributions     BigInt
+  totalParticipantPaid   BigInt
+  totalFeesAccrued       BigInt
+  totalFeesWithdrawn     BigInt
+  totalBondsDeposited    BigInt
+  totalBondsPaid         BigInt
+  bondLiability          BigInt
+  feeLiability           BigInt
+  participantLiability   BigInt
+  totalUnresolvedExposure BigInt
+  unaccountedBalance     BigInt
+  contractBalance        BigInt
+  createdAt              DateTime @default(now())
+
+  @@index([chainId, blockNumber])
+}
+
+/// 9. contract_deployment — verified local deployment registry.
+model ContractDeployment {
+  id                 String   @id @default(cuid())
+  chainId            Int
+  mode               String
+  status             String
+  factoryAddress     String
+  protocolConfigAddress String
+  roleMockAddress    String?
+  startBlock         BigInt
+  manifestPath       String
+  manifestSha256     String
+  activated          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([chainId, factoryAddress, manifestSha256])
+  @@index([chainId, status])
+}
+
+// ------------------------------------------------------------------ auth
+
+/// 19. auth_nonces — SIWE-style login challenge (PRD auth API).
+model AuthNonce {
+  id          String   @id @default(cuid())
+  walletAddress String
+  user        User?    @relation(fields: [walletAddress], references: [walletAddress])
+  nonce       String   @unique
+  issuedAt    DateTime @default(now())
+  expiresAt   DateTime
+  consumedAt  DateTime?
+
+  @@index([walletAddress])
+}
+
+/// 20. auth_sessions — issued API session (PRD auth API).
+model AuthSession {
+  id          String            @id @default(cuid())
+  tokenHash   String            @unique
+  walletAddress String
+  user        User              @relation(fields: [walletAddress], references: [walletAddress])
+  status      AuthSessionStatus @default(ACTIVE)
+  issuedAt    DateTime          @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+
+  @@index([walletAddress, status])
+}
+
+/// 21. moderation_reports — content reports (PRD 13.10).
+model ModerationReport {
+  id             String           @id @default(cuid())
+  marketId       String
+  market         Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  reporterAddress String
+  reporter       User?            @relation(fields: [reporterAddress], references: [walletAddress])
+  reason         String
+  status         ModerationStatus @default(OPEN)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([marketId, status])
+}
