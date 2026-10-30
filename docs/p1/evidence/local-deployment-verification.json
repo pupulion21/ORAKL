@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "verifiedAt": "2026-10-30T16:52:47.631Z",
+  "mode": "local-selected",
+  "chainId": 31337,
+  "rpcUrl": "http://127.0.0.1:8546",
+  "manifest": "frontend/public/deployments/local-selected.json",
+  "factory": "0x9a676e781a523b5d0c0e43731313a708cb607508",
+  "config": "0x0dcd1bf9a1b36ce34237eeafef220932846bcd82",
+  "checks": [
+    {
+      "name": "manifest-safety",
+      "ok": true,
+      "detail": "LOCAL_SIMULATION, no public deployment, no production approval"
+    },
+    {
+      "name": "factory-config-linkage",
+      "ok": true,
+      "detail": "factory.protocolConfig()=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 config.factory()=0x9A676e781A523b5d0C0e43731313A708CB607508"
+    },
+    {
+      "name": "financial-active",
+      "ok": true,
+      "detail": "financialActive=true paused=false"
+    },
+    {
+      "name": "release-digest",
+      "ok": true,
+      "detail": "approvedDigest=0xd3b5f09028b332e2619c390ae33e3195a585ce24c3625a3b9e4cb7baf5c2e0ba"
+    },
+    {
+      "name": "activity-epoch",
+      "ok": true,
+      "detail": "activityEpoch=0"
+    },
+    {
+      "name": "deployment-chain-id",
+      "ok": true,
+      "detail": "deploymentChainId=31337"
+    },
+    {
+      "name": "role-mocks",
+      "ok": true,
+      "detail": "governance=0x610178dA211FEF7D417bC0e6FeD39F05609AD788 compliance=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e guardian=0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+    },
+    {
+      "name": "parameters",
+      "ok": true,
+      "detail": "feeBps=200 poolCap=100000000000000000000"
+    },
+    {
+      "name": "exposure-caps",
+      "ok": true,
+      "detail": "pilot=100000000000000000000 global=300000000000000000000 perArb=200000000000000000000"
+    },
+    {
+      "name": "market-count",
+      "ok": true,
+      "detail": "marketCount=0"
+    },
+    {
+      "name": "runtime-code-hash",
+      "ok": true,
+      "detail": "factory=0x8993e12b86883317be7c54f0ba9470d7d8fc8ef449e550be6a02187a656d2d39 config=0x181c958e864b5762c7c25c67d51344f56e73c508bac8801fe141bf805813f328"
+    },
+    {
+      "name": "runtime-immutable-patch",
+      "ok": true,
+      "detail": "SelectedMarketFactory template patched with known immutables matches on-chain code"
+    },
+    {
+      "name": "runtime-immutable-patch-config",
+      "ok": true,
+      "detail": "ProtocolConfig template patched with known immutables matches on-chain code"
+    },
+    {
+      "name": "artifact-identity",
+      "ok": true,
+      "detail": "artifact + abi sha256 match manifest"
+    },
+    {
+      "name": "candidate-abi",
+      "ok": true,
+      "detail": "SelectedMarketFactory=match ProtocolConfig=match"
+    }
+  ],
+  "allPassed": true
+}
