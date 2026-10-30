@@ -192,4 +192,15 @@ contract MultisigControlsTest is OraklTestBase {
         assertEq(config.activityEpoch(), epoch, "caller gas cannot manufacture an interruption");
         assertTrue(config.financialActive(), "honest live state retained");
     }
+
+    function testOversizedReturnRejectedWithinBoundedCallerBudget() public {
+        g.setFault(3);
+        (bool ok, bytes memory reason) =
+            address(config).staticcall{gas: 30_000}(abi.encodeCall(config.roleFingerprint, (governance)));
+        assertFalse(ok, "oversized return rejects");
+        assertTrue(
+            bytes4(reason) == ProtocolConfig.InvalidMultisig.selector,
+            "bounded copy retains controlled error without caller exhaustion"
+        );
+    }
 }

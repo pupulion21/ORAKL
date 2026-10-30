@@ -1,0 +1,9 @@
+Compiling 3 files with Solc 0.8.37
+Solc 0.8.37 finished in 772.82ms
+Compiler run successful!
+
+Ran 1 test for test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[PASS] testOversizedReturnRejectedWithinBoundedCallerBudget() (gas: 77697)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.19ms (170.42µs CPU time)
+
+Ran 1 test suite in 12.17ms (2.19ms CPU time): 1 tests passed, 0 failed, 0 skipped (1 total tests)

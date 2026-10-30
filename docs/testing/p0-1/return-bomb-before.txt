@@ -1,0 +1,18 @@
+Compiling 1 files with Solc 0.8.37
+Solc 0.8.37 finished in 460.70ms
+Compiler run successful!
+
+Ran 1 test for test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[FAIL: bounded copy retains controlled error without caller exhaustion] testOversizedReturnRejectedWithinBoundedCallerBudget() (gas: 87332)
+Suite result: FAILED. 0 passed; 1 failed; 0 skipped; finished in 2.27ms (151.14µs CPU time)
+
+Ran 1 test suite in 12.23ms (2.27ms CPU time): 0 tests passed, 1 failed, 0 skipped (1 total tests)
+
+Failing tests:
+Encountered 1 failing test in test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[FAIL: bounded copy retains controlled error without caller exhaustion] testOversizedReturnRejectedWithinBoundedCallerBudget() (gas: 87332)
+
+Encountered a total of 1 failing tests, 0 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 1 failed test
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger

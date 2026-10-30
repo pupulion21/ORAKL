@@ -231,11 +231,11 @@ contract ProtocolConfig is IProtocolConfig {
 
     function _walletState(address wallet) private view returns (bytes32 fingerprint, address[] memory owners) {
         if (wallet.code.length == 0) revert InvalidMultisig();
-        (bool ok, bytes memory data) = wallet.staticcall{gas: 200_000}(abi.encodeCall(IMultisig.getOwners, ()));
-        if (!ok || data.length < 64 || data.length > 1088) revert InvalidMultisig();
+        bytes memory data = _boundedWalletRead(wallet, IMultisig.getOwners.selector, 200_000, 1088);
+        if (data.length < 64) revert InvalidMultisig();
         owners = abi.decode(data, (address[]));
-        (ok, data) = wallet.staticcall{gas: 30_000}(abi.encodeCall(IMultisig.getThreshold, ()));
-        if (!ok || data.length != 32) revert InvalidMultisig();
+        data = _boundedWalletRead(wallet, IMultisig.getThreshold.selector, 30_000, 32);
+        if (data.length != 32) revert InvalidMultisig();
         uint256 threshold = abi.decode(data, (uint256));
         if (owners.length < 2 || owners.length > 32 || threshold < 2 || threshold > owners.length) {
             revert InvalidMultisig();
@@ -247,6 +247,24 @@ contract ProtocolConfig is IProtocolConfig {
             }
         }
         fingerprint = keccak256(abi.encode(wallet, wallet.codehash, owners, threshold));
+    }
+
+    /// @dev Allocate only the known ABI maximum; never copy arbitrary returndata.
+    function _boundedWalletRead(address wallet, bytes4 selector, uint256 callGas, uint256 maxReturn)
+        private
+        view
+        returns (bytes memory data)
+    {
+        bytes memory query = abi.encodeWithSelector(selector);
+        data = new bytes(maxReturn);
+        bool ok;
+        uint256 size;
+        assembly ("memory-safe") {
+            ok := staticcall(callGas, wallet, add(query, 32), mload(query), add(data, 32), maxReturn)
+            size := returndatasize()
+        }
+        if (!ok || size > maxReturn) revert InvalidMultisig();
+        assembly ("memory-safe") { mstore(data, size) }
     }
 
     function _disjoint(address[] memory a, address[] memory b) private pure {
