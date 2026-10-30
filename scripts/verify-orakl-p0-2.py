@@ -38,6 +38,7 @@ STEPS = {
     "build-final": ("contracts", ["forge", "build", "--force"], {}),
     "artifact-check": (".", ["node", "scripts/check-orakl-artifacts.mjs", "docs/testing/p0-2/artifact-check.json"], {}),
     "interface-check": (".", ["node", "scripts/export-orakl-candidate-interface.mjs", "--check"], {}),
+    "interface-tests": (".", ["node", "--test", "scripts/test/orakl-candidate-interface.test.mjs"], {}),
     "economic-model": (".", ["python3", "scripts/model-orakl-p0-2-economics.py", "--output",
                              "docs/testing/p0-2/economic-model.json"], {}),
     "frontend-test": (".", ["npm", "test"], {}),
