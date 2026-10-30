@@ -1,0 +1,18 @@
+Compiling 4 files with Solc 0.8.37
+Compiling 9 files with Solc 0.8.37
+Solc 0.8.37 finished in 54.23ms
+Solc 0.8.37 finished in 1.14s
+Compiler run successful!
+
+Ran 8 tests for test/security/P0_3Regression.t.sol:P0_3RegressionTest
+[PASS] testArbitratorDriftCannotVetoExistingChallenge() (gas: 1328973)
+[PASS] testComplianceDriftCannotVetoExistingChallenge() (gas: 1329029)
+[PASS] testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary() (gas: 1733067)
+[PASS] testGovernanceDriftCannotVetoExistingChallenge() (gas: 1328761)
+[PASS] testIndependentEvidenceAcceptedBeforeFirstChallenge() (gas: 1021973)
+[PASS] testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge() (gas: 1659790)
+[PASS] testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection() (gas: 1994045)
+[PASS] testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges() (gas: 18136685)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 27.93ms (43.34ms CPU time)
+
+Ran 1 test suite in 28.61ms (27.93ms CPU time): 8 tests passed, 0 failed, 0 skipped (8 total tests)

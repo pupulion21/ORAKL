@@ -1,0 +1,88 @@
+{
+  "status": "P0_3_ENGINEERING_COMPLETE_PROTOCOL_FREEZE_BLOCKED",
+  "baseline": "8d850ae42ebc77acaf2323cd50f63f08e57f1b66",
+  "productionCommit": "7f9ca5e47a70915c7dfcd19889dcf7ffd3551646",
+  "testSourceCommit": "158694d42418cb37ea988e43212fdc40aceec46a",
+  "noLiveFinancialActivationOrDeploymentAuthorized": true,
+  "foundry": {
+    "passed": 208,
+    "failed": 0,
+    "skipped": 0,
+    "suites": 22
+  },
+  "newSecurityTests": 39,
+  "newHandlerBoundaryUnitTests": 1,
+  "fuzz": {
+    "functions": 13,
+    "runsPerFunction": 2048,
+    "seed": "0x4f52414b4c503031"
+  },
+  "namedInvariants": {
+    "legacy": 5,
+    "current": 16,
+    "A_N_unchanged": 14
+  },
+  "intensive": {
+    "runs": 256,
+    "depth": 128,
+    "calls": 32768,
+    "unexpectedHandlerReverts": 0,
+    "seed": "0x4f52414b4c503032"
+  },
+  "v1Coverage": {
+    "lines": [
+      395,
+      398
+    ],
+    "statements": [
+      571,
+      580
+    ],
+    "branches": [
+      82,
+      89
+    ],
+    "functions": [
+      67,
+      68
+    ]
+  },
+  "slither": {
+    "slither": {
+      "High": 4,
+      "Low": 14,
+      "Informational": 4,
+      "Optimization": 2
+    },
+    "slither-factory": {
+      "High": 1,
+      "Low": 9,
+      "Informational": 1
+    },
+    "slither-config": {
+      "Low": 1,
+      "Informational": 2,
+      "Optimization": 1
+    },
+    "slither-legacy": {
+      "High": 1,
+      "Low": 4,
+      "Informational": 1
+    }
+  },
+  "protectedFiles": 202,
+  "oldRefsUnchanged": 4,
+  "frontendTests": 39,
+  "interfaceTests": 4,
+  "candidateFunctions": 70,
+  "candidateEvents": 22,
+  "rawCommandOutputSHA256sVerified": 32,
+  "securityDisposition": {
+    "firstSlotEvidenceExclusion": "CORRECTED; overall economic capture PARTIALLY_MITIGATED",
+    "prematureArbitration": "FIXED_FOR_DEMONSTRATED_PATH",
+    "roleViewVeto": "FIXED_FOR_VALID_FUNDED_INCLUDED_ACTIVE_STATE_OBJECTION",
+    "truthfulIndependentArbitration": "OPEN_CONDITIONAL_HIGH_RELEASE_BLOCKER"
+  },
+  "requiredDeliverablesPresent": 9,
+  "localMarkdownTargetsVerified": 322
+}

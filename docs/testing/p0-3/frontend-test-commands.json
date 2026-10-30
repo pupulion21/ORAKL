@@ -1,0 +1,19 @@
+[
+  {
+    "step": "frontend-test",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "test"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:00:36.811112+00:00",
+    "elapsed_seconds": 1.311,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/frontend-test-1.txt",
+    "output_sha256": "3aaa59e2ac8d96d697d5f488a8de1af472503b00be8925d22ba2b262dfe7338c"
+  }
+]

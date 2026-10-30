@@ -38,7 +38,7 @@ This preserves default-disabled finance, separate compliance/governance,24-hour 
 4. The role restores original views after D. Direct finalize still rejects DISPUTED.
 5. The snapshot arbitrator may adjudicate only during [D,A); if its authority is unavailable/invalid or inactive, anyone can cancel at A and principals remain refundable.
 
-Regressions for governance/compliance/arbitrator mutations and all five getter faults failed before and pass after7f9ca5e. [Admission tests](../../contracts/test/security/P0_3Admission.t.sol) additionally cover threshold reduction, retained full checks on other paths, binding/chain, inactive/zero-bond gates, six explicit interventions, old epochs/repeated interruptions, caller/value validation and restoration fuzzing. [Original residual tests](../../contracts/test/economics/P0_2Economics.t.sol) were rewritten to assert the corrected behavior, not renamed into claimed fixes without an attack-prevention check.
+Regressions for governance/compliance/arbitrator mutations and all five getter faults failed before and pass after 7f9ca5e. [Admission tests](../../contracts/test/security/P0_3Admission.t.sol) additionally cover threshold reduction, retained full checks on other paths, binding/chain, inactive/zero-bond gates, six explicit interventions, old epochs/repeated interruptions, caller/value validation and restoration fuzzing. [Original residual tests](../../contracts/test/economics/P0_2Economics.t.sol) were rewritten to assert the corrected behavior, not renamed into claimed fixes without an attack-prevention check.
 
 ## Remaining trust and monitoring
 

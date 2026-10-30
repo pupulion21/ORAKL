@@ -1,0 +1,8 @@
+Compiling 13 files with Solc 0.8.37
+Solc 0.8.37 finished in 1.56s
+Error: Compiler run failed:
+Error: Compiler error (/solidity/libsolidity/codegen/LValue.cpp:50): Stack too deep. Try compiling with `--via-ir` (cli) or the equivalent `viaIR: true` (standard JSON) while enabling the optimizer. Otherwise, try removing local variables.
+   --> test/invariant/OraklInvariant.t.sol:480:29:
+    |
+480 |         submitEvidence(id, (actorSeed % 8 + 1) % 8, HASH);
+    |                             ^^^^^^^^^

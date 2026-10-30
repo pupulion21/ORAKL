@@ -1,6 +1,6 @@
 # P0.3 interface changes — candidate, not frozen
 
-Status:**CANDIDATE_NOT_FROZEN**, P0.3 safety design still needs final protocol approval. No frontend migration/deployment/activation is authorized. The functioning legacy frontend/Testnet source, ABI and manifest are unchanged. [Production correction](../../contracts/src/MarketResolver.sol), [configuration gate](../../contracts/src/ProtocolConfig.sol), [config interface](../../contracts/src/interfaces/IProtocolConfig.sol).
+Status: **CANDIDATE_NOT_FROZEN**, P0.3 safety design still needs final protocol approval. No frontend migration/deployment/activation is authorized. The functioning legacy frontend/Testnet source, ABI and manifest are unchanged. [Production correction](../../contracts/src/MarketResolver.sol), [configuration gate](../../contracts/src/ProtocolConfig.sol), [config interface](../../contracts/src/interfaces/IProtocolConfig.sol).
 
 ## Exact exported interface
 
@@ -36,6 +36,8 @@ Evidence submission is not a formal economic challenge. A PROPOSED market may st
 Index all confirmed evidence logs by `(chainId,facade,blockHash,txHash,logIndex)` and associate by `(chainId,facade,marketId)`. Retain duplicate provenance; do not impose a small global submission count cutoff or load the whole history into settlement. Fetch/verify externally available content under the separately approved evidence schema; show absent/mismatched content explicitly. No event guarantees reading, truth or availability. Handle reorg rollback/replay and never treat a transaction hash alone as confirmation.
 
 Keep evidence UI available in PROPOSED/DISPUTED until D during pause/quarantine, while disabling bond admission/new predictions according to actual gates. At D, evidence/challenge close and eligible finalization/arbitration begin; at A arbitration closes and disputed cancellation becomes available. Use chain time and stored deadlines. Preserve FINALIZED+refundable handling for an empty winning pool; claim/refund/bond withdrawals remain owner-directed and getter-independent. Do not automatically retry writes or submit emergency reports without a deliberate wallet action.
+
+Do not reuse the full `requireFinancialActivity`/“all roles healthy” preflight to disable protective challenges or no-value evidence. P1 must use the new narrow predicate plus market/epoch/time/value checks for the former, and state/deadline/nonzero commitment for the latter. Role warnings should still fail closed for new-risk financial activity and disclose arbitration availability. A UI-level refusal is not a protocol security boundary.
 
 Use a **matching verified Factory+ProtocolConfig build**. A P0.3 facade requires the new config predicate, while an old facade retains old challenge behavior; mixing versions is unsupported. Verify both artifact identities, immutable linkage/factory binding, chain and release state before any eventual integration. No automatic old-config fallback or legacy-ABI switch is introduced. The current candidate package has no deployed pair and cannot authorize signing. Runtime hashes are templates with immutable patches, not deployed-instance verification.
 

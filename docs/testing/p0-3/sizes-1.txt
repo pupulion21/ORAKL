@@ -1,0 +1,1678 @@
+No files changed, compilation skipped
+
+╭-------------------------------------+------------------+-------------------+--------------------+---------------------╮
+| Contract                            | Runtime Size (B) | Initcode Size (B) | Runtime Margin (B) | Initcode Margin (B) |
++=======================================================================================================================+
+| GuardedArbitratorMock               | 1,947            | 2,240             | 22,629             | 46,912              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| GuardedArbitratorMock.orakl         | 1,015            | 1,161             | 23,561             | 47,991              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MarketFactory                       | 15,860           | 16,147            | 8,716              | 33,005              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| Math.default                        | 45               | 125               | 24,531             | 49,027              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| Math.orakl                          | 45               | 100               | 24,531             | 49,052              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MultisigViewMock                    | 293              | 607               | 24,283             | 48,545              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MutableMultisig                     | 3,264            | 3,792             | 21,312             | 45,360              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MutableMultisig.orakl               | 1,639            | 1,902             | 22,937             | 47,250              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MutableProxyWalletMock              | 1,508            | 1,937             | 23,068             | 47,215              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| MutableProxyWalletMock.orakl        | 713              | 906               | 23,863             | 48,246              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| OpenWalletExecutionMock             | 611              | 642               | 23,965             | 48,510              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| OpenWalletExecutionMock.orakl       | 365              | 396               | 24,211             | 48,756              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| Panic.default                       | 45               | 125               | 24,531             | 49,027              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| Panic.orakl                         | 45               | 100               | 24,531             | 49,052              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| ProtocolConfig                      | 8,508            | 11,420            | 16,068             | 37,732              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| ProtocolTypes.orakl                 | 45               | 100               | 24,531             | 49,052              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| QiePredictionMarket                 | 13,906           | 13,945            | 10,670             | 35,207              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| ReentrancyAttacker                  | 2,339            | 2,370             | 22,237             | 46,782              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| RestrictedWalletExecutionMock       | 1,008            | 1,039             | 23,568             | 48,113              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| RestrictedWalletExecutionMock.orakl | 542              | 573               | 24,034             | 48,579              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| RevertingReceiver                   | 1,977            | 2,008             | 22,599             | 47,144              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| SafeCast.default                    | 45               | 125               | 24,531             | 49,027              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| SafeCast.orakl                      | 45               | 100               | 24,531             | 49,052              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| SharedControllerWalletMock          | 1,506            | 2,184             | 23,070             | 46,968              |
+|-------------------------------------+------------------+-------------------+--------------------+---------------------|
+| SharedControllerWalletMock.orakl    | 792              | 1,160             | 23,784             | 47,992              |
+╰-------------------------------------+------------------+-------------------+--------------------+---------------------╯
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+   ╭▸ src/ProtocolConfig.sol:22:39
+   │
+22 │     address public immutable override governance;
+   │                                       ━━━━━━━━━━ help: consider using: `GOVERNANCE`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+  ╭▸ test/doubles/NativeReentrancy.sol:9:10
+  │
+9 │ contract ReentrancyAttacker {
+  │          ━━━━━━━━━━━━━━━━━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/doubles/NativeReentrancy.sol:47:10
+   │
+47 │ contract RevertingReceiver {
+   │          ━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+   ╭▸ src/ProtocolStorage.sol:24:38
+   │
+24 │     IProtocolConfig public immutable protocolConfig;
+   │                                      ━━━━━━━━━━━━━━ help: consider using: `PROTOCOL_CONFIG`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[unused-import]: unused imports should be removed
+  ╭▸ test/helpers/OraklTestBase.sol:6:9
+  │
+6 │ import {ProtocolStorage} from "../../src/ProtocolStorage.sol";
+  │         ━━━━━━━━━━━━━━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/unused-import
+
+note[inline-assembly]: inline assembly used; review for memory safety and side effects
+   ╭▸ test/doubles/MutableMultisig.sol:47:13
+   │
+47 │             assembly { for {} 1 {} {} }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[inline-assembly]: inline assembly used; review for memory safety and side effects
+   ╭▸ test/doubles/MutableMultisig.sol:50:13
+   │
+50 │             assembly { return(0, 0x10000) }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[inline-assembly]: inline assembly used; review for memory safety and side effects
+   ╭▸ test/doubles/MutableMultisig.sol:53:13
+   │
+53 │             assembly { return(0, 31) }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[inline-assembly]: inline assembly used; review for memory safety and side effects
+   ╭▸ test/doubles/MutableMultisig.sol:56:13
+   │
+56 │             assembly {
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/helpers/OraklTestBase.sol:11:10
+   │
+11 │ contract MultisigViewMock {
+   │          ━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/helpers/OraklTestBase.sol:30:19
+   │
+30 │ abstract contract OraklTestBase is TestBase {
+   │                   ━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[low-level-calls]: Low-level calls should be avoided
+    ╭▸ src/ProtocolStorage.sol:132:22
+    │
+132 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ test/doubles/MutableMultisig.sol:73:24
+   │
+73 │         (ok, result) = target.call(data);
+   │                        ━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+   ╭▸ src/ProtocolConfig.sol:23:30
+   │
+23 │     address public immutable complianceApprover;
+   │                              ━━━━━━━━━━━━━━━━━━ help: consider using: `COMPLIANCE_APPROVER`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+   ╭▸ src/ProtocolConfig.sol:24:30
+   │
+24 │     address public immutable guardian;
+   │                              ━━━━━━━━ help: consider using: `GUARDIAN`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+   ╭▸ src/ProtocolConfig.sol:25:30
+   │
+25 │     uint256 public immutable deploymentChainId;
+   │                              ━━━━━━━━━━━━━━━━━ help: consider using: `DEPLOYMENT_CHAIN_ID`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ src/MarketFactory.sol:39:75
+   │
+39 │             closeTime <= block.timestamp || closeTime > block.timestamp + 365 days || resolutionTime < closeTime
+   │                                                                           ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/PredictionPool.sol:23:26
+   │
+23 │             m.yesPool += uint128(msg.value);
+   │                          ━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint128' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+   ╭▸ test/doubles/MutableMultisig.sol:75:13
+   │
+75 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ src/ProtocolConfig.sol:71:40
+   │
+71 │         (bool ok, bytes memory data) = facade.staticcall(abi.encodeWithSignature("protocolConfig()"));
+   │                                        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/doubles/MutableMultisig.sol:57:27
+   │
+57 │                 mstore(0, 32)
+   │                           ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/doubles/MutableMultisig.sol:58:24
+   │
+58 │                 mstore(32, not(0))
+   │                        ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/doubles/MutableMultisig.sol:75:59
+   │
+75 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+   │                                                           ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/doubles/NativeReentrancy.sol:23:9
+   │
+23 │         market.stake{value: msg.value}(marketId, QiePredictionMarket.Side.YES);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:47:51
+   │
+47 │         governance = address(new MultisigViewMock(100, 2));
+   │                                                   ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:48:51
+   │
+48 │         compliance = address(new MultisigViewMock(200, 2));
+   │                                                   ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:51:26
+   │
+51 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator);
+   │                          ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:51:80
+   │
+51 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator);
+   │                                                                                ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:51:89
+   │
+51 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator);
+   │                                                                                         ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/doubles/NativeReentrancy.sol:57:9
+   │
+57 │         market.stake{value: msg.value}(marketId, QiePredictionMarket.Side.YES);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/PredictionPool.sol:24:22
+   │
+24 │             p.yes += uint128(msg.value);
+   │                      ━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint128' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:30:13
+   │
+30 │         if (block.timestamp >= m.challengeDeadline) revert InvalidTime();
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:57:42
+   │
+57 │         close = uint64(block.timestamp + 100);
+   │                                          ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:58:30
+   │
+58 │         resolution = close + 100;
+   │                              ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:59:31
+   │
+59 │         expiry = resolution + 3 hours;
+   │                               ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:60:24
+   │
+60 │         vm.deal(alice, 1e30);
+   │                        ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:61:22
+   │
+61 │         vm.deal(bob, 1e30);
+   │                      ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:62:24
+   │
+62 │         vm.deal(carol, 1e30);
+   │                        ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:79:46
+   │
+79 │             close = uint64(block.timestamp + 100);
+   │                                              ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:80:34
+   │
+80 │             resolution = close + 100;
+   │                                  ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/OraklTestBase.sol:81:35
+   │
+81 │             expiry = resolution + 3 hours;
+   │                                   ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/doubles/NativeReentrancy.sol:61:9
+   │
+61 │         market.stake{value: msg.value}(marketId, QiePredictionMarket.Side.NO);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+    ╭▸ src/ProtocolConfig.sol:271:9
+    │
+271 │         assembly ("memory-safe") {
+    │         ━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/ProtocolStorage.sol:73:46
+   │
+73 │         if (m.storedState == T.State.OPEN && block.timestamp >= m.closeTime) return T.State.CLOSED;
+   │                                              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ src/MarketFactory.sol:42:70
+   │
+42 │                 || uint256(maxResolutionTime) > uint256(closeTime) + 365 days
+   │                                                                      ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+    ╭▸ src/ProtocolConfig.sol:276:9
+    │
+276 │         assembly ("memory-safe") { mstore(data, size) }
+    │         ━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ test/helpers/OraklTestBase.sol:57:17
+   │
+57 │         close = uint64(block.timestamp + 100);
+   │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint64' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[interface-naming]: interface names should be prefixed with 'I'
+  ╭▸ test/helpers/Vm.sol:8:11
+  │
+8 │ interface Vm {
+  │           ━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/interface-naming
+
+warning[reentrancy-eth]: uncapped ETH transfer can be reentered before `_status` is updated
+    ╭▸ src/ProtocolStorage.sol:132:22
+    │
+132 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-eth
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/PredictionPool.sol:26:25
+   │
+26 │             m.noPool += uint128(msg.value);
+   │                         ━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint128' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/PredictionPool.sol:27:21
+   │
+27 │             p.no += uint128(msg.value);
+   │                     ━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint128' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[interface-file-naming]: interface file names should be prefixed with 'I'
+  ╭▸ test/helpers/Vm.sol:8:11
+  │
+8 │ interface Vm {
+  │           ━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/interface-file-naming
+
+warning[uninitialized-local]: local variable is read before being initialized
+   ╭▸ test/doubles/MutableMultisig.sol:15:25
+   │
+15 │         for (uint256 i; i < count; ++i) {
+   │                         ━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ src/ProtocolConfig.sol:72:35
+   │
+72 │         if (!ok || data.length != 32 || abi.decode(data, (address)) != address(this)) revert InvalidConfiguration();
+   │                                   ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:187:64
+    │
+187 │         if (gasleft() < ROLE_CHECK_GAS + ROLE_CHECK_GAS / 63 + 200_000) revert InsufficientCheckGas();
+    │                                                                ━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/helpers/OraklTestBase.sol:85:16
+   │
+85 │         return factory.createMarket{value: bond}(HASH, "ipfs://test-cid", close, resolution, expiry);
+   │                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:225:40
+    │
+225 │                 || p.challengePeriod < 1 hours || p.challengePeriod > 7 days || p.arbitrationPeriod < 1 hours
+    │                                        ━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:225:103
+    │
+225 │                 || p.challengePeriod < 1 hours || p.challengePeriod > 7 days || p.arbitrationPeriod < 1 hours
+    │                                                                                                       ━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:243:86
+    │
+243 │         bytes memory data = _boundedWalletRead(wallet, IMultisig.getOwners.selector, 200_000, 1088);
+    │                                                                                      ━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:246:84
+    │
+246 │         data = _boundedWalletRead(wallet, IMultisig.getThreshold.selector, 30_000, 32);
+    │                                                                                    ━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:247:28
+    │
+247 │         if (data.length != 32) revert InvalidMultisig();
+    │                            ━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:46:13
+   │
+46 │         if (block.timestamp < m.resolutionTime || block.timestamp >= latest) revert InvalidTime();
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:46:51
+   │
+46 │         if (block.timestamp < m.resolutionTime || block.timestamp >= latest) revert InvalidTime();
+   │                                                   ━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[interface-naming]: interface names should be prefixed with 'I'
+   ╭▸ test/security/P0_3TestBase.sol:13:11
+   │
+13 │ interface EvidenceLogVm {
+   │           ━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/interface-naming
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketFactory.sol:39:13
+   │
+39 │             closeTime <= block.timestamp || closeTime > block.timestamp + 365 days || resolutionTime < closeTime
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketFactory.sol:39:45
+   │
+39 │             closeTime <= block.timestamp || closeTime > block.timestamp + 365 days || resolutionTime < closeTime
+   │                                             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ test/doubles/MutableMultisig.sol:16:42
+   │
+16 │             _owners.push(address(first + uint160(i)));
+   │                                          ━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint160' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/MarketFactory.sol:33:81
+   │
+33 │         if (metadataHash == bytes32(0) || uri.length < 8 || uri.length > 256 || bytes7(uri) != bytes7("ipfs://")) {
+   │                                                                                 ━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'bytes7' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:249:50
+    │
+249 │         if (owners.length < 2 || owners.length > 32 || threshold < 2 || threshold > owners.length) {
+    │                                                  ━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:272:58
+    │
+272 │             ok := staticcall(callGas, wallet, add(query, 32), mload(query), add(data, 32), maxReturn)
+    │                                                          ━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+    ╭▸ src/ProtocolConfig.sol:272:87
+    │
+272 │             ok := staticcall(callGas, wallet, add(query, 32), mload(query), add(data, 32), maxReturn)
+    │                                                                                       ━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/doubles/MutableMultisig.sol:32:34
+   │
+32 │     function installHiddenModule(address module) external {
+   │                                  ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolStorage.sol:101:9
+    │
+101 │         emit BondReleased(id, kind, msg.sender, recipient, b.amount);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+note[screaming-snake-case-const]: constants should use SCREAMING_SNAKE_CASE
+   ╭▸ test/security/P0_3TestBase.sol:27:37
+   │
+27 │     EvidenceLogVm internal constant logVm = EvidenceLogVm(address(vm));
+   │                                     ━━━━━ help: consider using: `LOG_VM`
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-const
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/MarketFactory.sol:33:96
+   │
+33 │         if (metadataHash == bytes32(0) || uri.length < 8 || uri.length > 256 || bytes7(uri) != bytes7("ipfs://")) {
+   │                                                                                                ━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'bytes7' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ test/helpers/OraklTestBase.sol:78:13
+   │
+78 │         if (close <= block.timestamp) {
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/doubles/MutableMultisig.sol:36:38
+   │
+36 │     function setImplementationMarker(address marker) external {
+   │                                      ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ test/security/P0_3TestBase.sol:63:17
+   │
+63 │         (ok,) = address(factory).call(abi.encodeWithSignature("submitEvidence(uint256,bytes32)", id, commitment));
+   │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ test/helpers/OraklTestBase.sol:79:21
+   │
+79 │             close = uint64(block.timestamp + 100);
+   │                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint64' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ src/MarketResolver.sol:54:31
+   │
+54 │         m.challengeDeadline = uint64(block.timestamp + m.terms.challengePeriod);
+   │                               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint64' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+  ╭▸ test/security/ArbitrationDoubles.sol:7:30
+  │
+7 │     address public immutable controller;
+  │                              ━━━━━━━━━━ help: consider using: `CONTROLLER`
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+   ╭▸ src/PredictionPool.sol:66:9
+   │
+66 │         emit ProtocolFeeWithdrawn(msg.sender, recipient, amount);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/helpers/OraklTestBase.sol:90:9
+   │
+90 │         factory.predict{value: amount}(id, side);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[unused-import]: unused imports should be removed
+  ╭▸ test/security/P0_3TestBase.sol:6:5
+  │
+6 │     ProtocolStorage,
+  │     ━━━━━━━━━━━━━━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/unused-import
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:66:13
+   │
+66 │         if (block.timestamp >= m.challengeDeadline) revert InvalidTime();
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/doubles/MutableMultisig.sol:40:29
+   │
+40 │     function setGuardMarker(address marker) external {
+   │                             ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+   ╭▸ test/helpers/OraklTestBase.sol:97:9
+   │
+97 │         factory.proposeResult{value: bond}(id, outcome, HASH);
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ test/security/ArbitrationDoubles.sol:32:42
+   │
+32 │         (bool ok, bytes memory result) = target.call(data);
+   │                                          ━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/security/P0_3TestBase.sol:13:11
+   │
+13 │ interface EvidenceLogVm {
+   │           ━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/security/P0_3TestBase.sol:23:19
+   │
+23 │ abstract contract P0_3TestBase is OraklTestBase {
+   │                   ━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/doubles/MutableMultisig.sol:70:38
+   │
+70 │     function executeFromHiddenModule(address target, bytes calldata data) external returns (bytes memory result) {
+   │                                      ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+   ╭▸ test/security/ArbitrationDoubles.sol:34:13
+   │
+34 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ test/helpers/OraklTestBase.sol:94:13
+   │
+94 │         if (block.timestamp < factory.getMarket(id).resolutionTime) vm.warp(factory.getMarket(id).resolutionTime);
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:82:13
+   │
+82 │         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime) revert InvalidTime();
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:82:54
+   │
+82 │         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime) revert InvalidTime();
+   │                                                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+   ╭▸ src/PredictionPool.sol:84:21
+   │
+84 │         if (refund) emit RefundClaimed(id, msg.sender, recipient, amount);
+   │                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+   ╭▸ src/PredictionPool.sol:85:14
+   │
+85 │         else emit RewardClaimed(id, msg.sender, recipient, amount);
+   │              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+note[screaming-snake-case-const]: constants should use SCREAMING_SNAKE_CASE
+  ╭▸ test/helpers/TestBase.sol:9:26
+  │
+9 │     Vm internal constant vm =
+  │                          ━━ help: consider using: `VM`
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-const
+
+note[inline-assembly]: inline assembly used; review for memory safety and side effects
+   ╭▸ test/security/ArbitrationDoubles.sol:68:9
+   │
+68 │         assembly {
+   │         ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+    ╭▸ src/ProtocolStorage.sol:132:22
+    │
+132 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:92:13
+   │
+92 │         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.arbitrationDeadline) revert InvalidTime();
+   │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+   ╭▸ src/MarketResolver.sol:92:54
+   │
+92 │         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.arbitrationDeadline) revert InvalidTime();
+   │                                                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ test/security/ArbitrationDoubles.sol:90:42
+   │
+90 │         (bool ok, bytes memory result) = target.call(data);
+   │                                          ━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+    ╭▸ test/helpers/OraklTestBase.sol:109:9
+    │
+109 │         factory.challengeResult{value: bond}(id, HASH);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+   ╭▸ test/security/ArbitrationDoubles.sol:92:13
+   │
+92 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+   │             ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[low-level-calls]: Low-level calls should be avoided
+   ╭▸ test/security/ArbitrationDoubles.sol:99:42
+   │
+99 │         (bool ok, bytes memory result) = target.call(data);
+   │                                          ━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/MarketResolver.sol:104:13
+    │
+104 │         if (block.timestamp < expiry) revert InvalidTime();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:32:33
+   │
+32 │         g = new MutableMultisig(100, 2);
+   │                                 ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:33:33
+   │
+33 │         c = new MutableMultisig(200, 2);
+   │                                 ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:42:26
+   │
+42 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator)
+   │                          ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:42:80
+   │
+42 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator)
+   │                                                                                ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:42:89
+   │
+42 │             T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator)
+   │                                                                                         ━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:48:42
+   │
+48 │         close = uint64(block.timestamp + 100);
+   │                                          ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:49:30
+   │
+49 │         resolution = close + 100;
+   │                              ━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[low-level-calls]: Low-level calls should be avoided
+    ╭▸ src/QiePredictionMarket.sol:464:22
+    │
+464 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/TestBase.sol:78:54
+   │
+78 │         for (uint256 rest = value; rest > 0; rest /= 10) ++digits;
+   │                                                      ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/TestBase.sol:81:58
+   │
+81 │             buffer[--digits] = bytes1(uint8(48 + (rest % 10)));
+   │                                                          ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/helpers/TestBase.sol:82:21
+   │
+82 │             rest /= 10;
+   │                     ━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/MarketResolver.sol:124:13
+    │
+124 │         if (block.timestamp < readyAt) revert InvalidTime();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ test/helpers/OraklTestBase.sol:114:13
+    │
+114 │         if (block.timestamp < deadline) vm.warp(deadline);
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+    ╭▸ test/security/ArbitrationDoubles.sol:101:13
+    │
+101 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+    │             ━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+note[screaming-snake-case-immutable]: immutables should use SCREAMING_SNAKE_CASE
+    ╭▸ test/security/ArbitrationDoubles.sol:107:30
+    │
+107 │     address public immutable controller;
+    │                              ━━━━━━━━━━ help: consider using: `CONTROLLER`
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/screaming-snake-case-immutable
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:51:24
+   │
+51 │         vm.deal(alice, 1e30);
+   │                        ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:52:22
+   │
+52 │         vm.deal(bob, 1e30);
+   │                      ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:53:24
+   │
+53 │         vm.deal(carol, 1e30);
+   │                        ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:54:27
+   │
+54 │         vm.deal(observer, 1e30);
+   │                           ━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:58:20
+   │
+58 │         return i % 3 == 0 ? g : i % 3 == 1 ? c : a;
+   │                    ━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[literal-instead-of-constant]: this literal appears multiple times in the contract; declare a named constant for it
+   ╭▸ test/security/P0_3TestBase.sol:58:37
+   │
+58 │         return i % 3 == 0 ? g : i % 3 == 1 ? c : a;
+   │                                     ━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/literal-instead-of-constant
+
+note[low-level-calls]: Low-level calls should be avoided
+    ╭▸ test/security/ArbitrationDoubles.sol:126:42
+    │
+126 │         (bool ok, bytes memory result) = target.call(data);
+    │                                          ━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/low-level-calls
+
+warning[uninitialized-local]: local variable is read before being initialized
+   ╭▸ test/helpers/TestBase.sol:78:60
+   │
+78 │         for (uint256 rest = value; rest > 0; rest /= 10) ++digits;
+   │                                                            ━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+note[inline-assembly]: inline assembly (declared memory-safe); review business logic and side effects
+    ╭▸ test/security/ArbitrationDoubles.sol:128:13
+    │
+128 │             assembly ("memory-safe") { revert(add(result, 32), mload(result)) }
+    │             ━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/inline-assembly
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ test/helpers/TestBase.sol:81:39
+   │
+81 │             buffer[--digits] = bytes1(uint8(48 + (rest % 10)));
+   │                                       ━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint8' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/QiePredictionMarket.sol:187:13
+    │
+187 │         if (closeTime <= block.timestamp) revert CloseTimeNotInFuture();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+  ╭▸ test/security/ArbitrationDoubles.sol:5:10
+  │
+5 │ contract GuardedArbitratorMock {
+  │          ━━━━━━━━━━━━━━━━━━━━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/security/ArbitrationDoubles.sol:40:10
+   │
+40 │ contract MutableProxyWalletMock {
+   │          ━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/security/ArbitrationDoubles.sol:78:10
+   │
+78 │ contract RestrictedWalletExecutionMock {
+   │          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+   ╭▸ test/security/ArbitrationDoubles.sol:97:10
+   │
+97 │ contract OpenWalletExecutionMock {
+   │          ━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+note[multi-contract-file]: prefer having only one contract, interface or library per file
+    ╭▸ test/security/ArbitrationDoubles.sol:106:10
+    │
+106 │ contract SharedControllerWalletMock {
+    │          ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/multi-contract-file
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+   ╭▸ test/security/P0_3TestBase.sol:48:17
+   │
+48 │         close = uint64(block.timestamp + 100);
+   │                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ├ note: consider disabling this lint if you're certain the cast is safe
+   │       
+   │       // casting to 'uint64' is safe because [explain why]
+   │       // forge-lint: disable-next-line(unsafe-typecast)
+   │       
+   │       
+   ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/QiePredictionMarket.sol:207:13
+    │
+207 │         if (block.timestamp >= m.closeTime) revert MarketClosed();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:10:17
+   │
+10 │     constructor(address controller_) {
+   │                 ━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/QiePredictionMarket.sol:221:22
+    │
+221 │         m.yesStake = uint128(newYes);
+    │                      ━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint128' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/QiePredictionMarket.sol:222:21
+    │
+222 │         m.noStake = uint128(newNo);
+    │                     ━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint128' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/QiePredictionMarket.sol:226:21
+    │
+226 │             p.yes = uint128(uint256(p.yes) + amount);
+    │                     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint128' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:29:22
+   │
+29 │     function execute(address target, bytes calldata data) external {
+   │                      ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/QiePredictionMarket.sol:228:20
+    │
+228 │             p.no = uint128(uint256(p.no) + amount);
+    │                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint128' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:45:34
+   │
+45 │     constructor(address initial, address owner) {
+   │                                  ━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:45:17
+   │
+45 │     constructor(address initial, address owner) {
+   │                 ━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/QiePredictionMarket.sol:241:13
+    │
+241 │         if (block.timestamp < m.closeTime) revert ResolutionNotOpen();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/QiePredictionMarket.sol:242:13
+    │
+242 │         if (block.timestamp >= m.resolveDeadline) revert ResolutionWindowClosed();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:61:22
+   │
+61 │     function upgrade(address next) external {
+   │                      ━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/QiePredictionMarket.sol:255:13
+    │
+255 │         if (block.timestamp < m.resolveDeadline) revert ResolutionWindowStillOpen();
+    │             ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[reentrancy-eth]: uncapped ETH transfer can be reentered before `_status` is updated
+    ╭▸ src/QiePredictionMarket.sol:464:22
+    │
+464 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-eth
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+   ╭▸ test/security/ArbitrationDoubles.sol:98:22
+   │
+98 │     function execute(address target, bytes calldata data) external {
+   │                      ━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+    ╭▸ test/security/ArbitrationDoubles.sol:110:32
+    │
+110 │     constructor(uint160 first, address controller_) {
+    │                                ━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[missing-zero-check]: address parameter is used in a state write or value transfer without a zero-address check
+    ╭▸ test/security/ArbitrationDoubles.sol:124:22
+    │
+124 │     function execute(address target, bytes calldata data) external {
+    │                      ━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/missing-zero-check
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/QiePredictionMarket.sol:434:9
+    │
+434 │         emit Claimed(marketId, account, recipient, payout);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/QiePredictionMarket.sol:454:9
+    │
+454 │         emit Refunded(marketId, account, recipient, amount);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[arbitrary-send-eth]: ETH is sent to a user-controlled destination; restrict the destination or the caller
+    ╭▸ src/QiePredictionMarket.sol:464:22
+    │
+464 │         (bool ok,) = payable(recipient).call{value: amount}("");
+    │                      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/arbitrary-send-eth
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   ╭▸ src/ProtocolConfig.sol:59:5
+   │
+59 │ ┏     modifier onlyGovernance() {
+60 │ ┃         if (msg.sender != governance) revert Unauthorized();
+61 │ ┃         _;
+62 │ ┃     }
+   │ ┗━━━━━┛
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/unwrapped-modifier-logic
+help: wrap modifier logic to reduce code size
+   ╭╴
+59 ±     modifier onlyGovernance() {
+60 +         _onlyGovernance();
+61 +         _;
+62 +     }
+63 + 
+64 +     function _onlyGovernance() internal {
+65 +         if (msg.sender != governance) revert Unauthorized();
+66 +     }
+   ╰╴
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:216:9
+    │
+216 │         emit ActivityInterrupted(oldEpoch, uint64(block.timestamp), msg.sender);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:217:9
+    │
+217 │         emit FinanceDeactivated(msg.sender);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:218:9
+    │
+218 │         emit PauseChanged(true, msg.sender);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+   ╭▸ src/ProtocolConfig.sol:81:9
+   │
+81 │         emit ParametersConfigured(keccak256(abi.encode(next)));
+   │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+note[asm-keccak256]: use of inefficient hashing mechanism; consider using inline assembly
+    ╭▸ src/ProtocolConfig.sol:93:16
+    │
+ 93 │           return keccak256(
+    │ ┏━━━━━━━━━━━━━━━━┛
+ 94 │ ┃             abi.encode(
+ 95 │ ┃                 block.chainid,
+ 96 │ ┃                 address(this),
+    ‡ ┃
+105 │ ┃         );
+    │ ┗━━━━━━━━━┛
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/asm-keccak256
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:117:9
+    │
+117 │         emit ReleaseApproved(release, approvedDigest, activationAfter);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/ProtocolConfig.sol:116:27
+    │
+116 │         activationAfter = uint64(block.timestamp + RECOVERY_DELAY);
+    │                           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint64' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:125:9
+    │
+125 │         emit FinanceActivated(release, approvedDigest);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[reentrancy-events]: event emitted after an external call; reentrancy can reorder or fabricate logs that off-chain consumers rely on
+    ╭▸ src/ProtocolConfig.sol:131:9
+    │
+131 │         emit PauseChanged(false, msg.sender);
+    │         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/reentrancy-events
+
+warning[block-timestamp]: usage of `block.timestamp` in a comparison may be manipulated by validators
+    ╭▸ src/ProtocolConfig.sol:197:68
+    │
+197 │             release == bytes32(0) || approvedRelease != release || block.timestamp < activationAfter
+    │                                                                    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/block-timestamp
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/ProtocolConfig.sol:208:35
+    │
+208 │         interruptedAt[oldEpoch] = uint64(block.timestamp);
+    │                                   ━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint64' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+warning[unsafe-typecast]: typecasts that can truncate values should be checked
+    ╭▸ src/ProtocolConfig.sol:216:44
+    │
+216 │         emit ActivityInterrupted(oldEpoch, uint64(block.timestamp), msg.sender);
+    │                                            ━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ├ note: consider disabling this lint if you're certain the cast is safe
+    │       
+    │       // casting to 'uint64' is safe because [explain why]
+    │       // forge-lint: disable-next-line(unsafe-typecast)
+    │       
+    │       
+    ╰ help: https://getfoundry.sh/forge/linting/unsafe-typecast
+
+note[asm-keccak256]: use of inefficient hashing mechanism; consider using inline assembly
+    ╭▸ src/ProtocolConfig.sol:238:16
+    │
+238 │         return keccak256(abi.encode(g, c, a, guardian));
+    │                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/asm-keccak256
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/ProtocolConfig.sol:254:29
+    │
+254 │             for (uint256 j; j < i; ++j) {
+    │                             ━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/ProtocolConfig.sol:252:25
+    │
+252 │         for (uint256 i; i < owners.length; ++i) {
+    │                         ━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/ProtocolConfig.sol:253:67
+    │
+253 │             if (owners[i] == address(0) || owners[i] == guardian) revert InvalidMultisig();
+    │                                                                   ━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/ProtocolConfig.sol:255:45
+    │
+255 │                 if (owners[i] == owners[j]) revert InvalidMultisig();
+    │                                             ━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/ProtocolConfig.sol:280:25
+    │
+280 │         for (uint256 i; i < a.length; ++i) {
+    │                         ━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[uninitialized-local]: local variable is read before being initialized
+    ╭▸ src/ProtocolConfig.sol:281:29
+    │
+281 │             for (uint256 j; j < b.length; ++j) {
+    │                             ━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/uninitialized-local
+
+warning[require-revert-in-loop]: `require` or `revert` inside a loop
+    ╭▸ src/ProtocolConfig.sol:282:35
+    │
+282 │                 if (a[i] == b[j]) revert InvalidMultisig();
+    │                                   ━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/require-revert-in-loop
+
+note[missing-inheritance]: contract `MultisigViewMock` implements interface `IMultisig`'s external API but does not explicitly inherit from it
+   ╭▸ test/helpers/OraklTestBase.sol:11:10
+   │
+11 │ contract MultisigViewMock {
+   │          ━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-inheritance
+
+note[missing-inheritance]: contract `GuardedArbitratorMock` implements interface `IMultisig`'s external API but does not explicitly inherit from it
+  ╭▸ test/security/ArbitrationDoubles.sol:5:10
+  │
+5 │ contract GuardedArbitratorMock {
+  │          ━━━━━━━━━━━━━━━━━━━━━
+  │
+  ╰ help: https://getfoundry.sh/forge/linting/missing-inheritance
+
+note[missing-inheritance]: contract `MutableProxyWalletMock` implements interface `IMultisig`'s external API but does not explicitly inherit from it
+   ╭▸ test/security/ArbitrationDoubles.sol:40:10
+   │
+40 │ contract MutableProxyWalletMock {
+   │          ━━━━━━━━━━━━━━━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/missing-inheritance
+
+note[missing-inheritance]: contract `SharedControllerWalletMock` implements interface `IMultisig`'s external API but does not explicitly inherit from it
+    ╭▸ test/security/ArbitrationDoubles.sol:106:10
+    │
+106 │ contract SharedControllerWalletMock {
+    │          ━━━━━━━━━━━━━━━━━━━━━━━━━━
+    │
+    ╰ help: https://getfoundry.sh/forge/linting/missing-inheritance
+
+note[internal-function-used-once]: this internal function is used only once; consider inlining it into its caller
+   ╭▸ test/helpers/TestBase.sol:26:5
+   │
+26 │     function assertEq(address left, address right, string memory message) internal pure {
+   │     ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/internal-function-used-once
+
+note[internal-function-used-once]: this internal function is used only once; consider inlining it into its caller
+   ╭▸ test/helpers/TestBase.sol:52:5
+   │
+52 │     function assertLe(uint256 left, uint256 right, string memory message) internal pure {
+   │     ━━━━━━━━
+   │
+   ╰ help: https://getfoundry.sh/forge/linting/internal-function-used-once
+

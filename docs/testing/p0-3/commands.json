@@ -1,0 +1,580 @@
+[
+  {
+    "step": "baseline-build",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:23:46.720663+00:00",
+    "elapsed_seconds": 6.582,
+    "head_at_execution": "f23a4c5c1ea105e762e7f51caa22d47f64451c41",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/baseline-build-1.txt",
+    "output_sha256": "861143f6950864a9d7003de0025c997f6d3c5a8df113efd1f5caa35f84fc16d7"
+  },
+  {
+    "step": "baseline-artifacts",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/check-orakl-artifacts.mjs",
+      "docs/testing/p0-3/baseline-artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:24:13.037625+00:00",
+    "elapsed_seconds": 0.333,
+    "head_at_execution": "f23a4c5c1ea105e762e7f51caa22d47f64451c41",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/baseline-artifacts-1.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "baseline-pocs",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/P0_2Economics.t.sol",
+      "--match-test",
+      "test(FirstChallengerCapturesSlot|ArbitratorMayResolveImmediately|RestoredRoleViews)",
+      "-vvvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:24:13.466618+00:00",
+    "elapsed_seconds": 0.133,
+    "head_at_execution": "f23a4c5c1ea105e762e7f51caa22d47f64451c41",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/baseline-pocs-1.txt",
+    "output_sha256": "955c6741696575c2d1c948f2dcbbbb231999c9c72e98189271b9137718c39dca"
+  },
+  {
+    "step": "regressions-before",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/security/P0_3Regression.t.sol",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:31:37.860938+00:00",
+    "elapsed_seconds": 2.885,
+    "head_at_execution": "3518891e2a57096f2ed7b7add66a648e6870e8f1",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/p0-3/regressions-before-1.txt",
+    "output_sha256": "3f09cf1403269c60b3366e0218ecd400204648e9551914c8a8cdbd910406f509"
+  },
+  {
+    "step": "security",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/security/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:32:14.378605+00:00",
+    "elapsed_seconds": 1.388,
+    "head_at_execution": "3518891e2a57096f2ed7b7add66a648e6870e8f1",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/security-1.txt",
+    "output_sha256": "e54d96fd85c79d17210a959852669494b5e2110c7e59b3a8aee7d84d842fe9f6"
+  },
+  {
+    "step": "security",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/security/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:40:19.978374+00:00",
+    "elapsed_seconds": 5.937,
+    "head_at_execution": "7f9ca5e47a70915c7dfcd19889dcf7ffd3551646",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/security-2.txt",
+    "output_sha256": "3b2d238b49c5a48cb3c7f38244ca98d9646c1a537c78cbb3b201e903e9c98477"
+  },
+  {
+    "step": "invariant",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:42:48.200632+00:00",
+    "elapsed_seconds": 105.946,
+    "head_at_execution": "7f9ca5e47a70915c7dfcd19889dcf7ffd3551646",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/invariant-1.txt",
+    "output_sha256": "ba36d3f05c2b41a49a797727edf9bf8e5bfb89d2dc28bccf8b3ef9d242a04d0a"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:49:37.887914+00:00",
+    "elapsed_seconds": 1.664,
+    "head_at_execution": "7a8b21d6c2ddcec020e5e56b39137b3da0c8f124",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/p0-3/forge-test-1.txt",
+    "output_sha256": "0f30b28b57ac5ab5652cc9628007c9cff948f4a99ac9aae22aa2903bece99904"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:51:48.023972+00:00",
+    "elapsed_seconds": 112.562,
+    "head_at_execution": "158694d42418cb37ea988e43212fdc40aceec46a",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/forge-test-2.txt",
+    "output_sha256": "f6422a4c75bb5bf584ad319adc017cef31997366bf358d56cc37e823b826fce0"
+  },
+  {
+    "step": "build",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:55:04.227001+00:00",
+    "elapsed_seconds": 9.035,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/build-1.txt",
+    "output_sha256": "6bf05021c1de24256af35b846c372ea417999ee015204eb5d1326c5b39e6c2cd"
+  },
+  {
+    "step": "economics",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:55:13.352889+00:00",
+    "elapsed_seconds": 2.126,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/economics-1.txt",
+    "output_sha256": "2cfc8c90ef1836e9c017631f2a99d5025ed9d2f54a398fe7ba711e85ccd74269"
+  },
+  {
+    "step": "remediation",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/remediation/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:55:15.572414+00:00",
+    "elapsed_seconds": 0.965,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/remediation-1.txt",
+    "output_sha256": "d562c3a70b7260c276054fe51842ee434e5def575ed4e43c4f1513bdd671ac22"
+  },
+  {
+    "step": "invariant",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T11:55:16.615147+00:00",
+    "elapsed_seconds": 105.299,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/invariant-2.txt",
+    "output_sha256": "dd51a9721e80496294443fcd35f58b99498a37375395b53244aae10b77e4b2c9"
+  },
+  {
+    "step": "invariant-intensive",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {
+      "FOUNDRY_INVARIANT_RUNS": "256",
+      "FOUNDRY_INVARIANT_DEPTH": "128",
+      "FOUNDRY_FUZZ_SEED": "0x4f52414b4c503032"
+    },
+    "start_utc": "2026-10-30T11:57:02.003517+00:00",
+    "elapsed_seconds": 487.484,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/invariant-intensive-1.txt",
+    "output_sha256": "1f07ce293a878831c6e650342a0b78a0a1c51ff87f99277d29bad9fa1f33ad06"
+  },
+  {
+    "step": "coverage",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:05:09.582491+00:00",
+    "elapsed_seconds": 148.68,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/coverage-1.txt",
+    "output_sha256": "76bd473edd08fca0e4a6e7d47fc95595410a59934a3f46b4424a0abd6ef0e51a"
+  },
+  {
+    "step": "fmt",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:38.350465+00:00",
+    "elapsed_seconds": 0.029,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/fmt-1.txt",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "step": "sizes",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--sizes",
+      "--skip",
+      "test",
+      "--skip",
+      "script"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:38.463472+00:00",
+    "elapsed_seconds": 0.16,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/sizes-1.txt",
+    "output_sha256": "5e2b36e72d8cf0f08adb3661bb546cdb185036cb50c0a06c317d714751881498"
+  },
+  {
+    "step": "slither",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/p0-3/slither.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:38.708452+00:00",
+    "elapsed_seconds": 5.366,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-3/slither-1.txt",
+    "output_sha256": "f567862275f395bd6fea351af1725b2ec5bb050360b0679c014c86c25ea57ba8"
+  },
+  {
+    "step": "slither-factory",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/MarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-3/slither-factory.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:44.160528+00:00",
+    "elapsed_seconds": 2.499,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-3/slither-factory-1.txt",
+    "output_sha256": "cec4c4248edbeb10857d70db678e4c910e2ea4c7c2fccc994daf75f09055d539"
+  },
+  {
+    "step": "slither-config",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/ProtocolConfig.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-3/slither-config.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:46.757497+00:00",
+    "elapsed_seconds": 0.852,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-3/slither-config-1.txt",
+    "output_sha256": "42412f098345609f8c22414f518ef6ca4fde5428475fa5af59c64eedbbc79cd5"
+  },
+  {
+    "step": "slither-legacy",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/QiePredictionMarket.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none",
+      "--json",
+      "../docs/testing/p0-3/slither-legacy.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:47.691609+00:00",
+    "elapsed_seconds": 1.489,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/p0-3/slither-legacy-1.txt",
+    "output_sha256": "57d6bb52f1c04d835a22bf529ddb48b5fb15d46861af4128bfcf1ec3307f3206"
+  },
+  {
+    "step": "build-final",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:49.264431+00:00",
+    "elapsed_seconds": 8.627,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/build-final-1.txt",
+    "output_sha256": "4ba61e8f3186055fb93f723d2249ec9eff203ac17a333bb817570eb1d0c585b8"
+  },
+  {
+    "step": "artifact-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/check-orakl-artifacts.mjs",
+      "docs/testing/p0-3/artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:57.974427+00:00",
+    "elapsed_seconds": 0.323,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/artifact-check-1.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "interface-export",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-candidate-interface.mjs",
+      "--write"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:58.386203+00:00",
+    "elapsed_seconds": 0.334,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/interface-export-1.txt",
+    "output_sha256": "be353d27b353c86b402bad723b0a54d08c72c39c45d5c821ccde3ee8295b8fa1"
+  },
+  {
+    "step": "interface-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-candidate-interface.mjs",
+      "--check"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:58.801705+00:00",
+    "elapsed_seconds": 0.34,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/interface-check-1.txt",
+    "output_sha256": "2677b3f4d025ae2047fa7c740a0c9b91b5fa702668953e8dae5db7a8dd682933"
+  },
+  {
+    "step": "interface-tests",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-candidate-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:07:59.224641+00:00",
+    "elapsed_seconds": 1.455,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/interface-tests-1.txt",
+    "output_sha256": "6285281c642756c3f052c99cc33ca36882d8b95c2a01ec311c441b1a82a72a93"
+  },
+  {
+    "step": "economic-model",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/model-orakl-p0-3-economics.py",
+      "--output",
+      "docs/testing/p0-3/economic-model.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:08:00.772867+00:00",
+    "elapsed_seconds": 0.084,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/economic-model-1.txt",
+    "output_sha256": "3a09c0baba3df61e8aba97f4b5f505d5f08adcfa02c2b072e1accab8b77a2214"
+  },
+  {
+    "step": "preservation",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/check-orakl-p0-3-preservation.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:08:00.951867+00:00",
+    "elapsed_seconds": 1.088,
+    "head_at_execution": "991d7c17c4336fa8fa8bc57a03331977086f7e7f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/preservation-1.txt",
+    "output_sha256": "50fc15905ffa0e30eb0477813a134a06d04a4e881c5b8e9b42752d3db12749fc"
+  },
+  {
+    "step": "preservation",
+    "attempt": 2,
+    "argv": [
+      "python3",
+      "scripts/check-orakl-p0-3-preservation.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T12:17:39.226686+00:00",
+    "elapsed_seconds": 0.953,
+    "head_at_execution": "09c6ab8f3ab93644e388c96a692ec54a8b03bc2f",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/p0-3/preservation-2.txt",
+    "output_sha256": "2d4072d7ab0529e88fef80e4b5759bb0857b6b5ec9a2663e91da2960942ad8e0"
+  }
+]

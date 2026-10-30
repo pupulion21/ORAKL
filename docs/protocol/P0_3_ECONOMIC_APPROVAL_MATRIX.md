@@ -8,7 +8,7 @@ The completed neutral-final-INVALID candidate below is **analysis only**. K alwa
 
 | Proposal | Arbitrator final | Current proposer / challenger | Candidate proposer / challenger | Conservation / coalition controlling both |
 | --- | --- | --- | --- | --- |
-| YES | YES | P / C | P+C /0 | Both sumP+C; coalition principal gain0 |
+| YES | YES | P / C | P+C /0 | Both sum P+C; coalition principal gain0 |
 | YES | NO | P / C |0 / P+C | Same |
 | YES | INVALID | P / C | P / C | Same |
 | NO | YES | P / C |0 / P+C | Same |
@@ -62,13 +62,15 @@ If the owner requires a **hard native unresolved-exposure bound**, recommend a s
 
 The model's A10/B20 example shows unresolved30, then20 after A finalizes while participant liability is29.8 and fee0.2; after A claim participant liability20; after B cancellation unresolved0 while refundable liability remains20; B refund then participant liability0. Bonds remain a separate20 throughout. This proposed counter must not be confused with outstanding liabilities or double-decremented on claims. It is **not implemented**; exact caps and capacity-contention UX need owner approval. Under a future punitive policy, bond-at-risk/external incentives require separate exposure analysis.
 
+An unresolved-outcome cap is not a total custody/TVL cap: terminal unclaimed entitlements can accumulate while new markets accept deposits. If a separate custody-risk bound is required, the owner must explicitly approve a distinct prospective limit on accounted participant/bond/fee liabilities. Forced surplus must not fabricate liabilities or entitlements. No custody cap is silently implemented or promised here.
+
 ## Exact owner decisions and follow-up code boundaries
 
 | Decision | Recommended default / alternatives rejected or reserved | Exact work after explicit approval |
 | --- | --- | --- |
 | S1 P0.3 timing/evidence/challenge gate | Approve the minimal implemented candidate for final specification review; reject early admin override, restarted windows and full live getter dependence for objections | Final sign-off on these three production-file changes; rerun/audit exact candidate. Separate review delayΔ is unnecessary now. If desired later, snapshot0<=Δ<arbitrationPeriod and requireD+Δ<=now<A without extending A; new validation/ABI/tests required. |
 | E1 Bond distribution | Consider completed neutral-INVALID matrix, accepting good-faith incorrect forfeiture; alternative full-return or independently specified service-cost policy | Add immutable policy/version and segregated deterministic bond reward entitlements; update claimBond/events/ABI/invariants. Never retrofit old contracts or arbitrary recipients. |
-| E2 Empty-winner/empty-market semantics | Explicit binary decision rule in matrix versus neutral returns for every refundable/empty market | Encode the chosen terminal matrix; tests for all9×pool/bond cases. Current full returns remain until approval. |
+| E2 Empty-winner/empty-market semantics | Explicit binary decision rule in matrix versus neutral returns for every refundable/empty market | Encode the chosen terminal matrix; tests for all nine×pool/bond cases. Current full returns remain until approval. |
 | E3 Positive P/C, K and minima | Positive P/C for economically active production, K refundable; exact amounts unset | Approved config validation/snapshots/production manifest and affordability tests. Reject zero P/C only after approved policy; current zero-bond local tests remain valid. |
 | E4 Fee and basis | Candidate200 bps, review0–200; full-pool basis has one-sided fee effects. Reject silently adopting hard maximum1,000 as pricing | Select exact future terms/release inputs; payout code changes only if fee basis itself changes, then review all rounding/refund cases. |
 | E5 Market and correlated caps | Explicit loss budget plus honest-monitor capital/coverage; P/Tcap5–20%, C/P0.5–1 remain discussion bands, not safe values | If hard aggregate bound selected, implement the counters/release flag/cap checks above and conservation/reentrancy/terminal-order tests. No cap/fee added now. |

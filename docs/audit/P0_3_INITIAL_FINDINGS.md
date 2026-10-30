@@ -19,7 +19,7 @@ All C1–C4 are initially **OPEN**, not fixed by documentation or a passing resi
 
 ## Safety boundaries preserved
 
-`ProtocolConfig.sol:108-145,186-210`: finance starts false; independent compliance approves an epoch/build/control-bound digest; a full24-hour delay and governance unpause/activate follow. Any authorized pause/deactivate/parameter change increments activityEpoch, revokes approval and quarantines old unresolved markets. `MarketResolver.sol:87-116`: ordinary and first-interruption refunds remain permissionless/bounded; existing disputed exit is arbitrationDeadline. Never resume old epochs or use an emergency outcome override.
+`ProtocolConfig.sol:108-145,186-210`: finance starts false; independent compliance approves an epoch/build/control-bound digest; a full 24-hour delay and governance unpause/activate follow. Any authorized pause/deactivate/parameter change increments activityEpoch, revokes approval and quarantines old unresolved markets. `MarketResolver.sol:87-116`: ordinary and first-interruption refunds remain permissionless/bounded; existing disputed exit is arbitrationDeadline. Never resume old epochs or use an emergency outcome override.
 
 `MarketFactory.sol:25-60` snapshots nine terms, metadata/deadlines and arbitrator fingerprint. `PredictionPool.sol:58-111`, `ProtocolStorage.sol:90-138` isolate participant/bond/fee liabilities with owner-directed pull withdrawals, CEI/nonreentrancy/rollback. Full-return bonds and fee/refund formulas must stay unchanged. Evidence must not touch these ledgers or grant settlement rights. Forced balances remain surplus. No participant/evidence iteration in settlement.
 

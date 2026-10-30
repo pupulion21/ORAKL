@@ -1,0 +1,48 @@
+No files changed, compilation skipped
+
+Ran 1 test for test/remediation/LegacyValueFlow.t.sol:LegacyValueFlowTest
+[PASS] testLegacyClaimAndRefundOnlyUseCallerEntitlementAcrossMarkets() (gas: 878028)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.15ms (1.35ms CPU time)
+
+Ran 4 tests for test/remediation/ValueFlow.t.sol:ValueFlowTest
+[PASS] testContractOwnersCanRedirectEachBondCategoryAfterRejectedTransfer() (gas: 4588468)
+[PASS] testNoExposedTransferHelperAndNoCrossOwnerClaims() (gas: 1529146)
+[PASS] testPartialFeeWithdrawalsCannotConsumeBondsPoolsOrForcedSurplus() (gas: 2500900)
+[PASS] testZeroBondClaimDoesNotInvokeRejectingRecipient() (gas: 1821810)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 12.86ms (21.41ms CPU time)
+
+Ran 12 tests for test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[PASS] testArbitratorRotationBlocksDisputeDecisionButPreservesTimeout() (gas: 1797604)
+[PASS] testControlDriftBlocksUncontestedFinalizationAndFees() (gas: 2786443)
+[PASS] testFuzzReporterGasCannotCreateFalseDrift(uint32) (runs: 2048, μ: 37734, ~: 25146)
+[PASS] testGasStarvationCannotManufactureRoleDrift() (gas: 148365)
+[PASS] testHiddenModulesGuardsAndImplementationCanEvadeViewFingerprint_RESIDUAL() (gas: 1620282)
+[PASS] testInvalidObservableMultisigCannotReceiveFreshApproval() (gas: 169823)
+[PASS] testMaximumDeclaredOwnerSetsFitReporterBudgetWithoutFalsePositive() (gas: 10073507)
+[PASS] testOverlappingOwnersOrGuardianOwnerFailClosed() (gas: 168133)
+[PASS] testOversizedReturnRejectedWithinBoundedCallerBudget() (gas: 77697)
+[PASS] testRevertingGasBurningOversizedMalformedViewsCanBeReportedSafely() (gas: 16118660)
+[PASS] testSignerDriftBeforeActivationInvalidatesApprovalAndDelay() (gas: 805856)
+[PASS] testThresholdDowngradeBlocksDepositsAndPermissionlessReportEnablesExit() (gas: 1128328)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 682.82ms (460.18ms CPU time)
+
+Ran 4 tests for test/remediation/P0_1Regression.t.sol:P0_1RegressionTest
+[PASS] testGuardianPauseNeedsFreshIndependentApproval() (gas: 81596)
+[PASS] testInterruptedProposalHasBoundedRefundBeforeDistantMax() (gas: 1388815)
+[PASS] testMutatedArbitratorCodeCannotSettleExistingDispute() (gas: 1232804)
+[PASS] testMutatedGovernanceCodeBlocksNewDeposits() (gas: 519315)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 824.10ms (5.83ms CPU time)
+
+Ran 9 tests for test/remediation/EmergencyRecovery.t.sol:EmergencyRecoveryTest
+[PASS] testAllUnresolvedPhasesQuarantinedAndPrincipalRefundedDuringLongHalt() (gas: 5156529)
+[PASS] testAlreadyFinalizedOutcomeAndClaimsUnaffectedByAllInterventions() (gas: 1755741)
+[PASS] testCannotReplaceLiveReleaseApprovalWithoutInterruption() (gas: 45533)
+[PASS] testEmergencyDeadlineCappedAtOriginalMaxAndZeroBondCases() (gas: 1994721)
+[PASS] testFreshApprovalAndFullDelayRequiredToUnpauseAndActivate() (gas: 660391)
+[PASS] testFuzzFirstExitDoesNotMove(uint8,uint32) (runs: 2048, μ: 1471068, ~: 1404261)
+[PASS] testNoEmergencyCancellationWithoutInterruptionAndNoArbitraryDecision() (gas: 556770)
+[PASS] testRepeatInterventionRevokesPendingReviewWithoutDelayingOldExit() (gas: 1396373)
+[PASS] testResumeCannotRefuelReproposeChallengeOrFinalizeQuarantinedMarkets() (gas: 2443180)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 824.13ms (845.00ms CPU time)
+
+Ran 5 test suites in 825.22ms (2.35s CPU time): 30 tests passed, 0 failed, 0 skipped (30 total tests)

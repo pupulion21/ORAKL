@@ -1,0 +1,1 @@
+Counterfactual model PASS:144 outcome/bond/pool cases, candidate allocations, exposure/liability separation; docs/testing/p0-3/economic-model.json

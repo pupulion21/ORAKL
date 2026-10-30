@@ -1,0 +1,854 @@
+Compiling 2 files with Solc 0.8.37
+Solc 0.8.37 finished in 461.59ms
+Compiler run successful!
+
+Ran 8 tests for test/security/P0_3Regression.t.sol:P0_3RegressionTest
+[FAIL: ControlChanged()] testArbitratorDriftCannotVetoExistingChallenge() (gas: 1065033)
+Traces:
+  [1065033] P0_3RegressionTest::testArbitratorDriftCannotVetoExistingChallenge()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [29057] MutableMultisig.orakl::setOwner(0, 0x00000000000000000000000000000000000003EA)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [98572] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68643] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000003EA, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Revert] ControlChanged()
+    │   └─ ← [Revert] ControlChanged()
+    └─ ← [Revert] ControlChanged()
+
+Backtrace:
+  at ProtocolConfig.requireFinancialActivity
+  at MarketFactory.challengeResult
+  at P0_3RegressionTest.testArbitratorDriftCannotVetoExistingChallenge
+
+[FAIL: ControlChanged()] testComplianceDriftCannotVetoExistingChallenge() (gas: 1065100)
+Traces:
+  [1065100] P0_3RegressionTest::testComplianceDriftCannotVetoExistingChallenge()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [29057] MutableMultisig.orakl::setOwner(0, 0x00000000000000000000000000000000000003e9)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [98572] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68643] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000003e9, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Revert] ControlChanged()
+    │   └─ ← [Revert] ControlChanged()
+    └─ ← [Revert] ControlChanged()
+
+Backtrace:
+  at ProtocolConfig.requireFinancialActivity
+  at MarketFactory.challengeResult
+  at P0_3RegressionTest.testComplianceDriftCannotVetoExistingChallenge
+
+[FAIL: next call did not revert as expected] testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary() (gas: 1436656)
+Traces:
+  [1436656] P0_3RegressionTest::testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 1, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 1, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 2, proposedOutcome: 1, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 1800090200 [1.8e9], arbitrationDeadline: 1800093800 [1.8e9], yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [216987] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 2, owner: 0x0000000000000000000000000000000000000B0b, amount: 3000000000000000000 [3e18])
+    │   ├─ emit MarketChallenged(marketId: 0, challenger: 0x0000000000000000000000000000000000000B0b, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, arbitrationDeadline: 1800093800 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 3, proposedOutcome: 1, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000B0b, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 1800090200 [1.8e9], arbitrationDeadline: 1800093800 [1.8e9], yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a])
+    │   └─ ← [Return]
+    ├─ [0] VM::expectRevert(InvalidTime())
+    │   └─ ← [Return]
+    ├─ [151854] MarketFactory::settleDispute(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [58891] ProtocolConfig::requireArbitrator(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a], 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ emit DisputeSettled(marketId: 0, arbitrator: MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a], decision: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ emit MarketFinalized(marketId: 0, outcome: 2, refundable: true)
+    │   └─ ← [Stop]
+    └─ ← [Revert] next call did not revert as expected
+
+Backtrace:
+  at P0_3RegressionTest.testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary
+
+[FAIL: ControlChanged()] testGovernanceDriftCannotVetoExistingChallenge() (gas: 1064922)
+Traces:
+  [1064922] P0_3RegressionTest::testGovernanceDriftCannotVetoExistingChallenge()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [29057] MutableMultisig.orakl::setOwner(0, 0x00000000000000000000000000000000000003e8)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [98572] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68643] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000003e8, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Revert] ControlChanged()
+    │   └─ ← [Revert] ControlChanged()
+    └─ ← [Revert] ControlChanged()
+
+Backtrace:
+  at ProtocolConfig.requireFinancialActivity
+  at MarketFactory.challengeResult
+  at P0_3RegressionTest.testGovernanceDriftCannotVetoExistingChallenge
+
+[FAIL: PROPOSED evidence intake exists] testIndependentEvidenceAcceptedBeforeFirstChallenge() (gas: 948400)
+Traces:
+  [948400] P0_3RegressionTest::testIndependentEvidenceAcceptedBeforeFirstChallenge()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 1, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 1, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000e11)
+    │   └─ ← [Return]
+    ├─ [22027] MarketFactory::fallback(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   └─ ← [Revert] DirectTransferRejected()
+    └─ ← [Revert] PROPOSED evidence intake exists
+
+Backtrace:
+  at MarketFactory.fallback
+  at P0_3RegressionTest.testIndependentEvidenceAcceptedBeforeFirstChallenge
+
+[FAIL: captured challenge cannot close independent evidence intake] testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge() (gas: 1529833)
+Traces:
+  [1529833] P0_3RegressionTest::testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000cA201)
+    │   └─ ← [Return]
+    ├─ [200033] MarketFactory::predict{value: 10000000000000000000}(0, 0)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit PredictionPlaced(marketId: 0, participant: 0x00000000000000000000000000000000000cA201, side: 0, amount: 10000000000000000000 [1e19])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 2, proposedOutcome: 2, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 1800090200 [1.8e9], arbitrationDeadline: 1800093800 [1.8e9], yesPool: 10000000000000000000 [1e19], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [216987] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 2, owner: 0x0000000000000000000000000000000000000B0b, amount: 3000000000000000000 [3e18])
+    │   ├─ emit MarketChallenged(marketId: 0, challenger: 0x0000000000000000000000000000000000000B0b, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, arbitrationDeadline: 1800093800 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 3, proposedOutcome: 2, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000B0b, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 1800090200 [1.8e9], arbitrationDeadline: 1800093800 [1.8e9], yesPool: 10000000000000000000 [1e19], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [6761] MarketFactory::totalAccounted() [staticcall]
+    │   └─ ← [Return] 20000000000000000000 [2e19]
+    ├─ [0] VM::recordLogs()
+    │   └─ ← [Return]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000e11)
+    │   └─ ← [Return]
+    ├─ [22027] MarketFactory::fallback(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   └─ ← [Revert] DirectTransferRejected()
+    └─ ← [Revert] captured challenge cannot close independent evidence intake
+
+Backtrace:
+  at MarketFactory.fallback
+  at P0_3RegressionTest.testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge
+
+[FAIL: Error != expected error: ControlChanged() != IncorrectValue()] testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection() (gas: 1431897)
+Traces:
+  [1431897] P0_3RegressionTest::testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000cA201)
+    │   └─ ← [Return]
+    ├─ [200033] MarketFactory::predict{value: 10000000000000000000}(0, 0)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit PredictionPlaced(marketId: 0, participant: 0x00000000000000000000000000000000000cA201, side: 0, amount: 10000000000000000000 [1e19])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [148899] MarketFactory::predict{value: 1000000000000000000}(0, 1)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit PredictionPlaced(marketId: 0, participant: 0x0000000000000000000000000000000000000B0b, side: 1, amount: 1000000000000000000 [1e18])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 1000000000000000000 [1e18], distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 1000000000000000000 [1e18], distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 10000000000000000000 [1e19], noPool: 1000000000000000000 [1e18], distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 2, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 2, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [29057] MutableMultisig.orakl::setOwner(0, 0x000000000000000000000000000000000000044b)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [0] VM::expectRevert(IncorrectValue())
+    │   └─ ← [Return]
+    ├─ [98572] MarketFactory::challengeResult{value: 1}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68643] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000044b, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Revert] ControlChanged()
+    │   └─ ← [Revert] ControlChanged()
+    └─ ← [Revert] Error != expected error: ControlChanged() != IncorrectValue()
+
+Backtrace:
+  at ProtocolConfig.requireFinancialActivity
+  at MarketFactory.challengeResult
+  at P0_3RegressionTest.testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection
+
+[FAIL: InvalidMultisig()] testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges() (gas: 1024352)
+Traces:
+  [1024352] P0_3RegressionTest::testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges()
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [439092] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 1800086500 [1.8e9], 1800086600 [1.8e9], 1800097400 [1.8e9])
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [7104] ProtocolConfig::roleFingerprint(MutableMultisig.orakl: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [2072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(1800086600 [1.8e9])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 1800086500 [1.8e9], resolutionTime: 1800086600 [1.8e9], maxResolutionTime: 1800097400 [1.8e9], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x0bfb66a25a1c0601ce0f4c12cd16a6978034ab7f8b743d4c5fbfb6d79f39d476, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 0, noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [238051] MarketFactory::proposeResult{value: 2000000000000000000}(0, 1, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [68616] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [10072] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2500] MutableMultisig.orakl::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 1, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 1800090200 [1.8e9])
+    │   └─ ← [Stop]
+    ├─ [43768] MutableMultisig.orakl::setFault(1)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [43321] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [13392] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [2546] MutableMultisig.orakl::getOwners() [staticcall]
+    │   │   │   └─ ← [Revert] getter unavailable
+    │   │   └─ ← [Revert] InvalidMultisig()
+    │   └─ ← [Revert] InvalidMultisig()
+    └─ ← [Revert] InvalidMultisig()
+
+Backtrace:
+  at MutableMultisig.orakl.getOwners
+  at ProtocolConfig.requireFinancialActivity
+  at MarketFactory.challengeResult
+  at P0_3RegressionTest.testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges
+
+Suite result: FAILED. 0 passed; 8 failed; 0 skipped; finished in 10.55ms (21.73ms CPU time)
+
+Ran 1 test suite in 2.21s (10.55ms CPU time): 0 tests passed, 8 failed, 0 skipped (8 total tests)
+
+Failing tests:
+Encountered 8 failing tests in test/security/P0_3Regression.t.sol:P0_3RegressionTest
+[FAIL: ControlChanged()] testArbitratorDriftCannotVetoExistingChallenge() (gas: 1065033)
+[FAIL: ControlChanged()] testComplianceDriftCannotVetoExistingChallenge() (gas: 1065100)
+[FAIL: next call did not revert as expected] testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary() (gas: 1436656)
+[FAIL: ControlChanged()] testGovernanceDriftCannotVetoExistingChallenge() (gas: 1064922)
+[FAIL: PROPOSED evidence intake exists] testIndependentEvidenceAcceptedBeforeFirstChallenge() (gas: 948400)
+[FAIL: captured challenge cannot close independent evidence intake] testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge() (gas: 1529833)
+[FAIL: Error != expected error: ControlChanged() != IncorrectValue()] testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection() (gas: 1431897)
+[FAIL: InvalidMultisig()] testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges() (gas: 1024352)
+
+Encountered a total of 8 failing tests, 0 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 8 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger

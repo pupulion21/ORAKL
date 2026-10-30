@@ -1,0 +1,12 @@
+✔ candidate encodes the exact new native contribution selector and Side enum (6.285287ms)
+✔ indexer decodes a binary FINALIZED event with refund eligibility (4.127005ms)
+✔ candidate identity check rejects changed ABI instead of silently regenerating (714.319542ms)
+✔ candidate identity check rejects stale compiler artifacts after a source edit (341.179912ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1405.832085

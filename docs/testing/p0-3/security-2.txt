@@ -1,0 +1,98 @@
+Compiling 1 files with Solc 0.8.37
+Compiling 10 files with Solc 0.8.37
+Solc 0.8.37 finished in 25.15ms
+Solc 0.8.37 finished in 3.40s
+Compiler run successful with warnings:
+Warning (3628): This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.
+  --> test/security/ArbitrationDoubles.sol:40:1:
+   |
+40 | contract MutableProxyWalletMock {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+Note: The payable fallback function is defined here.
+  --> test/security/ArbitrationDoubles.sol:66:5:
+   |
+66 |     fallback() external payable {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (6335): "at" will be promoted to keyword in the future and will not be allowed as an identifier anymore.
+   --> test/security/P0_3Arbitration.t.sol:255:9:
+    |
+255 |         uint256 at = mode == 0
+    |         ^^^^^^^^^^
+
+Warning (6335): "at" will be promoted to keyword in the future and will not be allowed as an identifier anymore.
+   --> test/security/P0_3Evidence.t.sol:197:9:
+    |
+197 |         uint256 at = deadline - 1 + timeSeed % 3;
+    |         ^^^^^^^^^^
+
+Warning (3628): This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.
+  --> test/security/ArbitrationDoubles.sol:40:1:
+   |
+40 | contract MutableProxyWalletMock {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+Note: The payable fallback function is defined here.
+  --> test/security/ArbitrationDoubles.sol:66:5:
+   |
+66 |     fallback() external payable {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (5159): "selfdestruct" has been deprecated. Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and data associated with an account and only transfers its Ether to the beneficiary, unless executed in the same transaction in which the contract was created (see EIP-6780). Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. Future changes to the EVM might further reduce the functionality of the opcode.
+  --> test/unit/BondsAndTransfers.t.sol:42:9:
+   |
+42 |         selfdestruct(target);
+   |         ^^^^^^^^^^^^
+
+
+Ran 8 tests for test/security/P0_3Regression.t.sol:P0_3RegressionTest
+[PASS] testArbitratorDriftCannotVetoExistingChallenge() (gas: 1328973)
+[PASS] testComplianceDriftCannotVetoExistingChallenge() (gas: 1329029)
+[PASS] testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary() (gas: 1733067)
+[PASS] testGovernanceDriftCannotVetoExistingChallenge() (gas: 1328761)
+[PASS] testIndependentEvidenceAcceptedBeforeFirstChallenge() (gas: 1021973)
+[PASS] testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge() (gas: 1659790)
+[PASS] testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection() (gas: 1994045)
+[PASS] testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges() (gas: 18136685)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 2.24s (52.65ms CPU time)
+
+Ran 11 tests for test/security/P0_3Arbitration.t.sol:P0_3ArbitrationTest
+[PASS] testBiasedArbitratorCanChooseInvalidToRefundItsLosingStake_RESIDUAL() (gas: 2041176)
+[PASS] testDecisionAndEvidenceValidationStillApplyAtPermittedBoundary() (gas: 1596849)
+[PASS] testDeclaredOwnerOverlapCannotPassArbitrationAuthorityChecks() (gas: 1702171)
+[PASS] testDisjointDeclaredOwnersCanShareOneExecutionController_RESIDUAL() (gas: 2891184)
+[PASS] testEvidenceContributorsAndEmergencyRolesHaveNoArbitrationOverride() (gas: 1560167)
+[PASS] testFuzzOriginalArbitrationBoundaries(uint8,uint8) (runs: 2048, μ: 1919454, ~: 1917754)
+[PASS] testHiddenModuleCannotBypassTimingButRemainsArbitrationTrust_RESIDUAL() (gas: 1841957)
+[PASS] testMutableProxySingletonCannotBypassTimingButCanHideExecutionDrift_RESIDUAL() (gas: 2956480)
+[PASS] testNoDecisionCanResetEvidenceOrArbitrationDeadlines() (gas: 2117466)
+[PASS] testPausedDisputeMustWaitThenCanHonorOriginalArbitrationAuthority() (gas: 2280716)
+[PASS] testUnsafeGuardHasBoundedRefundExitAndNoUnauthorizedFallback() (gas: 2849600)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 2.29s (2.30s CPU time)
+
+Ran 10 tests for test/security/P0_3Admission.t.sol:P0_3AdmissionTest
+[PASS] testBoundFacadeAndChainChecksRemainRequired() (gas: 1245989)
+[PASS] testChallengeGateIsPublicPreflightNotExternalSettlementAuthority() (gas: 1058757)
+[PASS] testExplicitEmergencyActionsStillBlockNativeChallengesAndKeepEvidenceOpen() (gas: 19818650)
+[PASS] testFuzzRoleRestorationKeepsObjectionAndExactBondAccounting(uint8,uint8,bool) (runs: 2048, μ: 1449030, ~: 1517760)
+[PASS] testInactiveChallengeGateCannotAdmitValueOrUnknownMarket() (gas: 1793332)
+[PASS] testOldEpochCannotResumeChallengesAfterFreshReviewedActivation() (gas: 1769955)
+[PASS] testOtherFinancialPathsRetainFullLiveRoleChecks() (gas: 4913767)
+[PASS] testProposerAndArbitratorStillCannotTakeChallengeBondSlot() (gas: 1325093)
+[PASS] testThresholdReductionCannotCensorAnExistingObjection() (gas: 3407797)
+[PASS] testZeroChallengeBondStillRequiresExplicitActivationAndNoPause() (gas: 2693052)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 2.29s (2.33s CPU time)
+
+Ran 10 tests for test/security/P0_3Evidence.t.sol:P0_3EvidenceTest
+[PASS] testEvidenceAloneDoesNotGrantEconomicObjectionOrSettlementAuthority() (gas: 1650850)
+[PASS] testEvidenceEndBoundaryAndTerminalFinality() (gas: 1217512)
+[PASS] testEvidenceIntakeSurvivesPauseDeactivationAndRepeatedInterruptions() (gas: 3063628)
+[PASS] testEvidenceIsNonpayableAndMalformedCallsDoNotFundAnything() (gas: 1033037)
+[PASS] testEvidencePermissionlessWithImmutableMarketAndContributorProvenance() (gas: 1968301)
+[PASS] testEvidenceRejectsUnknownOpenClosedAndZeroCommitments() (gas: 1115553)
+[PASS] testForcedBalanceAndEvidenceCannotAlterPayoutDenominators() (gas: 1683838)
+[PASS] testFuzzEvidenceWindowAndDuplicateCommitments(uint8,bool,bool) (runs: 2048, μ: 1363028, ~: 1253010)
+[PASS] testNativeCallbackCannotReenterEvidenceAcrossMarkets() (gas: 3274556)
+[PASS] testSpamAndDuplicateCommitmentsCannotExhaustEvidenceSlots() (gas: 18914057)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 2.29s (2.33s CPU time)
+
+Ran 4 test suites in 2.29s (9.10s CPU time): 39 tests passed, 0 failed, 0 skipped (39 total tests)
