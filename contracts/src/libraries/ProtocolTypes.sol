@@ -46,6 +46,8 @@ library ProtocolTypes {
         uint64 resolutionTime;
         uint64 maxResolutionTime;
         Parameters terms;
+        uint64 creationActivityEpoch;
+        bytes32 arbitratorFingerprint;
         State storedState;
         Outcome proposedOutcome;
         Outcome finalOutcome;

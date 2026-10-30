@@ -14,13 +14,21 @@ evm_version = "paris"
 optimizer = false
 bytecode_hash = "none"
 
+# P0.1: isolate optimized v1 roots; preserve default legacy compiler/runtime identity.
+additional_compiler_profiles = [{ name = "orakl", optimizer = true, optimizer_runs = 50, via_ir = false }]
+compilation_restrictions = [
+    { paths = "src/MarketFactory.sol", optimizer_runs = 50 },
+    { paths = "src/ProtocolConfig.sol", optimizer_runs = 50 },
+]
+
 [profile.default.fuzz]
-runs = 256
+runs = 2048
+seed = "0x4f52414b4c503031"
 
 [profile.default.invariant]
-runs = 64
-depth = 32
-fail_on_revert = false
+runs = 128
+depth = 64
+fail_on_revert = true
 
 # Preserve the legacy artifact/source and historical test formatting byte-for-byte.
 # All new ORAKL source, tests and scripts remain covered by forge fmt --check.

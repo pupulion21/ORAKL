@@ -145,7 +145,7 @@ contract ConfigurationBoundariesTest is OraklTestBase {
         uint256 epoch = config.activityEpoch();
         vm.prank(governance);
         config.pause();
-        assertEq(config.activityEpoch(), epoch, "already paused does not add epoch");
+        assertEq(config.activityEpoch(), epoch + 1, "new intervention invalidates pending approvals");
         vm.prank(compliance);
         config.deactivateFinance();
         assertFalse(config.financialActive(), "compliance can revoke");
@@ -173,22 +173,22 @@ contract ConfigurationBoundariesTest is OraklTestBase {
 
     function testFutureArbitratorDoesNotReplaceExistingMarketAuthority() public {
         uint256 id = _create();
+        _propose(id, T.Outcome.YES);
+        _challenge(id);
         T.Parameters memory p = config.parameters();
         address next = address(new MultisigViewMock(400, 2));
         p.arbitrator = next;
         vm.prank(governance);
         config.setParameters(p);
-        _activate();
-        uint256 other = _create();
-        assertEq(factory.getMarket(id).terms.arbitrator, arbitrator, "old authority fixed");
-        assertEq(factory.getMarket(other).terms.arbitrator, next, "new authority");
-        _propose(id, T.Outcome.YES);
-        _challenge(id);
         vm.prank(next);
         vm.expectRevert(ProtocolStorage.Unauthorized.selector);
         factory.settleDispute(id, T.Outcome.YES, HASH);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.YES, HASH);
+        _activate();
+        uint256 other = _create();
+        assertEq(factory.getMarket(id).terms.arbitrator, arbitrator, "old authority fixed");
+        assertEq(factory.getMarket(other).terms.arbitrator, next, "new authority");
     }
 
     function testLocalDeploymentRehearsalLeavesFinanceDisabledAndUnbound() public {

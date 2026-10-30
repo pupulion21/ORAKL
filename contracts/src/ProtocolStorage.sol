@@ -101,6 +101,10 @@ abstract contract ProtocolStorage is ReentrancyGuard {
         emit BondReleased(id, kind, msg.sender, recipient, b.amount);
     }
 
+    function _requireCurrentMarket(T.Market storage m) internal view {
+        if (m.creationActivityEpoch != protocolConfig.activityEpoch()) revert InvalidState();
+    }
+
     function _market(uint256 id) internal view returns (T.Market storage m) {
         if (id >= marketCount) revert MarketNotFound();
         return _markets[id];

@@ -65,11 +65,21 @@ abstract contract OraklTestBase is TestBase {
     function _activate() internal {
         vm.prank(compliance);
         config.approveRelease(RELEASE);
+        vm.warp(config.activationAfter());
+        if (config.paused()) {
+            vm.prank(governance);
+            config.unpause();
+        }
         vm.prank(governance);
         config.activateFinance(RELEASE);
     }
 
     function _create() internal returns (uint256) {
+        if (close <= block.timestamp) {
+            close = uint64(block.timestamp + 100);
+            resolution = close + 100;
+            expiry = resolution + 3 hours;
+        }
         uint256 bond = config.parameters().creationBond;
         vm.prank(alice);
         return factory.createMarket{value: bond}(HASH, "ipfs://test-cid", close, resolution, expiry);
@@ -81,7 +91,7 @@ abstract contract OraklTestBase is TestBase {
     }
 
     function _propose(uint256 id, T.Outcome outcome) internal {
-        vm.warp(factory.getMarket(id).resolutionTime);
+        if (block.timestamp < factory.getMarket(id).resolutionTime) vm.warp(factory.getMarket(id).resolutionTime);
         uint256 bond = factory.getMarket(id).terms.proposalBond;
         vm.prank(alice);
         factory.proposeResult{value: bond}(id, outcome, HASH);

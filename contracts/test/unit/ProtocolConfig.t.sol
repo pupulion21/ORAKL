@@ -52,6 +52,7 @@ contract ProtocolConfigTest is OraklTestBase {
         config.activateFinance(HASH);
         vm.expectRevert(ProtocolConfig.Unauthorized.selector);
         config.activateFinance(RELEASE);
+        vm.warp(config.activationAfter());
         vm.prank(governance);
         config.activateFinance(RELEASE);
         assertTrue(config.financialActive(), "local simulated activation");
@@ -100,7 +101,9 @@ contract ProtocolConfigTest is OraklTestBase {
         vm.expectRevert(ProtocolConfig.Unauthorized.selector);
         config.setParameters(p);
         vm.prank(governance);
+        vm.expectRevert(ProtocolConfig.NotApproved.selector);
         config.unpause();
+        _activate();
         vm.prank(guardian);
         config.deactivateFinance();
         assertFalse(config.financialActive(), "deactivated");
@@ -172,8 +175,15 @@ contract ProtocolConfigTest is OraklTestBase {
     }
 
     function testRuntimeWithinEIP170() public view {
-        assertLe(address(factory).code.length, 24576, "facade deployment code size");
-        assertLe(address(config).code.length, 24576, "config deployment code size");
+        assertLe(address(factory).code.length, 19660, "facade >=20 percent runtime headroom");
+        assertLe(address(config).code.length, 19660, "config >=20 percent runtime headroom");
+        assertLe(type(MarketFactory).creationCode.length + 32, 39321, "facade initcode headroom");
+        assertLe(
+            type(ProtocolConfig).creationCode.length
+                + abi.encode(governance, compliance, guardian, config.parameters()).length,
+            39321,
+            "config initcode headroom"
+        );
     }
 
     function _bad(T.Parameters memory p) private {

@@ -169,6 +169,7 @@ contract MarketResolverTest is OraklTestBase {
         vm.prank(guardian);
         config.deactivateFinance();
         vm.prank(governance);
+        vm.expectRevert(ProtocolConfig.NotApproved.selector);
         config.unpause();
         vm.prank(bob);
         vm.expectRevert(ProtocolConfig.FinancialActivityDisabled.selector);
@@ -181,12 +182,10 @@ contract MarketResolverTest is OraklTestBase {
         _propose(id, T.Outcome.YES);
         vm.prank(guardian);
         config.pause();
-        vm.prank(governance);
-        config.unpause();
-        vm.warp(factory.getMarket(id).challengeDeadline);
+        _activate();
         vm.expectRevert(ProtocolStorage.InvalidState.selector);
         factory.finalizeResult(id);
-        vm.warp(expiry);
+        if (block.timestamp < expiry) vm.warp(expiry);
         factory.cancelExpiredMarket(id);
         vm.prank(bob);
         factory.claimRefund(id);
@@ -201,12 +200,11 @@ contract MarketResolverTest is OraklTestBase {
         _challenge(disputed);
         vm.prank(guardian);
         config.deactivateFinance();
-        _activate();
-        vm.warp(factory.getMarket(id).challengeDeadline);
-        vm.expectRevert(ProtocolStorage.InvalidState.selector);
-        factory.finalizeResult(id);
         vm.prank(arbitrator);
         factory.settleDispute(disputed, T.Outcome.YES, HASH);
+        _activate();
+        vm.expectRevert(ProtocolStorage.InvalidState.selector);
+        factory.finalizeResult(id);
         assertTrue(factory.marketState(disputed) == T.State.FINALIZED, "arbitration still available");
     }
 

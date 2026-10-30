@@ -51,6 +51,8 @@ contract MarketFactory is MarketResolver {
         m.resolutionTime = resolutionTime;
         m.maxResolutionTime = maxResolutionTime;
         m.terms = terms;
+        m.creationActivityEpoch = protocolConfig.activityEpoch();
+        m.arbitratorFingerprint = protocolConfig.roleFingerprint(terms.arbitrator);
         _depositBond(id, T.BondType.CREATION, terms.creationBond);
         emit MarketCreated(
             id, msg.sender, metadataHash, metadataURI, closeTime, resolutionTime, maxResolutionTime, terms

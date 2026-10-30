@@ -13,6 +13,7 @@ abstract contract PredictionPool is ProtocolStorage {
 
     function predict(uint256 id, T.Side side) external payable nonReentrant financialEntry {
         T.Market storage m = _market(id);
+        _requireCurrentMarket(m);
         if (marketState(id) != T.State.OPEN) revert InvalidState();
         if (msg.value < m.terms.minContribution) revert BelowMinimum();
         uint256 total = uint256(m.yesPool) + m.noPool;
@@ -56,6 +57,7 @@ abstract contract PredictionPool is ProtocolStorage {
 
     function withdrawProtocolFees(uint256 amount, address recipient) external nonReentrant {
         if (msg.sender != protocolConfig.governance()) revert Unauthorized();
+        protocolConfig.requireGovernanceAuthority(msg.sender);
         _recipient(recipient);
         if (amount == 0 || amount > feeLiability) revert NothingToClaim();
         feeLiability -= amount;

@@ -27,6 +27,7 @@ abstract contract MarketResolver is PredictionPool {
         financialEntry
     {
         T.Market storage m = _market(id);
+        _requireCurrentMarket(m);
         if (marketState(id) != T.State.CLOSED) revert InvalidState();
         if (msg.sender == m.terms.arbitrator) revert Unauthorized();
         uint256 latest = uint256(m.maxResolutionTime) - m.terms.challengePeriod - m.terms.arbitrationPeriod;
@@ -47,6 +48,7 @@ abstract contract MarketResolver is PredictionPool {
 
     function challengeResult(uint256 id, bytes32 evidenceHash) external payable nonReentrant financialEntry {
         T.Market storage m = _market(id);
+        _requireCurrentMarket(m);
         if (m.storedState != T.State.PROPOSED) revert InvalidState();
         if (block.timestamp >= m.challengeDeadline) revert InvalidTime();
         if (msg.sender == m.proposer || msg.sender == m.terms.arbitrator) revert Unauthorized();
@@ -65,6 +67,7 @@ abstract contract MarketResolver is PredictionPool {
             revert InvalidState();
         }
         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime) revert InvalidTime();
+        protocolConfig.requireUncontestedSettlement();
         _finish(id, m, m.proposedOutcome);
     }
 
@@ -72,6 +75,7 @@ abstract contract MarketResolver is PredictionPool {
         T.Market storage m = _market(id);
         if (m.storedState != T.State.DISPUTED) revert InvalidState();
         if (msg.sender != m.terms.arbitrator) revert Unauthorized();
+        protocolConfig.requireArbitrator(m.terms.arbitrator, m.arbitratorFingerprint);
         if (block.timestamp >= m.arbitrationDeadline) revert InvalidTime();
         if (decision == T.Outcome.UNRESOLVED) revert InvalidOutcome();
         if (evidenceHash == bytes32(0)) revert InvalidEvidence();
@@ -89,6 +93,26 @@ abstract contract MarketResolver is PredictionPool {
         m.storedState = T.State.CANCELLED;
         m.refundable = true;
         emit MarketCancelled(id, msg.sender, 1);
+    }
+
+    /// @notice Earliest permissionless emergency refund; zero if no interruption.
+    function interruptionRefundTime(uint256 id) public view returns (uint256) {
+        T.Market storage m = _market(id);
+        if (m.creationActivityEpoch == protocolConfig.activityEpoch() || _terminal(m)) return 0;
+        if (m.storedState == T.State.DISPUTED) return m.arbitrationDeadline;
+        uint256 graceEnd = uint256(protocolConfig.interruptedAt(m.creationActivityEpoch)) + m.terms.challengePeriod;
+        return graceEnd < m.maxResolutionTime ? graceEnd : m.maxResolutionTime;
+    }
+
+    function cancelInterruptedMarket(uint256 id) external nonReentrant {
+        T.Market storage m = _market(id);
+        uint256 readyAt = interruptionRefundTime(id);
+        if (readyAt == 0 || _terminal(m)) revert InvalidState();
+        if (block.timestamp < readyAt) revert InvalidTime();
+        m.finalOutcome = T.Outcome.INVALID;
+        m.storedState = T.State.CANCELLED;
+        m.refundable = true;
+        emit MarketCancelled(id, msg.sender, 3);
     }
 
     function _finish(uint256 id, T.Market storage m, T.Outcome outcome) private {
