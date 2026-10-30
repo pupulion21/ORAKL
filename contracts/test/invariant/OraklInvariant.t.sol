@@ -425,6 +425,12 @@ contract OraklHandler is OraklTestBase {
 contract OraklInvariantTest is OraklTestBase {
     OraklHandler internal handler;
 
+    struct QuoteTotals {
+        uint256 quotes;
+        uint256 allPayouts;
+        uint256 winners;
+    }
+
     function setUp() public {
         vm.warp(1_800_000_000);
         handler = new OraklHandler();
@@ -558,6 +564,63 @@ contract OraklInvariantTest is OraklTestBase {
             assertEq(
                 factory.interruptionRefundTime(id), handler.expectedRefundAt(id), "exit follows first interruption only"
             );
+        }
+    }
+
+    function invariant_M_ImmutableTermsAndEvidence() public view {
+        for (uint256 id; id < factory.marketCount(); ++id) {
+            T.Market memory m = factory.getMarket(id);
+            OraklHandler.GMarket memory g = handler.ghostMarket(id);
+            assertTrue(keccak256(abi.encode(m.terms)) == keccak256(abi.encode(g.terms)), "all terms snapshotted");
+            assertEq(m.closeTime, g.closeAt, "close commitment");
+            assertEq(m.resolutionTime, g.resolveAt, "observation commitment");
+            assertEq(m.maxResolutionTime, g.maxAt, "maximum commitment");
+            assertEq(m.creationActivityEpoch, g.creationEpoch, "creation epoch commitment");
+            assertTrue(m.metadataHash == HASH, "metadata commitment");
+            assertEq(m.metadataURI, "ipfs://stateful", "URI commitment");
+            if (m.proposer != address(0)) assertTrue(m.proposalEvidence == HASH, "proposal evidence retained");
+            if (m.challenger != address(0)) assertTrue(m.challengeEvidence == HASH, "challenge evidence retained");
+            if (m.decisionEvidence != bytes32(0)) assertTrue(m.decisionEvidence == HASH, "decision evidence retained");
+        }
+    }
+
+    function invariant_N_QuotedEntitlementsAndDustReconcile() public view {
+        uint256 remaining;
+        for (uint256 id; id < factory.marketCount(); ++id) {
+            OraklHandler.GMarket memory g = handler.ghostMarket(id);
+            uint256 reserve = g.yes + g.no - g.paid - g.refunded - g.fee;
+            remaining += reserve;
+            uint256 winning = g.outcome == T.Outcome.YES ? g.yes : g.no;
+            bool refund = g.outcome == T.Outcome.INVALID || winning == 0;
+            bool terminal = g.state == T.State.FINALIZED || g.state == T.State.CANCELLED;
+            QuoteTotals memory q = _quotes(id, g);
+            if (!terminal) {
+                assertEq(q.quotes, 0, "nonterminal quotes zero");
+            } else if (refund) {
+                assertEq(q.quotes, reserve, "all unclaimed principal quoted");
+            } else {
+                uint256 dust = g.yes + g.no - g.fee - q.allPayouts;
+                assertLt(dust, q.winners, "floor residual bounded by winner count");
+                assertEq(q.quotes + dust, reserve, "only floor dust exceeds quoted claims");
+            }
+        }
+        assertEq(remaining, factory.participantLiability(), "quoted claims plus dust reconcile across markets");
+    }
+
+    function _quotes(uint256 id, OraklHandler.GMarket memory g) private view returns (QuoteTotals memory q) {
+        uint256 winning = g.outcome == T.Outcome.YES ? g.yes : g.no;
+        bool terminal = g.state == T.State.FINALIZED || g.state == T.State.CANCELLED;
+        for (uint256 a; a < 8; ++a) {
+            address actor = handler.actorAt(a);
+            OraklHandler.GPosition memory p = handler.ghostPosition(id, actor);
+            (uint256 payout, uint256 refundQuote) = factory.getClaimable(id, actor);
+            if (!terminal || p.settled) assertEq(payout + refundQuote, 0, "no live or settled entitlement");
+            q.quotes += payout + refundQuote;
+            if (terminal && g.outcome != T.Outcome.INVALID && winning > 0) {
+                uint256 contribution = g.outcome == T.Outcome.YES ? p.yes : p.no;
+                if (contribution > 0) ++q.winners;
+                q.allPayouts += contribution * (g.yes + g.no - g.fee) / winning;
+            }
         }
     }
 }
