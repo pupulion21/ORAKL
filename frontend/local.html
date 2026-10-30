@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c111b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>html { color-scheme: dark; background: #0c111b; color: #edf2fa; }</style>
+    <meta
+      name="description"
+      content="ORAKL Predict — local selected-protocol fixture on an isolated Anvil chain. Not a public deployment."
+    />
+    <title>ORAKL Predict — Local</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <div style="max-width: 720px; margin: 3rem auto; padding: 1rem; font-family: system-ui, sans-serif; color: #edf2fa">
+        ORAKL Predict needs JavaScript to read the local Anvil contracts and connect to your wallet.
+      </div>
+    </noscript>
+    <script>
+      // Surface module errors in the DOM for local smoke tests.
+      window.__errs = [];
+      window.addEventListener('error', (event) => {
+        window.__errs.push(String(event.message) + ' @ ' + event.filename + ':' + event.lineno);
+        document.title = 'ERR — ORAKL Predict Local';
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        window.__errs.push('rejection: ' + String((event.reason && event.reason.stack) || event.reason));
+        document.title = 'ERR — ORAKL Predict Local';
+      });
+    </script>
+    <script type="module" src="/src/local/main.ts"></script>
+  </body>
+</html>
