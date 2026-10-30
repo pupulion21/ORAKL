@@ -30,6 +30,8 @@ recorder.STEPS.update({
     "sizes": ("contracts", ["forge", "build", "--sizes", "--skip", "test", "--skip", "script"], {}),
     "interface-export": (".", ["node", "scripts/export-orakl-candidate-interface.mjs", "--write"], {}),
     "preservation": (".", ["python3", "scripts/check-orakl-p0-3-preservation.py"], {}),
+    "economic-model": (".", ["python3", "scripts/model-orakl-p0-3-economics.py", "--output",
+                             "docs/testing/p0-3/economic-model.json"], {}),
 })
 
 if __name__ == "__main__":
