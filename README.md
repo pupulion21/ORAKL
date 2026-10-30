@@ -1,18 +1,23 @@
-# QIE Predict
+# ORAKL
 
-An English prediction market platform on **QIE EVM Testnet, chain 1983**. Stake native QIE on YES or NO. The contract holds stakes, distributes the final pool to winning positions, and enables refunds for invalid results or cancellation.
+**Predict What's Next. Own Your Conviction.**
 
-The frontend uses a dark market workspace designed with **UI UX Pro Max**: persistent topic navigation, photographic collections, readable market cards, a focused trading panel, and mobile bottom navigation. It is built with vanilla TypeScript, Vite, and viem. Fonts and images are self-hosted; asset sources and the font license are in `frontend/public/media/`. The design specification is in `design-system/qie-predict/MASTER.md`.
+ORAKL targets a native-QIE binary pari-mutuel prediction market with optimistic resolution on QIE Mainnet. The authoritative product reference is the [user-supplied PRD v1.0](docs/product/ORAKL-PRD-v1.0.md), dated October 30, 2026, status **Draft — Engineering Specification**. Its open decisions remain open until explicitly approved.
 
-## QIE Testnet deployment
+## Implementation status
 
-Live contract: [`0x43A666a9a305232E6a10fae8507d67EF64F02C98`](https://testnet.qie.digital/address/0x43A666a9a305232E6a10fae8507d67EF64F02C98). [Deployment transaction](https://testnet.qie.digital/tx/0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1).
+Two implementations coexist:
 
-The bundled public manifest activates this contract after runtime-bytecode and accounting verification. The contract was deployed with official faucet tokens using a separate local deployment wallet. Its encrypted keystore stays under the Git-ignored `secrets/qie-testnet/` directory and is excluded from the frontend. Deployment and verification evidence is in `results/deployment/`.
+- **Legacy Testnet prototype:** the functioning English Vite/TypeScript/viem frontend and `contracts/src/QiePredictionMarket.sol`, using manual trusted resolution. Its [public manifest](frontend/public/deployments/qie-testnet.json) and [actual deployment history](results/deployment/README.md) are preserved. Contract: `0x43A666a9a305232E6a10fae8507d67EF64F02C98`, chain 1983.
+- **ORAKL P0 protocol:** new modular Solidity source and local Foundry tests. Financial entry points initialize disabled; the frontend is not migrated to the new ABI. No Mainnet deployment or activation was performed. These changes do not complete the PRD's backend, indexer, metadata service or eligibility requirements.
 
-## Run locally
+[Initial repository audit](docs/audit/INITIAL_REPOSITORY_AUDIT.md) · [Architecture](docs/protocol/ARCHITECTURE.md) · [State machine](docs/protocol/STATE_MACHINE.md) · [Accounting](docs/protocol/ACCOUNTING_INVARIANTS.md) · [Bonds](docs/protocol/BOND_ECONOMICS.md) · [Resolution](docs/protocol/RESOLUTION.md) · [Threat model](docs/security/THREAT_MODEL.md) · [Frontend migration](docs/migration/FRONTEND_ABI_MIGRATION.md) · [Mainnet readiness](docs/deployment/QIE_MAINNET_READINESS.md) · [Executed tests](docs/testing/FOUNDRY_TEST_REPORT.md).
 
-Use Node.js 24 and npm.
+Earlier specifications and UI delivery reports are [archived](docs/archive/README.md). They are not current product requirements. Third-party licenses and live deployment history remain in place.
+
+## Run the existing frontend
+
+Use Node.js 24 and npm:
 
 ```sh
 npm ci
@@ -20,11 +25,7 @@ npm --prefix frontend ci
 npm run dev
 ```
 
-Open http://localhost:5176/. The default port is 5176. To use another port:
-
-```sh
-npm run dev -- --port 5177
-```
+Open http://localhost:5176/. Build output is `frontend/dist`. This UI continues to use the verified legacy QIE Testnet contract. Consumer connection information is at `#/network`; maintenance tools are at `#/developer`. Those tools do not deploy or activate ORAKL v1.
 
 ```sh
 npm run typecheck
@@ -32,44 +33,19 @@ npm test
 npm run build
 ```
 
-Static hosting output is in `frontend/dist`. Hash routing lets market links work without server rewrite rules.
+## Check contracts locally
 
-Consumer pages show a simple connection overview. JSON imports, contract deployment, compiler hashes, and diagnostics live at `#/developer`, behind deliberate navigation and collapsed sections. This is a UX separation, not an admin authorization system; contract permissions and wallet approvals still enforce writes.
-
-## Platform flows
-
-- **Markets:** search, topic categories, status filters, sorting, and market details. Topics are inferred from question keywords; they do not alter contract rules.
-- **Watchlist:** save markets or starter ideas in this browser. Saved market IDs are scoped to their contract address.
-- **Create market:** enter a question, YES/NO/INVALID criteria, source, closing time, resolution deadline, and resolver. Draft before connecting; publishing requires a wallet and a verified contract.
-- **Market details:** pool composition, rules, reference source, wallet position, payout estimates, staking, claims, refunds, and phase-appropriate resolver actions.
-- **Portfolio:** open positions and claimable funds read from the contract. A disconnected wallet shows no fabricated balances.
-- **Resolve markets:** manual settlement by the designated resolver within the contract’s resolution window.
-- **How it works:** market mechanics, payouts, refunds, and Testnet information.
-
-When no contract is active, discovery shows clearly labeled **starter ideas**. An idea fills only a draft question and dates. Criteria and sources must be supplied before publishing. Ideas have no pool, odds, volume, or staking action.
-
-YES/NO percentages in funded markets show **pool share**, not probability or share price. Payout estimates can change before resolution. The resolver’s result is final. Payouts round down according to the contract; rounding dust remains in escrow.
-
-## Maintain a QIE contract
-
-1. Open **Network status** in the footer (`#/network`; old `#/deploy` links still work). Open **Advanced options → Developer tools** only when maintaining the platform connection.
-2. For an existing contract, expand **Use a different contract** and paste its deployment manifest and select **Verify & connect**. Chain ID, runtime bytecode, and contract accounting must pass verification.
-3. For a new deployment, expand **Deploy a separate platform**, connect on QIE Testnet, and review the deployment transaction, and approve in your wallet. The application never accesses private keys or seed phrases.
-4. Download the manifest to `frontend/public/deployments/qie-testnet.json`, then rebuild and redeploy so all visitors use the same contract.
-
-Imported configurations apply to the current tab session. Contracts are never silently activated from localStorage. No fabricated deployment address is included.
-
-Default RPC endpoints are in `frontend/src/config.ts`. `VITE_QIE_RPC_URL` optionally overrides them; use a public endpoint because the value is bundled into the frontend. The app requires chain 1983.
-
-## Transactions and verification
-
-The confirmation dialog closes after the wallet returns a hash. Recover pending or unknown transactions with **Check receipt**, without resending. If a receipt succeeds but its application effect still needs verification, select **Recover result**. A successful receipt alone does not prove network finality.
-
-Contract checks require Foundry and the compiler configured in `contracts/foundry.toml`:
+Use the existing pinned Foundry/Solidity dependencies in `contracts/foundry.toml`:
 
 ```sh
 cd contracts
-forge test --offline
+forge build
+forge test -vvv
+forge test --match-path 'test/invariant/*' -vvv
+forge coverage
+forge fmt --check
 ```
 
-UI screenshots and browser evidence are in `results/promax/`. The simplified connection and developer-tools UX, accessibility checks, receipt recovery regression, and production read-only check are in `results/ux-simplification/`. Browser tests use controlled RPC and wallet fixtures; they do not prove live QIE Wallet extension compatibility or live signing. A separate read-only RPC observation is in `results/platform/network-observation.json`. The live deployment, actual receipt, runtime verification, and frontend activation are recorded separately in `results/deployment/`. These observations do not imply network finality or explorer source verification.
+Legacy tests remain part of the full suite. Formatting ignores only untouched legacy files to preserve their artifact/source identity. The new deployment rehearsal is local-chain-only and constructs unbound, unapproved, inactive contracts; it has no broadcast or activation call.
+
+Passing local checks is not an independent security audit or authorization for a real-value launch. Mainnet configuration and remaining release gates are tracked in the readiness document.

@@ -1,0 +1,251 @@
+{
+  "reason": "Superseded QIE Predict requirements/design and historical delivery evidence; ORAKL PRD v1.0 is the current product reference. Artifacts retained unchanged.",
+  "date": "2026-10-30",
+  "files": [
+    {
+      "original": "README.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/README.md",
+      "sha256": "e0f2031fea6383e00303f6429fd5e6d708c342422a2cace9e39b3bac496b2ad7"
+    },
+    {
+      "original": "design-system/qie-predict/MASTER.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/design-system/qie-predict/MASTER.md",
+      "sha256": "b73a48bab88b94e92fba3d9076a40f9a6fad59d9391534d46bf478e1d585df2c"
+    },
+    {
+      "original": "design-system/qie-predict/pages/network.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/design-system/qie-predict/pages/network.md",
+      "sha256": "65f4427884d9f2358d9b825133aa7e26a8785c3b6a9f014ab35419e587d4ed03"
+    },
+    {
+      "original": "results/platform-design-contract.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform-design-contract.md",
+      "sha256": "d631d7c2af1de68aaffa2916b6169c8bbb677c770ebb16939b852676f186b478"
+    },
+    {
+      "original": "results/qie-remediation.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/qie-remediation.md",
+      "sha256": "b9ad07ae3010f19c188f290f2ad81141f0556880e3ebb982cbbc768d3d8448ab"
+    },
+    {
+      "original": "results/platform/README.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/README.md",
+      "sha256": "a73e43d29c0e183a051bbc2345ef60f1fb91f892651bff52dd3eaa51ede4fae8"
+    },
+    {
+      "original": "results/platform/desktop.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/desktop.png",
+      "sha256": "4ba3e93f1d421feeaa1146fef219faa74e0a3ef840274b01f3411dedd13ec653"
+    },
+    {
+      "original": "results/platform/detail-connected.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/detail-connected.png",
+      "sha256": "f6267b1dce027899f7831e1282c04964abba365574af38393b6f605b2aa718cd"
+    },
+    {
+      "original": "results/platform/evidence.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/evidence.json",
+      "sha256": "324a77db31cde601144eaa80f034cd47735dd372aef4e274b38d9b1846c0ec84"
+    },
+    {
+      "original": "results/platform/mobile.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/mobile.png",
+      "sha256": "5ef91525d0e343fd88dc57ee8fb5c1c1eec9b8228e81f6d7b7e79cd41e22c80f"
+    },
+    {
+      "original": "results/platform/network-observation.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/network-observation.json",
+      "sha256": "a07351608e61336b8a6bf84fb0e0c100413b92a6d7f5ea27197b4789285403eb"
+    },
+    {
+      "original": "results/platform/partial-error.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/partial-error.png",
+      "sha256": "625052052f7b8244ff903ba4db0ac0bbd5947fee7df7822a0ff6f6962924f84b"
+    },
+    {
+      "original": "results/platform/tablet.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/platform/tablet.png",
+      "sha256": "a9bc1f43aac9aea2b508bc8da1ac2d262f1603dcf1b6b07992f24e349c72edb3"
+    },
+    {
+      "original": "results/promax/README.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/README.md",
+      "sha256": "ab43cfc4f5f6be034232029c84e8fca721a73f34b7342a221d96607b2cf4e230"
+    },
+    {
+      "original": "results/promax/accessibility.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/accessibility.json",
+      "sha256": "e7a249c4f75ce617a502c5ca56e20aae65c412463bc3921ec32a6596d6e51fa1"
+    },
+    {
+      "original": "results/promax/connected-accessibility.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/connected-accessibility.json",
+      "sha256": "9e2d46eb55dbb683e7c06bc49fe6754a25bae6cf86fcc01e5cdb0a3e0c4237e9"
+    },
+    {
+      "original": "results/promax/create.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/create.png",
+      "sha256": "cc7e831b676b77ea4e4a1a03e35f5ded11bd1e4f639191cdf7cbb860cf0b6996"
+    },
+    {
+      "original": "results/promax/deploy.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/deploy.png",
+      "sha256": "a5ed9c8dd45f49c70db235ee506e9b63e4ce9aff6643377983bc37c05fec66fd"
+    },
+    {
+      "original": "results/promax/desktop.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/desktop.png",
+      "sha256": "8335018ccdf8a180dd3667fc2e6f6fd4b6e362f42ddc204fd860942f6e8c66f2"
+    },
+    {
+      "original": "results/promax/detail-connected.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/detail-connected.png",
+      "sha256": "b0ddfaedf5a1b561c985f009694e59f02122b0e76dcd5e438c5438a364a9110b"
+    },
+    {
+      "original": "results/promax/evidence.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/evidence.json",
+      "sha256": "7e64b56824817b9f80ec58418d0c11075885b9f54d35d5e7b0806b7e27eba8c8"
+    },
+    {
+      "original": "results/promax/how-it-works.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/how-it-works.png",
+      "sha256": "799f59738e0bd0b36fe4359d1d6c5a2a86f28ae85389d54b2f34de647e0d0c46"
+    },
+    {
+      "original": "results/promax/mobile-375.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/mobile-375.png",
+      "sha256": "2004f63d3565b9914d5c1975fed1efa337ee77eb2ee4cca0ee386712eedc6d34"
+    },
+    {
+      "original": "results/promax/mobile-390.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/mobile-390.png",
+      "sha256": "473e42bfc2ed480ddac4d0329eaed62b4d56f1e09e5cec0772122335139fedff"
+    },
+    {
+      "original": "results/promax/partial-error.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/partial-error.png",
+      "sha256": "8b74144570ce3ab764d5c905dcf96475ceb17adca85583dbd2b2d31ae0c60570"
+    },
+    {
+      "original": "results/promax/portfolio.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/portfolio.png",
+      "sha256": "2361282f8171791eb235f4e847a5b6df29105297f3301915e5c734ccc7440e43"
+    },
+    {
+      "original": "results/promax/production-live.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/production-live.png",
+      "sha256": "d4a8a362674c510f860c2255f1b9cbe946c79916119e69fa5ac47857143c425f"
+    },
+    {
+      "original": "results/promax/production-smoke.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/production-smoke.json",
+      "sha256": "ecb35f64cca02bb0ce7073ee92f4be80d978b7490832baba062a3c536da7feca"
+    },
+    {
+      "original": "results/promax/receipt-regression.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/receipt-regression.json",
+      "sha256": "246896ea6f41103dcf3e3908b023c6d22259665ae9882bec52db12ae3b2ef467"
+    },
+    {
+      "original": "results/promax/tablet-1024.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/tablet-1024.png",
+      "sha256": "3dc421c2e0defc79c12b5657bb06e04b88ce47b36edbbededa1ee60ecfbb8975"
+    },
+    {
+      "original": "results/promax/tablet-768.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/tablet-768.png",
+      "sha256": "0712d0538cd8a86532055c2f2a1d65d597125b729fe31caaaa8f1c5427905f60"
+    },
+    {
+      "original": "results/promax/wallet-dialog.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/promax/wallet-dialog.png",
+      "sha256": "ee72858375ce4915303c0c51efbc14e51ed01b91a868c4d43cfe29e142d2e505"
+    },
+    {
+      "original": "results/ux-simplification/README.md",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/README.md",
+      "sha256": "2d4d62497abbe3b81160de14ba849a7f731e3c4281fcda8acfb9972d38e13e5e"
+    },
+    {
+      "original": "results/ux-simplification/browser-evidence.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/browser-evidence.json",
+      "sha256": "d44ccab4e9a313d54a091a916da80c504f95be04353cb13dc34e4128967735c7"
+    },
+    {
+      "original": "results/ux-simplification/connected-accessibility.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/connected-accessibility.json",
+      "sha256": "9e2d46eb55dbb683e7c06bc49fe6754a25bae6cf86fcc01e5cdb0a3e0c4237e9"
+    },
+    {
+      "original": "results/ux-simplification/detail-connected.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/detail-connected.png",
+      "sha256": "5cb76b4a58aa525af69af1da7464b6f68be64757c081125362f29e6f7c8abcc3"
+    },
+    {
+      "original": "results/ux-simplification/developer-desktop.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/developer-desktop.png",
+      "sha256": "e896b702c2054191aedc1f020cde129d930ca7ad1f9d01b1057e204260cd76de"
+    },
+    {
+      "original": "results/ux-simplification/developer-mobile-expanded.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/developer-mobile-expanded.png",
+      "sha256": "707ec12ca48698b912aa9feef1fb979eebc83e267e4935a4eb8af501d23fd179"
+    },
+    {
+      "original": "results/ux-simplification/network-375.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/network-375.png",
+      "sha256": "bcb695d778103db7ea9fbc349ded82132cae0e245c716e02708ec782d6f5c180"
+    },
+    {
+      "original": "results/ux-simplification/network-768.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/network-768.png",
+      "sha256": "73d70b54464d54a1355f169ac156e8a17b76a75c4c4d6c35f9ac2dd8194e0812"
+    },
+    {
+      "original": "results/ux-simplification/network-844.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/network-844.png",
+      "sha256": "238cbd8928046695cb833ae5ddbe9a6a0cbe846e7ae35fad21f960ee479f2cc3"
+    },
+    {
+      "original": "results/ux-simplification/network-desktop.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/network-desktop.png",
+      "sha256": "630fe7a2d57949a99b1a9d356d813663cf5838c8ddc1dea88d10e255167e74a5"
+    },
+    {
+      "original": "results/ux-simplification/network-live.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/network-live.png",
+      "sha256": "b6f725b55dc1c7feb7037838c084d076ee53ef287554f4facde8ba988f7838a5"
+    },
+    {
+      "original": "results/ux-simplification/production-live-check.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/production-live-check.json",
+      "sha256": "cb674fb2ac4546c01064032d138e0048175920117e9d424f1e83b3af916827f7"
+    },
+    {
+      "original": "results/ux-simplification/receipt-regression.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/receipt-regression.json",
+      "sha256": "597ad09e5e74eedc1525c2b930aae49260ada0467ddc300b057f282e085c49ed"
+    },
+    {
+      "original": "results/ux-simplification/state-invalid.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/state-invalid.png",
+      "sha256": "0e6060192fb81910cf7e932d19335200a8743fa7c7669d0684e2a377a74f7cdd"
+    },
+    {
+      "original": "results/ux-simplification/state-missing.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/state-missing.png",
+      "sha256": "ccfd6b3fa045b8da8be4647ead98c4ce2577565070b00db447f37c9cf80b2145"
+    },
+    {
+      "original": "results/ux-simplification/state-wrong-chain.png",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/ux-simplification/state-wrong-chain.png",
+      "sha256": "89021c43fe4f62548f50edb361037bd563fe1774a6705ab5384c4d8b92fe1eb0"
+    },
+    {
+      "original": "results/browser-regression.json",
+      "archived": "docs/archive/2026-10-30-pre-prd/results/browser-regression.json",
+      "sha256": "69af5667d8291cb097335e5781466c9e5a19cc4de0a6fae49a0ed091d4a1e945"
+    }
+  ]
+}

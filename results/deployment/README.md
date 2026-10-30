@@ -1,6 +1,8 @@
 # Live QIE Testnet deployment
 
-Status: **DEPLOYED_AND_RUNTIME_VERIFIED**.
+Historical legacy Testnet deployment record. This is not the ORAKL v1 contract or a Mainnet release. Product requirements are in [ORAKL PRD v1.0](../../docs/product/ORAKL-PRD-v1.0.md).
+
+Status at the recorded observation: **DEPLOYED_AND_RUNTIME_VERIFIED**.
 
 - Network: QIE Testnet, chain 1983.
 - Contract: [`0x43A666a9a305232E6a10fae8507d67EF64F02C98`](https://testnet.qie.digital/address/0x43A666a9a305232E6a10fae8507d67EF64F02C98).
@@ -25,4 +27,4 @@ The encrypted keystore and its local password file are stored under `secrets/qie
 
 The official faucet page initially hydrated after the first input attempt, so no funding request was observed. After waiting for the client input handler, the same wallet received one successful 2-QIE claim. No new wallet was rotated to evade limits.
 
-The recorded block and runtime/accounting reads are actual network observations. Explorer source verification has not been run; network finality is not inferred from the receipt or observed canonical block. Earlier `results/promax` screenshots use controlled wallet/RPC fixtures and remain separate from this live deployment evidence.
+The recorded block and runtime/accounting reads are actual network observations. Explorer source verification has not been run; network finality is not inferred from the receipt or observed canonical block. Earlier screenshots (now under `docs/archive/2026-10-30-pre-prd/results/promax/`) use controlled wallet/RPC fixtures and remain separate from this live deployment evidence.
