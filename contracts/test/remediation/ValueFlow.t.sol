@@ -35,6 +35,7 @@ contract ValueFlowTest is OraklTestBase {
                 receiver.invoke(abi.encodeCall(factory.challengeResult, (id, HASH)), 3 ether);
             }
             if (kind == 2) {
+                _waitForArbitration(id);
                 vm.prank(arbitrator);
                 factory.settleDispute(id, T.Outcome.INVALID, HASH);
             } else {

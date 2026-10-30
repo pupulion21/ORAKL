@@ -2,6 +2,9 @@
 """Allowlisted offline P0.3 verification, using the existing exact-output recorder. No signing/RPC/broadcast."""
 import importlib.util
 from pathlib import Path
+import sys
+
+sys.dont_write_bytecode = True
 
 path = Path(__file__).resolve().with_name("verify-orakl-p0-2.py")
 spec = importlib.util.spec_from_file_location("orakl_verification_recorder", path)

@@ -50,7 +50,7 @@ contract P0_2EconomicsTest is OraklTestBase {
         _assertConservation();
     }
 
-    function testFirstChallengerCapturesSlotButCannotBypassArbitrator_RESIDUAL() public {
+    function testFirstBondedSlotStaysExclusiveButIndependentEvidenceIsAccepted() public {
         uint256 id = _create();
         _predict(id, carol, T.Side.YES, 10 ether);
         _propose(id, T.Outcome.NO);
@@ -58,9 +58,12 @@ contract P0_2EconomicsTest is OraklTestBase {
         vm.prank(carol);
         vm.expectRevert(ProtocolStorage.InvalidState.selector);
         factory.challengeResult{value: 3 ether}(id, keccak256("independent corrective evidence"));
+        vm.prank(carol);
+        factory.submitEvidence(id, keccak256("independent corrective evidence"));
         vm.prank(bob);
         vm.expectRevert(ProtocolStorage.Unauthorized.selector);
         factory.settleDispute(id, T.Outcome.NO, HASH);
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.YES, keccak256("independent decision evidence"));
         _claimAllBonds(id);
@@ -68,15 +71,19 @@ contract P0_2EconomicsTest is OraklTestBase {
         _assertConservation();
     }
 
-    function testArbitratorMayResolveImmediatelyAfterCapturedChallenge_RESIDUAL() public {
+    function testCapturedChallengeCannotResolveBeforeOriginalDeadline() public {
         uint256 id = _create();
         _propose(id, T.Outcome.YES);
         _challenge(id);
         assertLt(block.timestamp, factory.getMarket(id).challengeDeadline, "original challenge window still open");
         vm.prank(arbitrator);
+        vm.expectRevert(ProtocolStorage.InvalidTime.selector);
         factory.settleDispute(id, T.Outcome.NO, HASH);
-        assertEq(uint256(factory.marketState(id)), uint256(T.State.FINALIZED), "trusted adjudication can be immediate");
-        // A minimum independent evidence-intake/appeal delay is NOT implemented or silently introduced.
+        assertEq(uint256(factory.marketState(id)), uint256(T.State.DISPUTED), "no premature finality");
+        _waitForArbitration(id);
+        vm.prank(arbitrator);
+        factory.settleDispute(id, T.Outcome.NO, HASH);
+        assertEq(uint256(factory.marketState(id)), uint256(T.State.FINALIZED), "settlement after original boundary");
         _assertConservation();
     }
 
@@ -88,6 +95,7 @@ contract P0_2EconomicsTest is OraklTestBase {
                 _predict(id, carol, T.Side.NO, 4 ether);
                 _propose(id, T.Outcome(proposed));
                 _challenge(id);
+                _waitForArbitration(id);
                 vm.prank(arbitrator);
                 factory.settleDispute(id, T.Outcome(decision), HASH);
                 uint256 outstanding = factory.bondLiability();
@@ -199,6 +207,7 @@ contract P0_2EconomicsTest is OraklTestBase {
         next.arbitrationPeriod = 30 days;
         vm.prank(governance);
         config.setParameters(next);
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.YES, decision);
         T.Market memory after_ = factory.getMarket(id);
@@ -238,6 +247,7 @@ contract P0_2EconomicsTest is OraklTestBase {
         _propose(id, T.Outcome.YES);
         _challenge(id);
         mutableArb.setFault(1);
+        _waitForArbitration(id);
         vm.prank(address(mutableArb));
         vm.expectRevert(ProtocolConfig.InvalidMultisig.selector);
         factory.settleDispute(id, T.Outcome.YES, HASH);
@@ -251,7 +261,7 @@ contract P0_2EconomicsTest is OraklTestBase {
         _assertConservation();
     }
 
-    function testRestoredRoleViewsDoNotProveUninterruptedChallengeAvailability_RESIDUAL() public {
+    function testRestoredRoleViewsCannotEraseAcceptedChallenge() public {
         MutableMultisig mutableGov = new MutableMultisig(100, 2);
         governance = address(mutableGov);
         T.Parameters memory terms = config.parameters();
@@ -267,15 +277,17 @@ contract P0_2EconomicsTest is OraklTestBase {
         uint256 originalEpoch = config.activityEpoch();
         mutableGov.setOwner(0, address(1099));
         vm.prank(bob);
-        vm.expectRevert(ProtocolConfig.ControlChanged.selector);
         factory.challengeResult{value: 3 ether}(id, HASH);
-        // No independently funded observer reports the drift before the old control views return.
-        // A reverted challenge cannot persist an interruption; real-world truth is not observable on-chain.
+        // The valid objection succeeds without an external drift reporter.
         vm.warp(factory.getMarket(id).challengeDeadline);
         mutableGov.setOwner(0, address(100));
+        vm.expectRevert(ProtocolStorage.InvalidState.selector);
         factory.finalizeResult(id);
-        assertEq(config.activityEpoch(), originalEpoch, "unreported transient drift leaves no protocol history");
-        assertEq(uint256(factory.getMarket(id).finalOutcome), uint256(T.Outcome.NO), "restored current views pass");
+        assertEq(config.activityEpoch(), originalEpoch, "objection does not require an interruption");
+        assertEq(uint256(factory.marketState(id)), uint256(T.State.DISPUTED), "restoration cannot erase objection");
+        _waitForArbitration(id);
+        vm.prank(arbitrator);
+        factory.settleDispute(id, T.Outcome.YES, HASH);
         _assertConservation();
     }
 
@@ -337,6 +349,7 @@ contract P0_2EconomicsTest is OraklTestBase {
         uint256 id = _create();
         _propose(id, T.Outcome.INVALID);
         _challenge(id);
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome(1 + outcomeSeed % 3), HASH);
         _claimAllBonds(id);

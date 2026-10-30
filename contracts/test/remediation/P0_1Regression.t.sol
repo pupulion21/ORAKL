@@ -45,6 +45,7 @@ contract P0_1RegressionTest is OraklTestBase {
         uint256 id = _create();
         _propose(id, T.Outcome.YES);
         _challenge(id);
+        _waitForArbitration(id);
         AdditionalVm(address(vm)).etch(arbitrator, hex"00");
         vm.prank(arbitrator);
         (bool ok,) = address(factory).call(abi.encodeCall(factory.settleDispute, (id, T.Outcome.YES, HASH)));

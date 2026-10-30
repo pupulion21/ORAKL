@@ -183,6 +183,7 @@ contract ConfigurationBoundariesTest is OraklTestBase {
         vm.prank(next);
         vm.expectRevert(ProtocolStorage.Unauthorized.selector);
         factory.settleDispute(id, T.Outcome.YES, HASH);
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.YES, HASH);
         _activate();

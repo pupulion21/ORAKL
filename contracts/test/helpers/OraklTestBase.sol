@@ -109,6 +109,11 @@ abstract contract OraklTestBase is TestBase {
         factory.challengeResult{value: bond}(id, HASH);
     }
 
+    function _waitForArbitration(uint256 id) internal {
+        uint256 deadline = factory.getMarket(id).challengeDeadline;
+        if (block.timestamp < deadline) vm.warp(deadline);
+    }
+
     function _assertConservation() internal view {
         assertEq(
             factory.totalAccounted(),

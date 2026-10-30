@@ -72,6 +72,7 @@ contract AccountingFuzzTest is OraklTestBase {
             vm.warp(factory.getMarket(id).arbitrationDeadline);
             factory.cancelExpiredMarket(id);
         } else {
+            _waitForArbitration(id);
             vm.prank(arbitrator);
             factory.settleDispute(id, T.Outcome(1 + decision % 3), HASH);
         }

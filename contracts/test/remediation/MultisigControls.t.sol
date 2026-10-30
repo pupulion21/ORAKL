@@ -90,6 +90,7 @@ contract MultisigControlsTest is OraklTestBase {
         _predict(id, bob, T.Side.NO, 1 ether);
         _propose(id, T.Outcome.YES);
         _challenge(id);
+        _waitForArbitration(id);
         a.setOwner(1, address(600));
         vm.prank(arbitrator);
         vm.expectRevert(ProtocolConfig.ControlChanged.selector);
@@ -163,6 +164,7 @@ contract MultisigControlsTest is OraklTestBase {
         uint256 id = _create();
         _propose(id, T.Outcome.YES);
         _challenge(id);
+        _waitForArbitration(id);
         bytes32 before = config.roleFingerprint(arbitrator);
         a.installHiddenModule(carol);
         a.setGuardMarker(address(900));

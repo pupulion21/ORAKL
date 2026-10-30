@@ -77,6 +77,7 @@ contract MarketResolverTest is OraklTestBase {
         uint256 id = _create();
         _propose(id, T.Outcome.YES);
         _challenge(id);
+        _waitForArbitration(id);
         vm.expectRevert(ProtocolStorage.InvalidState.selector);
         factory.finalizeResult(id);
         vm.prank(alice);
@@ -91,6 +92,7 @@ contract MarketResolverTest is OraklTestBase {
         vm.prank(arbitrator);
         vm.expectRevert(ProtocolStorage.InvalidEvidence.selector);
         factory.settleDispute(id, T.Outcome.NO, bytes32(0));
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.NO, HASH);
         assertTrue(factory.getMarket(id).finalOutcome == T.Outcome.NO, "independent decision");
@@ -106,6 +108,7 @@ contract MarketResolverTest is OraklTestBase {
         _predict(id, bob, T.Side.YES, 1 ether);
         _propose(id, T.Outcome.YES);
         _challenge(id);
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.INVALID, HASH);
         assertTrue(factory.marketState(id) == T.State.CANCELLED, "invalid cancellation");
@@ -200,6 +203,7 @@ contract MarketResolverTest is OraklTestBase {
         _challenge(disputed);
         vm.prank(guardian);
         config.deactivateFinance();
+        _waitForArbitration(disputed);
         vm.prank(arbitrator);
         factory.settleDispute(disputed, T.Outcome.YES, HASH);
         _activate();

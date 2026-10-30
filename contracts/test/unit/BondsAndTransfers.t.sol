@@ -55,6 +55,7 @@ contract BondsAndTransfersTest is OraklTestBase {
         _propose(id, T.Outcome.YES);
         _challenge(id);
         assertEq(factory.bondLiability(), 10 ether, "three categories");
+        _waitForArbitration(id);
         vm.prank(arbitrator);
         factory.settleDispute(id, T.Outcome.NO, HASH);
         uint256 principal = factory.participantLiability();

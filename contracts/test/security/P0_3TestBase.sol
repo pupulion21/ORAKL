@@ -75,9 +75,4 @@ abstract contract P0_3TestBase is OraklTestBase {
         assertTrue(entry.topics[3] == commitment, "integrity commitment");
         assertEq(entry.data.length, 0, "no raw evidence payload");
     }
-
-    function _waitForArbitration(uint256 id) internal {
-        uint256 deadline = factory.getMarket(id).challengeDeadline;
-        if (block.timestamp < deadline) vm.warp(deadline);
-    }
 }

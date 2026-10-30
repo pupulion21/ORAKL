@@ -21,6 +21,7 @@ contract LifecycleTest is OraklTestBase {
         _propose(disputed, T.Outcome.YES);
         _challenge(disputed);
         _propose(invalid, T.Outcome.INVALID);
+        _waitForArbitration(disputed);
         vm.prank(arbitrator);
         factory.settleDispute(disputed, T.Outcome.NO, HASH);
         vm.warp(factory.getMarket(valid).challengeDeadline);

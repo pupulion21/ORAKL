@@ -84,7 +84,8 @@ for (const name of ['MarketFactory', 'ProtocolConfig']) {
 const manifest = {
   schemaVersion: 1, status: 'CANDIDATE_NOT_FROZEN', economicPolicy: 'FULL_RETURN_NO_SLASHING',
   financialActivationAuthorized: false, deploymentAuthorized: false,
-  baselineCommit: 'd46452479b9ce08dea77dd45730276c26fa50894',
+  baselineCommit: '8d850ae42ebc77acaf2323cd50f63f08e57f1b66',
+  protocolRevision: 'P0.3', securityCandidateRequiresFinalProtocolApproval: true,
   scope: 'Current P0.2 candidate interface and unpatched artifact templates; not a deployed-address manifest',
   productionNetworkConfiguration: null, productionAddresses: null,
   enums,
@@ -93,9 +94,9 @@ const manifest = {
 };
 files.set(`${directory}/interface-manifest.json`, fileText(manifest));
 let md = '# ORAKL v1 candidate interface — generated\n\n';
-md += '**CANDIDATE_NOT_FROZEN.** Full-return bonds only. No deployment or activation authorized.\n\n';
+md += '**CANDIDATE_NOT_FROZEN, P0.3 security candidate; final protocol approval required.** Full-return bonds only. No deployment or activation authorized.\n\n';
 md += 'Generated from compiler artifacts; tuple definitions, full outputs, indexed event fields, errors, hashes and source identity are in [interface-manifest.json](interface-manifest.json).\n\n';
-md += 'Refresh offline: `node scripts/export-orakl-candidate-interface.mjs --write`; verify: `--check`. Read the [P1 integration specification](../../../docs/migration/P0_2_P1_INTERFACE.md) before using these ABIs.\n\n';
+md += 'Refresh offline: `node scripts/export-orakl-candidate-interface.mjs --write`; verify: `--check`. Read the [P0.3 interface changes](../../../docs/migration/P0_3_INTERFACE_CHANGES.md) before using these ABIs.\n\n';
 for (const [name, c] of Object.entries(contracts)) {
   md += `## ${name}\n\nABI: [${name}.abi.json](${name}.abi.json). SHA256: \`${c.abiSha256}\`.\n\n`;
   md += '| Function (canonical ABI types) | Selector | Mutability |\n| --- | --- | --- |\n';

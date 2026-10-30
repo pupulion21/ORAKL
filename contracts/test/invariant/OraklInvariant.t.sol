@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.37;
 import {OraklTestBase, T, MarketFactory, ProtocolConfig} from "../helpers/OraklTestBase.sol";
+import {MutableMultisig} from "../doubles/MutableMultisig.sol";
+import {EvidenceLogVm} from "../security/P0_3TestBase.sol";
+
+interface StatefulCodeVm {
+    function etch(address target, bytes calldata code) external;
+}
 
 /// @dev Independent ghost ledger. All activation calls here are local simulation only.
 contract RejectingStatefulActor {
@@ -26,6 +32,7 @@ contract OraklHandler is OraklTestBase {
         uint64 creationEpoch;
         uint64 challengeAt;
         uint64 arbitrationAt;
+        uint64 decidedAt;
         T.Parameters terms;
     }
 
@@ -55,9 +62,17 @@ contract OraklHandler is OraklTestBase {
     uint256 public forced;
     bool public doubleClaimSucceeded;
     bool public unauthorizedSucceeded;
+    bool public evidenceCorruption;
+    bool public roleCensorship;
+    bool public earlySettlementSucceeded;
+    uint256 public evidenceAccepted;
+    uint256 public faultedObjections;
+    uint256 public earlyDecisionAttempts;
+    address private mutableTemplate;
 
     constructor() {
         _deploy(true);
+        mutableTemplate = address(new MutableMultisig(100, 2));
         actors = [
             alice,
             bob,
@@ -79,16 +94,20 @@ contract OraklHandler is OraklTestBase {
         predict(1, 1, false, 20 ether);
         advance(0, 0);
         propose(0, 0, 0);
+        submitEvidence(0, 2, HASH);
         challenge(0, 1);
+        submitEvidence(0, 3, HASH);
         arbitrate(0, 0, false);
+        arbitrate(0, 0, true); // Explicit early-decision attempt must fail.
+        advance(1, 0);
+        propose(1, 0, 0);
+        advance(0, 1);
         arbitrate(0, 1, true);
         claim(0, 1);
         claimBond(0, 0);
         claimBond(0, 1);
         claimBond(0, 2);
         fees(true, 1 ether);
-        advance(1, 0);
-        propose(1, 0, 0);
         advance(1, 1);
         finalize(1);
         claim(1, 0);
@@ -100,6 +119,10 @@ contract OraklHandler is OraklTestBase {
         claim(2, 7);
         togglePause(false);
         create(3);
+        predict(3, 1, true, 1 ether);
+        advance(3, 0);
+        propose(3, 0, 0);
+        transientRoleChallenge(3, 1, 0, 0, false);
     }
 
     function protocol() external view returns (MarketFactory) {
@@ -221,6 +244,13 @@ contract OraklHandler is OraklTestBase {
             vm.prank(carol);
             (bool ok,) = address(factory).call(abi.encodeCall(factory.settleDispute, (id, outcome, HASH)));
             unauthorizedSucceeded = unauthorizedSucceeded || ok;
+            return;
+        }
+        if (block.timestamp < g.challengeAt) {
+            ++earlyDecisionAttempts;
+            vm.prank(g.terms.arbitrator);
+            (bool ok,) = address(factory).call(abi.encodeCall(factory.settleDispute, (id, outcome, HASH)));
+            earlySettlementSucceeded = earlySettlementSucceeded || ok;
             return;
         }
         vm.prank(g.terms.arbitrator);
@@ -383,6 +413,94 @@ contract OraklHandler is OraklTestBase {
         quarantineBypass = quarantineBypass || ok;
     }
 
+    function submitEvidence(uint256 seed, uint256 actorSeed, bytes32 commitment) public {
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        bool expected = (g.state == T.State.PROPOSED || g.state == T.State.DISPUTED) && block.timestamp < g.challengeAt
+            && commitment != bytes32(0);
+        address who = actors[actorSeed % 8];
+        bytes32 before = _evidenceFingerprint(id);
+        EvidenceLogVm logVm = EvidenceLogVm(address(vm));
+        logVm.recordLogs();
+        vm.prank(who);
+        (bool ok,) = address(factory).call(abi.encodeCall(factory.submitEvidence, (id, commitment)));
+        EvidenceLogVm.Log[] memory logs = logVm.getRecordedLogs();
+        evidenceCorruption = evidenceCorruption || ok != expected || before != _evidenceFingerprint(id);
+        if (!ok) {
+            evidenceCorruption = evidenceCorruption || logs.length != 0;
+            return;
+        }
+        ++evidenceAccepted;
+        bool valid = logs.length == 1 && logs[0].emitter == address(factory) && logs[0].topics.length == 4;
+        if (valid) {
+            valid = logs[0].topics[0] == keccak256("DisputeEvidenceSubmitted(uint256,address,bytes32)")
+                && logs[0].topics[1] == bytes32(id) && logs[0].topics[2] == bytes32(uint256(uint160(who)))
+                && logs[0].topics[3] == commitment && logs[0].data.length == 0;
+        }
+        evidenceCorruption = evidenceCorruption || !valid;
+    }
+
+    /// @dev Atomic transient faults restore original fixtures before A-N run. Persistent real-mock drift is covered by unit tests.
+    ///      Both test wallet layouts have owners at slot0 and threshold at slot1; mutable code has no immutables.
+    function transientRoleChallenge(
+        uint256 seed,
+        uint256 actorSeed,
+        uint8 roleSeed,
+        uint8 modeSeed,
+        bool restoreAfterDeadline
+    ) public {
+        if (!config.financialActive() || config.paused()) return;
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        address who = actors[actorSeed % 8];
+        if (
+            g.creationEpoch != ghostEpoch || g.state != T.State.PROPOSED || block.timestamp >= g.challengeAt
+                || who == bonds[id][1].owner
+        ) return;
+        uint256 role = roleSeed % 3;
+        address wallet = role == 0 ? governance : role == 1 ? compliance : arbitrator;
+        bytes memory originalCode = wallet.code;
+        StatefulCodeVm(address(vm)).etch(wallet, mutableTemplate.code);
+        MutableMultisig changed = MutableMultisig(wallet);
+        uint8 mode = modeSeed % 7;
+        if (mode == 0) changed.setOwner(0, address(uint160(1000 + role)));
+        else if (mode == 1) changed.setThreshold(1);
+        else changed.setFault(mode - 1);
+        submitEvidence(id, actorSeed, HASH);
+        vm.prank(who);
+        (bool accepted,) =
+            address(factory).call{value: g.terms.challengeBond}(abi.encodeCall(factory.challengeResult, (id, HASH)));
+        roleCensorship = roleCensorship || !accepted;
+        if (accepted) {
+            ++faultedObjections;
+            g.state = T.State.DISPUTED;
+            bonds[id][2] = GBond(who, g.terms.challengeBond, false);
+            deposits += g.terms.challengeBond;
+        }
+        submitEvidence(id, (actorSeed % 8 + 1) % 8, HASH);
+        if (restoreAfterDeadline && block.timestamp < g.challengeAt) vm.warp(g.challengeAt);
+        changed.setOwner(0, address(uint160(100 + 100 * role)));
+        changed.setThreshold(2);
+        changed.setFault(0);
+        StatefulCodeVm(address(vm)).etch(wallet, originalCode);
+        if (restoreAfterDeadline) {
+            (bool finalized,) = address(factory).call(abi.encodeCall(factory.finalizeResult, (id)));
+            roleCensorship = roleCensorship || finalized;
+        }
+    }
+
+    function _evidenceFingerprint(uint256 id) private view returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                factory.getMarket(id),
+                factory.participantLiability(),
+                factory.bondLiability(),
+                factory.feeLiability(),
+                factory.marketCount()
+            )
+        );
+    }
+
     function _refundAt(GMarket storage g) private view returns (uint256) {
         if (g.state == T.State.DISPUTED) return g.arbitrationAt;
         uint256 bound_ = uint256(epochBreak[g.creationEpoch]) + g.terms.challengePeriod;
@@ -396,6 +514,7 @@ contract OraklHandler is OraklTestBase {
 
     function _finish(uint256 id, T.Outcome outcome) private {
         GMarket storage g = ghost[id];
+        g.decidedAt = uint64(block.timestamp);
         g.outcome = outcome;
         g.state = outcome == T.Outcome.INVALID ? T.State.CANCELLED : T.State.FINALIZED;
         uint256 winning = outcome == T.Outcome.YES ? g.yes : g.no;
@@ -440,6 +559,20 @@ contract OraklInvariantTest is OraklTestBase {
     function targetContracts() external view returns (address[] memory targets) {
         targets = new address[](1);
         targets[0] = address(handler);
+    }
+
+    function testTransientRoleHandlerAcceptsMaximumActorSeed() public {
+        handler.create(4);
+        handler.advance(4, 0);
+        handler.propose(4, 0, 0);
+        handler.transientRoleChallenge(4, type(uint256).max, 1, 6, true);
+        assertFalse(handler.roleCensorship(), "bounded actor arithmetic in strict stateful action");
+        assertFalse(handler.evidenceCorruption(), "fixed-word evidence remains isolated during fault");
+        assertEq(
+            uint256(factory.marketState(4)),
+            uint256(T.State.DISPUTED),
+            "max seed targets valid rejecting-contract actor"
+        );
     }
 
     function invariant_A_Solvency() public view {
@@ -620,6 +753,30 @@ contract OraklInvariantTest is OraklTestBase {
                 uint256 contribution = g.outcome == T.Outcome.YES ? p.yes : p.no;
                 if (contribution > 0) ++q.winners;
                 q.allPayouts += contribution * (g.yes + g.no - g.fee) / winning;
+            }
+        }
+    }
+
+    function invariant_O_EvidenceAndChallengeIntegrity() public view {
+        assertFalse(
+            handler.evidenceCorruption(), "evidence is available, indexed and cannot alter financial/market state"
+        );
+        assertFalse(
+            handler.roleCensorship(), "transient role views cannot block funded objections or erase them on restore"
+        );
+        assertGt(handler.evidenceAccepted(), 0, "nonvacuous intake");
+        assertGt(handler.faultedObjections(), 0, "nonvacuous role-fault objection");
+    }
+
+    function invariant_P_FullDisputeWindow() public view {
+        assertFalse(handler.earlySettlementSucceeded(), "no early disputed finality");
+        assertGt(handler.earlyDecisionAttempts(), 0, "nonvacuous early decision attempts");
+        for (uint256 id; id < factory.marketCount(); ++id) {
+            OraklHandler.GMarket memory g = handler.ghostMarket(id);
+            OraklHandler.GBond memory challenger = handler.ghostBond(id, 2);
+            if (g.decidedAt != 0 && challenger.owner != address(0)) {
+                assertGe(g.decidedAt, g.challengeAt, "full original intake period before decision");
+                assertLt(g.decidedAt, g.arbitrationAt, "original bounded arbitration period");
             }
         }
     }
