@@ -1,0 +1,22 @@
+[
+  {
+    "step": "gas-security",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--gas-report",
+      "--match-path",
+      "test/security/*"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:40:24.605960+00:00",
+    "elapsed_seconds": 3.6,
+    "head_at_execution": "9f4663e964105a581ee6f8d5d3a4e53181d061eb",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/gas-security-1.txt",
+    "output_sha256": "49b7cfce23d9b99873b2562e720b89cc5dfc1190b74ff8242a8760f396ce008c"
+  }
+]

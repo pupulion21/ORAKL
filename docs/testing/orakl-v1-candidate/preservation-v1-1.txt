@@ -1,0 +1,1 @@
+PASS: 312 protected files match baseline, five protected refs unchanged, Solidity/tests/config/frontend unchanged, legacy runtime identity matches

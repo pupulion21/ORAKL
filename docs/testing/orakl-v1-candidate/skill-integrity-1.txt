@@ -1,0 +1,8 @@
+qie 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 6
+qie-smart-contracts 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 15
+qie-networks 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 16
+qie-deployment 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 25
+qie-transactions 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 14
+qie-debug 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 14
+qie-wallets 0.6.0-ecosystem.2 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b 13
+PASS []

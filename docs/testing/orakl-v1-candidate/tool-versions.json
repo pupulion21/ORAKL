@@ -1,0 +1,50 @@
+{
+  "checked_at": "2026-10-30T13:29:11.991443+00:00",
+  "tools": {
+    "forge": {
+      "argv": [
+        "forge",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "forge Version: 1.8.1\nCommit SHA: 982849d3140c01fd3b72905759581a132df7aa98\nBuild Timestamp: 2026-08-28T17:46:00.964391484Z (1787939160)\nBuild Profile: dist\n",
+      "stderr": ""
+    },
+    "solc": {
+      "argv": [
+        "solc",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "solc, the solidity compiler commandline interface\nVersion: 0.8.37+commit.f401782d.Linux.g++\n",
+      "stderr": ""
+    },
+    "node": {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "v24.20.0\n",
+      "stderr": ""
+    },
+    "npm": {
+      "argv": [
+        "npm",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "11.19.0\n",
+      "stderr": ""
+    },
+    "slither": {
+      "argv": [
+        "slither",
+        "--version"
+      ],
+      "exit": 0,
+      "stdout": "0.11.6\n",
+      "stderr": ""
+    }
+  }
+}

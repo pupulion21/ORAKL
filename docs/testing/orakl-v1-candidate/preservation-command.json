@@ -1,0 +1,19 @@
+[
+  {
+    "step": "preservation-v1",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/check-orakl-v1-preservation.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:38:00.116363+00:00",
+    "elapsed_seconds": 1.212,
+    "head_at_execution": "2194878f11a0e4da690e21a3e31651ec63be9251",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/preservation-v1-1.txt",
+    "output_sha256": "8720b6058d0708836f1b94fbb9ddf730162c214c07b515d1d6d1a990940d784c"
+  }
+]

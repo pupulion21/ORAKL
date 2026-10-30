@@ -1,0 +1,444 @@
+[
+  {
+    "step": "network-offline",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "/home/pupulion/.agents/skills/qie-networks/scripts/inspect-network.mjs",
+      "qie-mainnet"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:27:22.715327+00:00",
+    "elapsed_seconds": 0.04,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/network-offline-1.txt",
+    "output_sha256": "464b78282faea2d99202ab1cb595a178f3356874e143d52e46d2d3239e119214"
+  },
+  {
+    "step": "build",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:27:22.758938+00:00",
+    "elapsed_seconds": 9.221,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/build-1.txt",
+    "output_sha256": "5cf18239e4cf2f2018ad5fb4e8659dd404af945a425470794694319c993dadd8"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:27:31.985945+00:00",
+    "elapsed_seconds": 112.568,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/forge-test-1.txt",
+    "output_sha256": "f157a6cce279857aede5372a91275f760db4b407476db729c0939dab4fd4dac6"
+  },
+  {
+    "step": "security",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/security/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:24.557911+00:00",
+    "elapsed_seconds": 2.39,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/security-1.txt",
+    "output_sha256": "ca8c214d3973cb4890c4f70c6890c8523b00d4456e39ae97698533c107347baa"
+  },
+  {
+    "step": "economics",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:26.952283+00:00",
+    "elapsed_seconds": 2.258,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/economics-1.txt",
+    "output_sha256": "2fd480ad1aa743fe1349f482549bcb66ad29d0c3d9f417c4f945800ad60a91b1"
+  },
+  {
+    "step": "remediation",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/remediation/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:29.214631+00:00",
+    "elapsed_seconds": 0.811,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/remediation-1.txt",
+    "output_sha256": "f231813f44c5262b7365630ef9ab414197c6bb872efc2f08ec7e3640aaffe017"
+  },
+  {
+    "step": "invariant",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:30.029250+00:00",
+    "elapsed_seconds": 106.213,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/invariant-1.txt",
+    "output_sha256": "4485e559d871cead5d0a248e6a8c76e13a7f2bfd875423dbe2686fcade282f96"
+  },
+  {
+    "step": "coverage",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:31:16.246405+00:00",
+    "elapsed_seconds": 169.274,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/coverage-1.txt",
+    "output_sha256": "70a0f01deaaac54ef42ae066dc7b21a7bfb7732e161566e76ad3b9b67cac1d34"
+  },
+  {
+    "step": "fmt",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:05.524643+00:00",
+    "elapsed_seconds": 0.036,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/fmt-1.txt",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "step": "sizes",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--sizes",
+      "--skip",
+      "test",
+      "--skip",
+      "script"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:05.566628+00:00",
+    "elapsed_seconds": 0.183,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/sizes-1.txt",
+    "output_sha256": "cae963fb6755b84da8ea584ee98caae0d2539ca349fdc7e4b36b0cc011421baf"
+  },
+  {
+    "step": "slither",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/orakl-v1-candidate/slither.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:05.754131+00:00",
+    "elapsed_seconds": 5.958,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/orakl-v1-candidate/slither-1.txt",
+    "output_sha256": "f567862275f395bd6fea351af1725b2ec5bb050360b0679c014c86c25ea57ba8"
+  },
+  {
+    "step": "slither-factory",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/MarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/orakl-v1-candidate/slither-factory.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:11.717609+00:00",
+    "elapsed_seconds": 2.604,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/orakl-v1-candidate/slither-factory-1.txt",
+    "output_sha256": "cec4c4248edbeb10857d70db678e4c910e2ea4c7c2fccc994daf75f09055d539"
+  },
+  {
+    "step": "slither-config",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/ProtocolConfig.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/orakl-v1-candidate/slither-config.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:14.326100+00:00",
+    "elapsed_seconds": 0.896,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/orakl-v1-candidate/slither-config-1.txt",
+    "output_sha256": "42412f098345609f8c22414f518ef6ca4fde5428475fa5af59c64eedbbc79cd5"
+  },
+  {
+    "step": "slither-legacy",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/QiePredictionMarket.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none",
+      "--json",
+      "../docs/testing/orakl-v1-candidate/slither-legacy.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:15.226708+00:00",
+    "elapsed_seconds": 1.671,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/orakl-v1-candidate/slither-legacy-1.txt",
+    "output_sha256": "57d6bb52f1c04d835a22bf529ddb48b5fb15d46861af4128bfcf1ec3307f3206"
+  },
+  {
+    "step": "build-final",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:16.903242+00:00",
+    "elapsed_seconds": 10.442,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/build-final-1.txt",
+    "output_sha256": "2e05daf34257a4a9158d6dac9c6d4e57f7c26310f9abc2d23988b68789595b96"
+  },
+  {
+    "step": "artifact-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/check-orakl-artifacts.mjs",
+      "docs/testing/orakl-v1-candidate/artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:27.354750+00:00",
+    "elapsed_seconds": 0.457,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/artifact-check-1.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "interface-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-candidate-interface.mjs",
+      "--check"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:27.816794+00:00",
+    "elapsed_seconds": 0.358,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/interface-check-1.txt",
+    "output_sha256": "2677b3f4d025ae2047fa7c740a0c9b91b5fa702668953e8dae5db7a8dd682933"
+  },
+  {
+    "step": "interface-tests",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-candidate-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:28.180277+00:00",
+    "elapsed_seconds": 1.588,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/interface-tests-1.txt",
+    "output_sha256": "6a73770390d8493b57b5ce46b6b2a06c256402e470d64ee29e6c503a85c4199b"
+  },
+  {
+    "step": "frontend-test",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "test"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:29.772102+00:00",
+    "elapsed_seconds": 1.051,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/frontend-test-1.txt",
+    "output_sha256": "349a48172a5334013c4eeb10858c0d6fd7995420f81c71d58e931cbcea7e308e"
+  },
+  {
+    "step": "frontend-typecheck",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:30.828307+00:00",
+    "elapsed_seconds": 5.933,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/frontend-typecheck-1.txt",
+    "output_sha256": "dca6ea3c0d1d0418d3886657c170d00af9bc1df48a5e2071e5267076d09481c8"
+  },
+  {
+    "step": "frontend-build",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:34:36.765849+00:00",
+    "elapsed_seconds": 2.813,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/frontend-build-1.txt",
+    "output_sha256": "4d22ef2bc41511ff71cc7075698b2b85cabd6b9190559c27f907be39fc1375f3"
+  },
+  {
+    "step": "invariant-intensive",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {
+      "FOUNDRY_INVARIANT_RUNS": "256",
+      "FOUNDRY_INVARIANT_DEPTH": "128",
+      "FOUNDRY_FUZZ_SEED": "0x4f52414b4c503032"
+    },
+    "start_utc": "2026-10-30T13:34:39.582702+00:00",
+    "elapsed_seconds": 520.772,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/invariant-intensive-1.txt",
+    "output_sha256": "f9a57c086ab107d9ca084e69be024619a5908ec3fe3b7e7f9c1b464eb66dc25f"
+  }
+]

@@ -1,0 +1,25 @@
+
+Detector: timestamp
+ProtocolConfig._requireApproved(bytes32) (src/ProtocolConfig.sol#195-200) uses timestamp for comparisons
+	Dangerous comparisons:
+	- release == bytes32(0) || approvedRelease != release || block.timestamp < activationAfter || block.chainid != deploymentChainId || approvedDigest != releaseDigest(release) (src/ProtocolConfig.sol#197-198)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: assembly
+ProtocolConfig._boundedWalletRead(address,bytes4,uint256,uint256) (src/ProtocolConfig.sol#262-277) uses assembly
+	- INLINE ASM (src/ProtocolConfig.sol#271-274)
+	- INLINE ASM (src/ProtocolConfig.sol#276)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#assembly-usage
+
+Detector: low-level-calls
+Low level call in ProtocolConfig.bindFactory(address) (src/ProtocolConfig.sol#68-75):
+	- (ok,data) = facade.staticcall(abi.encodeWithSignature(protocolConfig())) (src/ProtocolConfig.sol#71)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: var-read-using-this
+The function ProtocolConfig.reportRoleDrift() (src/ProtocolConfig.sol#184-193) reads observed = this.currentRoleState{gas: ROLE_CHECK_GAS}() (src/ProtocolConfig.sol#188-190) with `this` which adds an extra STATICCALL.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-variable-read-in-external-context
+src/ProtocolConfig.sol analyzed (4 contracts with 102 detectors), 4 result(s) found
+'forge config --json' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 --version' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/ src/ProtocolConfig.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize-runs 200 --evm-version paris --allow-paths .,/home/pupulion/prediction-market-mvp/contracts/src' running

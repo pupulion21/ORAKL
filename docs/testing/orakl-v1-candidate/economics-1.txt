@@ -1,0 +1,31 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/economics/P0_2GasBounds.t.sol:P0_2GasBoundsTest
+[PASS] testClaimGasDoesNotGrowWithUnrelatedMarketCount() (gas: 20572244)
+[PASS] testMaximumDeclaredOwnerSetsAndMetadataFitLocalAdmissionBudget() (gas: 13688824)
+Logs:
+  local max-owners max-metadata create gas: 1941894
+  local max-owners predict gas: 1398639
+
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 2.12s (166.62ms CPU time)
+
+Ran 16 tests for test/economics/P0_2Economics.t.sol:P0_2EconomicsTest
+[PASS] testAllTermsAndEvidenceRemainCommittedThroughEmergencyArbitration() (gas: 1580882)
+[PASS] testCapturedChallengeCannotResolveBeforeOriginalDeadline() (gas: 1573627)
+[PASS] testFirstBondedSlotStaysExclusiveButIndependentEvidenceIsAccepted() (gas: 1968372)
+[PASS] testFullReturnMatrixAllProposalAndArbitrationOutcomes() (gas: 18207597)
+[PASS] testFuzzSameBlockPauseAndCancellationOrder(uint8,bool) (runs: 2048, μ: 1434596, ~: 1545283)
+[PASS] testFuzzZeroAndPositiveBondMatrix(uint8,uint8,uint8) (runs: 2048, μ: 2129797, ~: 2142499)
+[PASS] testNonzeroCommitmentDoesNotProveEvidenceAvailability_RESIDUAL() (gas: 758754)
+[PASS] testOneSidedValidResultPaysFeeWhileInvalidRefundsAll_RESIDUAL() (gas: 2593958)
+[PASS] testPerMarketCapDoesNotEnforceAggregateExposure_RESIDUAL() (gas: 3100235)
+[PASS] testRejectedBondTransferThenCrossMarketReentrancyRemainsIsolated() (gas: 3554068)
+[PASS] testRepeatedEmptyCreationRecyclesBondWithoutPermanentSpamCost_RESIDUAL() (gas: 3806140)
+[PASS] testRestoredRoleViewsCannotEraseAcceptedChallenge() (gas: 2943162)
+[PASS] testRevertingArbitratorCannotBlockParticipantOrBondRefundAfterTimeout() (gas: 3099637)
+[PASS] testSmallestUnitRoundingReservesDustAcrossMixedMarkets() (gas: 3105672)
+[PASS] testTinyFalseWinningPositionCanReceiveAlmostEntirePool_RESIDUAL() (gas: 1713246)
+[PASS] testUint128CapBoundaryAndMultipleBothSideContributions() (gas: 1936713)
+Suite result: ok. 16 passed; 0 failed; 0 skipped; finished in 2.12s (3.77s CPU time)
+
+Ran 2 test suites in 2.12s (4.23s CPU time): 18 tests passed, 0 failed, 0 skipped (18 total tests)

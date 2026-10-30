@@ -1,0 +1,73 @@
+No files changed, compilation skipped
+
+Ran 2 tests for test/invariant/OraklInvariant.t.sol:OraklInvariantTest
+[PASS]
+OraklInvariantTest invariants:
+[PASS] invariant_A_Solvency
+[PASS] invariant_B_NoDoubleClaim
+[PASS] invariant_C_PayoutBound
+[PASS] invariant_D_RefundBound
+[PASS] invariant_E_FeeIsolation
+[PASS] invariant_F_BondIsolation
+[PASS] invariant_G_TerminalConsistency
+[PASS] invariant_H_Finality
+[PASS] invariant_I_UserAccounting
+[PASS] invariant_J_Conservation
+[PASS] invariant_K_ReleaseAndEpochAuthorization
+[PASS] invariant_L_ImmutableEmergencyExit
+[PASS] invariant_M_ImmutableTermsAndEvidence
+[PASS] invariant_N_QuotedEntitlementsAndDustReconcile
+[PASS] invariant_O_EvidenceAndChallengeIntegrity
+[PASS] invariant_P_FullDisputeWindow
+ OraklInvariantTest invariants (runs: 256, calls: 32768, reverts: 0)
+
+╭--------------+------------------------+-------+---------+----------╮
+| Contract     | Selector               | Calls | Reverts | Discards |
++====================================================================+
+| OraklHandler | advance                | 1552  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | arbitrate              | 1540  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | cancel                 | 1529  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | challenge              | 1538  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claim                  | 1517  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claimBond              | 1619  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | create                 | 1584  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | emergencyCancel        | 1554  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | fees                   | 1603  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | finalize               | 1575  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | forceNative            | 1545  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | futureTerms            | 1575  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | predict                | 1545  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | propose                | 1568  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | rejectingReceiverClaim | 1546  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | submitEvidence         | 1583  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | togglePause            | 1579  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | transientRoleChallenge | 1554  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryEarlyCancellation   | 1573  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryQuarantinedWrites   | 1561  | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | unauthorizedResume     | 1528  | 0       | 0        |
+╰--------------+------------------------+-------+---------+----------╯
+
+[PASS] testTransientRoleHandlerAcceptsMaximumActorSeed() (gas: 1391150)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 520.61s (520.59s CPU time)
+
+Ran 1 test suite in 520.62s (520.61s CPU time): 2 tests passed, 0 failed, 0 skipped (2 total tests)

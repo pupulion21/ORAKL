@@ -1,0 +1,36 @@
+[
+  {
+    "step": "evidence-vectors",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/check-orakl-evidence-v1-vectors.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:32.674238+00:00",
+    "elapsed_seconds": 0.105,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/evidence-vectors-1.txt",
+    "output_sha256": "f4d5d0fa843e0cdec6189f384af58fac43b874d05bf5cd306d4d1b90bd37c200"
+  },
+  {
+    "step": "economic-model-v1",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/model-orakl-v1-economics.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T13:29:32.783637+00:00",
+    "elapsed_seconds": 0.048,
+    "head_at_execution": "9e256c1451d666889f9f248edee3e2e2d61f6d48",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/orakl-v1-candidate/economic-model-v1-1.txt",
+    "output_sha256": "6d0661616854e143aa9b5149c1f75ddfd25a1bb033692d5e92ea000c9e5e6b1c"
+  }
+]

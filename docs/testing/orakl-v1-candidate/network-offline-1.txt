@@ -1,0 +1,73 @@
+{
+  "network_id": "qie-mainnet",
+  "claims": [
+    {
+      "claim_id": "qie-mainnet.chain_id",
+      "predicate": "chain_id",
+      "value": 1990,
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "claim_id": "qie-mainnet.explorer_url",
+      "predicate": "explorer_url",
+      "value": "https://mainnet.qie.digital/",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "claim_id": "qie-mainnet.native_symbol",
+      "predicate": "native_symbol",
+      "value": "QIEV3",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "claim_id": "qie-mainnet.network_name",
+      "predicate": "network_name",
+      "value": "QIEMainnet",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "claim_id": "qie-mainnet.rpc_url",
+      "predicate": "rpc_url",
+      "value": "https://rpc1mainnet.qie.digital/",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion.",
+      "source_ids": [
+        "S03"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "S03",
+      "url": "https://docs.qie.digital/getting-started-with-qie-blockchain/4.-access-mainnet-or-testnet"
+    },
+    {
+      "source_id": "S10",
+      "url": "https://docs.qie.digital/qie-wallet-integration-guide-for-websites.md"
+    },
+    {
+      "source_id": "S15",
+      "url": "https://raw.githubusercontent.com/qieadmin/chain-registry/master/qie/chain.json"
+    }
+  ],
+  "live_check": {
+    "outcome": "NOT_RUN",
+    "reason": "Offline inspection only; no RPC or provider compatibility test was executed."
+  }
+}

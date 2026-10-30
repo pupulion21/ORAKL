@@ -1,0 +1,902 @@
+{
+  "challenger_ev_assumptions": "Binary reward P on reversal; loss C on upheld decision. INVALID, timeout, external incentives, time value, opportunity cost and gas excluded.",
+  "challenger_ev_scenarios": [
+    {
+      "C": 5,
+      "P": 5,
+      "gross_expected_return_excluding_gas_and_cost": "-5",
+      "q_assumed": "0"
+    },
+    {
+      "C": 10,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "-10",
+      "q_assumed": "0"
+    },
+    {
+      "C": 20,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "-20",
+      "q_assumed": "0"
+    },
+    {
+      "C": 5,
+      "P": 5,
+      "gross_expected_return_excluding_gas_and_cost": "-49/10",
+      "q_assumed": "1/100"
+    },
+    {
+      "C": 10,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "-97/10",
+      "q_assumed": "1/100"
+    },
+    {
+      "C": 20,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "-98/5",
+      "q_assumed": "1/100"
+    },
+    {
+      "C": 5,
+      "P": 5,
+      "gross_expected_return_excluding_gas_and_cost": "0",
+      "q_assumed": "1/2"
+    },
+    {
+      "C": 10,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "5",
+      "q_assumed": "1/2"
+    },
+    {
+      "C": 20,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "0",
+      "q_assumed": "1/2"
+    },
+    {
+      "C": 5,
+      "P": 5,
+      "gross_expected_return_excluding_gas_and_cost": "5",
+      "q_assumed": "1"
+    },
+    {
+      "C": 10,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "20",
+      "q_assumed": "1"
+    },
+    {
+      "C": 20,
+      "P": 20,
+      "gross_expected_return_excluding_gas_and_cost": "20",
+      "q_assumed": "1"
+    }
+  ],
+  "limitation": "A coalition can increase total stake to dilute an honest challenger; arbitrary external incentives and biased arbitration are unbounded by this model.",
+  "matrix": [
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 1
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 103
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 1
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 2
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 104
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 101
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 102
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "YES",
+      "proposer": 204
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 1,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 2,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 104,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 101,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 102,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 204,
+      "decision": "NO",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 1
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 1
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 1
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 101
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 101
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "YES",
+      "proposer": 101
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 1,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 2,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 104,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 101,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 102,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 204,
+      "decision": "YES",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 1
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 103
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 1
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 2
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 104
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 101
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 102
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "NO",
+      "proposer": 204
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 1
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 1
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 1
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 101
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 101
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "NO",
+      "proposer": 101
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 1,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 2,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 104,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 101,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 102,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 204,
+      "decision": "YES",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 1,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 2,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 104,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 101,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 102,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 204,
+      "decision": "NO",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 0,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 1,
+      "P": 0,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 103,
+      "P": 0,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 0
+    },
+    {
+      "C": 0,
+      "P": 1,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 1
+    },
+    {
+      "C": 1,
+      "P": 1,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 1
+    },
+    {
+      "C": 103,
+      "P": 1,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 1
+    },
+    {
+      "C": 0,
+      "P": 101,
+      "challenger": 0,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 101
+    },
+    {
+      "C": 1,
+      "P": 101,
+      "challenger": 1,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 101
+    },
+    {
+      "C": 103,
+      "P": 101,
+      "challenger": 103,
+      "decision": "INVALID",
+      "proposal": "INVALID",
+      "proposer": 101
+    }
+  ],
+  "matrix_checks": 81,
+  "proportional_split_checks": 24,
+  "proportional_splitting": [
+    {
+      "P": 0,
+      "coalition_stake": 1,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 0,
+      "coalition_stake": 9,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 0,
+      "coalition_stake": 100,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 0,
+      "coalition_stake": 1,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 0,
+      "coalition_stake": 9,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 0,
+      "coalition_stake": 100,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 1,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 9,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 100,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 1,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 9,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 1,
+      "coalition_stake": 100,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 7,
+      "coalition_stake": 1,
+      "honest_stake": 1,
+      "split_reward": 3,
+      "unsplit_reward": 3
+    },
+    {
+      "P": 7,
+      "coalition_stake": 9,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 6
+    },
+    {
+      "P": 7,
+      "coalition_stake": 100,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 6
+    },
+    {
+      "P": 7,
+      "coalition_stake": 1,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 0
+    },
+    {
+      "P": 7,
+      "coalition_stake": 9,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 3
+    },
+    {
+      "P": 7,
+      "coalition_stake": 100,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 6
+    },
+    {
+      "P": 100,
+      "coalition_stake": 1,
+      "honest_stake": 1,
+      "split_reward": 50,
+      "unsplit_reward": 50
+    },
+    {
+      "P": 100,
+      "coalition_stake": 9,
+      "honest_stake": 1,
+      "split_reward": 90,
+      "unsplit_reward": 90
+    },
+    {
+      "P": 100,
+      "coalition_stake": 100,
+      "honest_stake": 1,
+      "split_reward": 0,
+      "unsplit_reward": 99
+    },
+    {
+      "P": 100,
+      "coalition_stake": 1,
+      "honest_stake": 7,
+      "split_reward": 12,
+      "unsplit_reward": 12
+    },
+    {
+      "P": 100,
+      "coalition_stake": 9,
+      "honest_stake": 7,
+      "split_reward": 54,
+      "unsplit_reward": 56
+    },
+    {
+      "P": 100,
+      "coalition_stake": 100,
+      "honest_stake": 7,
+      "split_reward": 0,
+      "unsplit_reward": 93
+    }
+  ],
+  "status": "COUNTERFACTUAL_UNAPPROVED_NOT_ECONOMIC_SECURITY_PROOF",
+  "unit": "hypothetical indivisible native units; no Mainnet denomination claim"
+}
