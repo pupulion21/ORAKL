@@ -105,7 +105,7 @@ for (const [name, c] of Object.entries(contracts)) {
   for (const e of c.events) md += `| \`${e.signature}\` | \`${e.topic0}\` | ${e.inputs.filter(p => p.indexed).map(p => p.name).join(', ') || 'None'} |\n`;
   md += '\n';
 }
-files.set(`${directory}/INTERFACE.md`, md);
+files.set(`${directory}/INTERFACE.md`, md.trimEnd() + "\n");
 if (!check) mkdirSync(directory, { recursive: true });
 for (const [path, expected] of files) {
   if (check) expect(readFileSync(path, 'utf8') === expected, `Candidate interface drift: ${path}`);

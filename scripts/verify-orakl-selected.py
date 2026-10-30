@@ -22,4 +22,6 @@ r.STEPS['tool-identity']=('.', ['python3','scripts/selected-tool-identity.py'],{
 r.STEPS['interface-tests-v2']=r.STEPS['interface-tests']
 r.STEPS['gas-selected']=('contracts',['forge','test','--gas-report','--match-path','test/selected/*'],{})
 r.STEPS['rounding-model']=('.', ['python3','scripts/model-selected-rounding.py'],{})
+r.STEPS['selected-export-final']=r.STEPS['interface-export']
+r.STEPS['selected-interface-final']=r.STEPS['interface-check']
 if __name__=='__main__':r.main()

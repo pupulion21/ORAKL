@@ -130,4 +130,3 @@ ABI: [ProtocolConfig.abi.json](ProtocolConfig.abi.json). SHA256: `ca814a020dbb43
 | `PauseChanged(bool,address)` | `0x007399144da1af487abfd29504c088166edf0ad343b64eade59600fa1ffd873f` | caller |
 | `ReleaseApproved(bytes32,bytes32,uint64)` | `0xd91027677fc5ef9c1e222add1805d64b380743b932b090a1c33b4f46042e451c` | release, digest |
 | `RoleDriftReported(address)` | `0xb3c1f589096dc42dc84aba292fae0e34a3365dd70f3fd9a0a9495b819b7f67e1` | reporter |
-
