@@ -1,5 +1,7 @@
 # P0.1 compiler and contract size report
 
+Latest P0.3 measurement: Factory runtime 15,860 / initcode with args 16,179 bytes; Config 8,508 / 11,804; legacy 13,906 / 13,945 unchanged. [Raw P0.3 profile/size check](../testing/p0-3/artifact-check.json) and [verification](../testing/P0_3_VERIFICATION_REPORT.md). Pinned compiler/Paris/runs50/non-IR profiles are unchanged; both v1 roots retain >=20% standard EVM engineering margin. The P0.1/P0.2 measurements below are historical and do not certify QIE-specific limits.
+
 P0.2 preserves production Solidity/compiler settings byte-for-byte. The [P0.2 artifact identity check](../testing/p0-2/artifact-check.json) and [verification report](../testing/P0_2_VERIFICATION_REPORT.md) revalidate these sizes; no new optimizer choice or modularization is introduced.
 
 Code: `fc5b8be`. Offline compilation only; no deployment or activation.

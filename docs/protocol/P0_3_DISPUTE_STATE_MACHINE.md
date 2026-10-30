@@ -2,6 +2,8 @@
 
 The P0.3 task explicitly authorizes implementing reviewable timing/evidence/admission corrections. **Final protocol approval/freeze is still missing.** No bond/slashing/fee/payout policy is approved or changed. Initial design is recorded before regression tests and production edits; final implementation/evidence is linked in the verification report.
 
+Implemented source: [Resolver submitEvidence/challenge/finality](../../contracts/src/MarketResolver.sol), lines27/61/77/87; [Config admission](../../contracts/src/ProtocolConfig.sol), lines146/152/156; [config interface](../../contracts/src/interfaces/IProtocolConfig.sol). Production correction7f9ca5e follows failing regressions3518891.
+
 ## Minimal changes selected
 
 1. Add nonpayable `submitEvidence(uint256 marketId,bytes32 evidenceHash)` to the facade through MarketResolver. Accept nonzero commitments in PROPOSED **and** DISPUTED, only `now < challengeDeadline`. Any address may submit; no reward, bond, settlement authority or financial-state change. Only a formal bonded challenge changes PROPOSED→DISPUTED. Evidence alone does not stop optimistic finalization.

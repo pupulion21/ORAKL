@@ -2,6 +2,8 @@
 
 Status: authorized engineering safety remediation; unaudited, financially inactive. Punitive economics are not changed.
 
+P0.3 update: [challenge integrity](P0_3_CHALLENGE_INTEGRITY.md) and [role-drift gate review](P0_3_ROLE_DRIFT_REVIEW.md) add getter-independent protective objections while explicitly active, event-only evidence through the original window even during pause/quarantine, and the lower arbitration boundary challengeDeadline. Original exit timestamps, epoch quarantine, independent 24-hour review and financial accounting below remain unchanged. These safety changes are a candidate requiring final protocol approval.
+
 ## Market recovery
 
 Every market snapshots `creationActivityEpoch`. Each interruption records `interruptedAt[oldEpoch]` before advancing activityEpoch. That original record never changes. All old-epoch unresolved markets are quarantined: predict/propose/challenge and uncontested finalization reject even after the platform is reapproved. There is no partial challenge-window restart and no administrative resettlement.
@@ -15,7 +17,7 @@ emergencyExpiry = DISPUTED ? arbitrationDeadline
 
 Anyone can execute `cancelInterruptedMarket` at emergencyExpiry; `cancelExpiredMarket` retains the ordinary deadline. Result is CANCELLED/INVALID, fee zero, full participant principal and unchanged bond-return policy. In PROPOSED state, emergencyExpiry cannot precede the originally promised challengeDeadline: interruption occurs after proposal and adds a full challengePeriod; maxResolutionTime already reserves the original windows. No admin chooses a result or receiver. OPEN cancellation is an explicit emergency-only extension, not ordinary early withdrawal or selling positions. Exact times are exposed by `interruptionRefundTime` and indexed events.
 
-Existing disputes may be adjudicated before their original arbitrationDeadline by the unchanged, independently checked snapshotted arbitrator. Emergency actors cannot cut that period short. If declared control changes or adjudication is unavailable, ordinary timeout refunds remain permissionless. Finalized/cancelled markets are never changed by later emergencies. Participant claims/refunds and bond withdrawals do not query external multisig views, so malicious/reverting wallet getters cannot block them.
+Existing disputes may be adjudicated at/after their original challengeDeadline and before their original arbitrationDeadline by the unchanged, independently checked snapshotted arbitrator. Emergency actors cannot cut that period short. If declared control changes or adjudication is unavailable, ordinary timeout refunds remain permissionless. Finalized/cancelled markets are never changed by later emergencies. Participant claims/refunds and bond withdrawals do not query external multisig views, so malicious/reverting wallet getters cannot block them.
 
 A short pause sacrifices unresolved markets to principal refunds; resumption supports newly created markets only. This prevents challenge censorship followed by payout finalization but retains privileged abort/denial risk. Repeated pauses, deactivations, configuration changes and later epochs cannot move a market's first-interruption deadline. No script signs, broadcasts or activates contracts.
 
@@ -27,7 +29,7 @@ Review can begin only while finance is disabled; an active release approval cann
 
 ## Observable role drift
 
-Owners, thresholds and outer runtime identities are pinned on review and rechecked for financial admission and uncontested finalization. Each market also pins its arbitrator fingerprint. Changed/reverting/malformed observable control fails closed. A permissionless drift reporter can record an interruption when a currently active release no longer matches; bounded calls and explicit sufficient-gas checks must prevent a reporter manufacturing a failure through gas starvation. This cannot detect a malicious wallet that lies consistently or a module/guard/implementation change not reflected in the checked views.
+Owners, thresholds and outer runtime identities are pinned on review and rechecked for new-risk financial admission and uncontested finalization. P0.3 protective challenges deliberately omit live wallet queries while retaining explicit activation/pause/binding/chain/epoch/window/exact-bond controls; nonpayable evidence intake also remains available through the original window. See the role-drift review above for the narrow exception. Each market also pins its arbitrator fingerprint. Changed/reverting/malformed observable control fails closed. A permissionless drift reporter can record an interruption when a currently active release no longer matches; bounded calls and explicit sufficient-gas checks must prevent a reporter manufacturing a failure through gas starvation. This cannot detect a malicious wallet that lies consistently or a module/guard/implementation change not reflected in the checked views.
 
 Operationally, verify real Safe-compatible implementations, singleton/storage layout, owners, threshold, modules, guards, fallback handlers and cross-role signer/control independence before approval and continuously afterward. Do not advertise interface checks as proof of multisig execution security. Unknown wallet code/configuration remains a production blocker.
 

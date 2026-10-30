@@ -1,14 +1,14 @@
 # ORAKL v1 candidate interface — generated
 
-**CANDIDATE_NOT_FROZEN.** Full-return bonds only. No deployment or activation authorized.
+**CANDIDATE_NOT_FROZEN, P0.3 security candidate; final protocol approval required.** Full-return bonds only. No deployment or activation authorized.
 
 Generated from compiler artifacts; tuple definitions, full outputs, indexed event fields, errors, hashes and source identity are in [interface-manifest.json](interface-manifest.json).
 
-Refresh offline: `node scripts/export-orakl-candidate-interface.mjs --write`; verify: `--check`. Read the [P1 integration specification](../../../docs/migration/P0_2_P1_INTERFACE.md) before using these ABIs.
+Refresh offline: `node scripts/export-orakl-candidate-interface.mjs --write`; verify: `--check`. Read the [P0.3 interface changes](../../../docs/migration/P0_3_INTERFACE_CHANGES.md) before using these ABIs.
 
 ## MarketFactory
 
-ABI: [MarketFactory.abi.json](MarketFactory.abi.json). SHA256: `e34a3ca06ef364602bf324b735bb9644b950d9effa5c57467cd598b50aa96728`.
+ABI: [MarketFactory.abi.json](MarketFactory.abi.json). SHA256: `6545c154f812f485eb5e7588200e29dad1448d60bd58ae9c935ac776d7a02a4c`.
 
 | Function (canonical ABI types) | Selector | Mutability |
 | --- | --- | --- |
@@ -37,6 +37,7 @@ ABI: [MarketFactory.abi.json](MarketFactory.abi.json). SHA256: `e34a3ca06ef36460
 | `proposeResult(uint256,uint8,bytes32)` | `0x1620b27b` | payable |
 | `protocolConfig()` | `0xf5efbb4f` | view |
 | `settleDispute(uint256,uint8,bytes32)` | `0x44a5fa68` | nonpayable |
+| `submitEvidence(uint256,bytes32)` | `0x912da4db` | nonpayable |
 | `totalAccounted()` | `0x2964e4e6` | view |
 | `totalBondsDeposited()` | `0xfe03a460` | view |
 | `totalBondsPaid()` | `0xd047358e` | view |
@@ -51,6 +52,7 @@ ABI: [MarketFactory.abi.json](MarketFactory.abi.json). SHA256: `e34a3ca06ef36460
 | --- | --- | --- |
 | `BondDeposited(uint256,uint8,address,uint256)` | `0x0e89d8f2cdd4e0a3a09524782191f48bf1c45a3fd5b098e9d30e4f0c4612abe8` | marketId, bondType, owner |
 | `BondReleased(uint256,uint8,address,address,uint256)` | `0x62439fad92c0b8b05a12fed907e5e97e14323464b0b8331d4f2c62c60ea9490f` | marketId, bondType, owner |
+| `DisputeEvidenceSubmitted(uint256,address,bytes32)` | `0xee0324d17e85288161de1f23ac51a0ec3f8453dda3d0e58ec058b2ba238c9433` | marketId, contributor, evidenceHash |
 | `DisputeSettled(uint256,address,uint8,bytes32)` | `0x30d4f328727f5341b8d77791409e75d8fe9b62a823ed16a9ebfea62b65261af7` | marketId, arbitrator |
 | `MarketCancelled(uint256,address,uint8)` | `0xd745bc4926f66c66a050fd875ed3576a4a83b15687c676545eab138f2f46cf1f` | marketId, caller |
 | `MarketChallenged(uint256,address,bytes32,uint64)` | `0x53bc4f37a03361dfa6b39980ec7fe28c44b0acfd274eec1ef86a50e23ec8ccea` | marketId, challenger |
@@ -65,7 +67,7 @@ ABI: [MarketFactory.abi.json](MarketFactory.abi.json). SHA256: `e34a3ca06ef36460
 
 ## ProtocolConfig
 
-ABI: [ProtocolConfig.abi.json](ProtocolConfig.abi.json). SHA256: `18b6c8bcb7ac2a0edf05f3d7efefca35d684f529b09622fa3d9db65ec40b82dc`.
+ABI: [ProtocolConfig.abi.json](ProtocolConfig.abi.json). SHA256: `ca814a020dbb43eb58d93b917dbc8685c92fbd3a0fa15d5376dedbeae34c0301`.
 
 | Function (canonical ABI types) | Selector | Mutability |
 | --- | --- | --- |
@@ -97,6 +99,7 @@ ABI: [ProtocolConfig.abi.json](ProtocolConfig.abi.json). SHA256: `18b6c8bcb7ac2a
 | `releaseDigest(bytes32)` | `0x26186644` | view |
 | `reportRoleDrift()` | `0x5a39aafa` | nonpayable |
 | `requireArbitrator(address,bytes32)` | `0x91df355b` | view |
+| `requireChallengeActivity(address)` | `0x9b100a91` | view |
 | `requireFinancialActivity(address)` | `0x15c6ea38` | view |
 | `requireGovernanceAuthority(address)` | `0xbb3464be` | view |
 | `requireUncontestedSettlement()` | `0x16d01a8a` | view |

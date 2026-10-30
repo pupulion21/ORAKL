@@ -1,6 +1,8 @@
 # QIE Mainnet readiness — BLOCKED
 
-Latest P0.2 status: [protocol freeze checklist](../audit/P0_2_PROTOCOL_FREEZE_CHECKLIST.md), [economic decisions](../protocol/P0_2_ECONOMIC_DECISION.md), [verification](../testing/P0_2_VERIFICATION_REPORT.md). No production source/compiler/network configuration, deployment permission or activation status is changed.
+Latest P0.3: [freeze readiness](../audit/P0_3_PROTOCOL_FREEZE_READINESS.md), [verification](../testing/P0_3_VERIFICATION_REPORT.md), [interface changes](../migration/P0_3_INTERFACE_CHANGES.md). Independent evidence, the full pre-arbitration intake window and narrow protective challenge admission are implemented candidates with regression proof. The P0.2 early-arbitration/role-veto descriptions below are historical; economic capture, honest arbitration and all production gates remain unresolved. No new live network probe, transaction, signing, deployment or activation occurred.
+
+Historical P0.2 status: [protocol freeze checklist](../audit/P0_2_PROTOCOL_FREEZE_CHECKLIST.md), [economic decisions](../protocol/P0_2_ECONOMIC_DECISION.md), [verification](../testing/P0_2_VERIFICATION_REPORT.md). No production source/compiler/network configuration, deployment permission or activation status is changed.
 
 Checked: 2026-10-30. No Mainnet transaction, signature, deployment or activation occurred. Network reads do not authorize a launch. Existing Testnet deployment history remains at [results/deployment](../../results/deployment/README.md).
 

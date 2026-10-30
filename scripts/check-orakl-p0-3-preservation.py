@@ -60,9 +60,16 @@ def main():
     controls = ["approveRelease", "activateFinance", "unpause", "pause", "deactivateFinance", "_requireApproved",
                 "_interrupt", "setParameters", "_validateParameters", "requireUncontestedSettlement",
                 "requireGovernanceAuthority", "requireArbitrator", "reportRoleDrift", "currentRoleState", "_walletState",
-                "_boundedWalletRead", "roleFingerprint", "_disjoint", "bindFactory", "releaseDigest"]
+                "_boundedWalletRead", "roleFingerprint", "_disjoint", "bindFactory", "releaseDigest", "_requireUnchangedRoles"]
     for name in controls:
         assert body(old_config, name) == body(config, name), f"Protected release/control policy changed: {name}"
+    resolver_path = "contracts/src/MarketResolver.sol"
+    old_resolver = git("show", f"{BASE}:{resolver_path}")
+    resolver = (ROOT / resolver_path).read_text()
+    resolution_policies = ["proposeResult", "finalizeResult", "cancelExpiredMarket", "interruptionRefundTime",
+                           "cancelInterruptedMarket", "_finish"]
+    for name in resolution_policies:
+        assert body(old_resolver, name) == body(resolver, name), f"Original proposal/refund/finality policy changed: {name}"
     files = git("ls-files", "--", *PROTECTED).splitlines()
     hashes = {p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in files}
     cfg = json.loads(subprocess.check_output(["forge", "config", "--json"], cwd=ROOT / "contracts", text=True))
@@ -80,15 +87,27 @@ def main():
     package = json.loads((ROOT / "contracts/abi/orakl-v1-candidate/interface-manifest.json").read_text())
     assert package["status"] == "CANDIDATE_NOT_FROZEN" and package["protocolRevision"] == "P0.3"
     assert package["financialActivationAuthorized"] is False and package["productionAddresses"] is None
+    assert package["deploymentAuthorized"] is False and package["securityCandidateRequiresFinalProtocolApproval"] is True
+    additions = {}
+    for contract in ["MarketFactory", "ProtocolConfig"]:
+        path = f"contracts/abi/orakl-v1-candidate/{contract}.abi.json"
+        original = {json.dumps(x, sort_keys=True) for x in json.loads(git("show", f"{BASE}:{path}"))}
+        updated = {json.dumps(x, sort_keys=True) for x in json.loads((ROOT / path).read_text())}
+        assert original <= updated, f"Old ABI/struct/event signature changed: {contract}"
+        extra = [json.loads(x) for x in updated - original]
+        additions[contract] = sorted(f"{x['type']}:{x['name']}" for x in extra)
+    assert additions == {"MarketFactory": ["event:DisputeEvidenceSubmitted", "function:submitEvidence"],
+                         "ProtocolConfig": ["function:requireChallengeActivity"]}, additions
     report = {"status": "PASS", "baseline": BASE, "protected_refs": refs, "protected_file_count": len(files),
               "source_sha256": hashes, "modified_production_files": sorted(changed),
               "unchanged_A_N_assertions": invariants, "unchanged_release_control_functions": controls,
+              "unchanged_resolution_and_refund_functions": resolution_policies, "exact_ABI_additions_only": additions,
               "compiler_and_default_test_configuration": safe_cfg, "tool_versions": versions,
               "legacy_runtime_identity": "PASS", "candidate_status": package["status"],
               "scope": "offline; no private key/seed/environment secret reads, RPC, signing or financial activation"}
     output = ROOT / "docs/testing/p0-3/preservation.json"
     output.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"PASS:{len(files)} protected files,4 refs,14 unchanged A-N assertions,20 unchanged release/control policies; legacy runtime exact")
+    print(f"PASS:{len(files)} protected files,4 refs,14 unchanged A-N assertions,{len(controls)} unchanged release/control policies; original refund/finality and ABI compatibility verified")
 
 
 if __name__ == "__main__":

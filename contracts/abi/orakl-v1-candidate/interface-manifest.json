@@ -4,8 +4,10 @@
   "economicPolicy": "FULL_RETURN_NO_SLASHING",
   "financialActivationAuthorized": false,
   "deploymentAuthorized": false,
-  "baselineCommit": "d46452479b9ce08dea77dd45730276c26fa50894",
-  "scope": "Current P0.2 candidate interface and unpatched artifact templates; not a deployed-address manifest",
+  "baselineCommit": "8d850ae42ebc77acaf2323cd50f63f08e57f1b66",
+  "protocolRevision": "P0.3",
+  "securityCandidateRequiresFinalProtocolApproval": true,
+  "scope": "Current P0.3 candidate interface and unpatched artifact templates; not a deployed-address manifest",
   "productionNetworkConfiguration": null,
   "productionAddresses": null,
   "enums": {
@@ -39,12 +41,12 @@
     "contracts/lib/openzeppelin-contracts/contracts/utils/Panic.sol": "270fc8401c1a13fae6a7a4a2dd6e381b95d658896701e51f0d3e2688acab3dec",
     "contracts/lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol": "32fbb1c908ec1b4de85cc1bb10091aebd5816ffe80dfdd5ca5e084fbea67a462",
     "contracts/src/interfaces/IMultisig.sol": "ad114a3e5e25a572e08a846dd19eb32e5127ab9e23f4c044b831de4666c3291d",
-    "contracts/src/interfaces/IProtocolConfig.sol": "ba1e120379e2b3ecf1e5a1b6ab1d7ccb6814f553301f0e52778a73ecfc4876dd",
+    "contracts/src/interfaces/IProtocolConfig.sol": "d1a8b9be2a794d1845526a2a6bdc1b54fd3d4effb5d276920cb289b318fa6602",
     "contracts/src/libraries/ProtocolTypes.sol": "f1745dad662b6e14c2fa74ea24fa075a71a58791207bca5c3b3a4d4723305e0b",
     "contracts/src/MarketFactory.sol": "f8e94b9b8403ffa64f29f3f1874377fbfb281d70962c67ba0fabb6c04806ae2c",
-    "contracts/src/MarketResolver.sol": "4d129e8ea8013046052960ed678e363a9dbf10b5bf19f7b20070af61bb498cc2",
+    "contracts/src/MarketResolver.sol": "2e72c4f852e083f532cadccf9d388158ea79403e5b0d7722766c4cfa8f5ef4df",
     "contracts/src/PredictionPool.sol": "e447b04c751182f6fdacb7429072bf27790fd6948d1ec22cba4997d49f07945c",
-    "contracts/src/ProtocolConfig.sol": "5666c2a0a5d693a36f4af1f6cba7be2179a01f7e45d91c96302b02937fea6383",
+    "contracts/src/ProtocolConfig.sol": "e488e8c2875caa96ee20342e1e37982818260b24b7f20407c40b49ce3e42bff1",
     "contracts/src/ProtocolStorage.sol": "4531649bf6bc829b68373b1caeec11824dc1c2219dab3768c6cac81a599be793"
   },
   "structures": {
@@ -317,7 +319,7 @@
   "contracts": {
     "MarketFactory": {
       "abiFile": "contracts/abi/orakl-v1-candidate/MarketFactory.abi.json",
-      "abiSha256": "e34a3ca06ef364602bf324b735bb9644b950d9effa5c57467cd598b50aa96728",
+      "abiSha256": "6545c154f812f485eb5e7588200e29dad1448d60bd58ae9c935ac776d7a02a4c",
       "compiler": "0.8.37+commit.f401782d",
       "settings": {
         "remappings": [
@@ -337,9 +339,9 @@
         "evmVersion": "paris",
         "libraries": {}
       },
-      "creationBytecodeKeccak256": "0xf8ce14d58dfa461250ce092d23a41c75e78127513953cb808b6bf9bfe2537b2a",
-      "runtimeTemplateKeccak256": "0x10a67c3e10c77a5fdb928c619465fe9f20c108bef3c2ddba27f9e2b63c146d60",
-      "runtimeBytes": 15412,
+      "creationBytecodeKeccak256": "0x65d083827420eecd14eb143d21da00bc2495b88f2dce3a15edda01abbd11f8eb",
+      "runtimeTemplateKeccak256": "0xb7961b0a0e4099bd9ac75fc821940a1858386572df142e4b7da28e18ad79f4ca",
+      "runtimeBytes": 15860,
       "runtimeHasImmutablePatches": true,
       "functions": [
         {
@@ -1034,6 +1036,24 @@
           "outputs": []
         },
         {
+          "signature": "submitEvidence(uint256,bytes32)",
+          "selector": "0x912da4db",
+          "stateMutability": "nonpayable",
+          "inputs": [
+            {
+              "name": "id",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "evidenceHash",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            }
+          ],
+          "outputs": []
+        },
+        {
           "signature": "totalAccounted()",
           "selector": "0x2964e4e6",
           "stateMutability": "view",
@@ -1222,6 +1242,31 @@
               "type": "uint256",
               "indexed": false,
               "internalType": "uint256"
+            }
+          ]
+        },
+        {
+          "signature": "DisputeEvidenceSubmitted(uint256,address,bytes32)",
+          "topic0": "0xee0324d17e85288161de1f23ac51a0ec3f8453dda3d0e58ec058b2ba238c9433",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "marketId",
+              "type": "uint256",
+              "indexed": true,
+              "internalType": "uint256"
+            },
+            {
+              "name": "contributor",
+              "type": "address",
+              "indexed": true,
+              "internalType": "address"
+            },
+            {
+              "name": "evidenceHash",
+              "type": "bytes32",
+              "indexed": true,
+              "internalType": "bytes32"
             }
           ]
         },
@@ -1720,7 +1765,7 @@
     },
     "ProtocolConfig": {
       "abiFile": "contracts/abi/orakl-v1-candidate/ProtocolConfig.abi.json",
-      "abiSha256": "18b6c8bcb7ac2a0edf05f3d7efefca35d684f529b09622fa3d9db65ec40b82dc",
+      "abiSha256": "ca814a020dbb43eb58d93b917dbc8685c92fbd3a0fa15d5376dedbeae34c0301",
       "compiler": "0.8.37+commit.f401782d",
       "settings": {
         "remappings": [
@@ -1740,9 +1785,9 @@
         "evmVersion": "paris",
         "libraries": {}
       },
-      "creationBytecodeKeccak256": "0xffa5b89c1589170c9e962f72595ec12bf44b2074db2f2019b507cb4ba60bda42",
-      "runtimeTemplateKeccak256": "0x7373a63e57b1a5cd854e9194e82ee5053c7c27df977e747b6d73f174b8cb7b38",
-      "runtimeBytes": 8460,
+      "creationBytecodeKeccak256": "0x4dd87b9df2318f69184eb56c43a06f4ed0820fa0c69d538133a6496e5ae66263",
+      "runtimeTemplateKeccak256": "0xaed346cc6bdb2d85536b5d320058822be4a355b2ef417bffe07ce3bfcd25b5fe",
+      "runtimeBytes": 8508,
       "runtimeHasImmutablePatches": true,
       "functions": [
         {
@@ -2151,6 +2196,19 @@
               "name": "expected",
               "type": "bytes32",
               "internalType": "bytes32"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "signature": "requireChallengeActivity(address)",
+          "selector": "0x9b100a91",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "name": "facade",
+              "type": "address",
+              "internalType": "address"
             }
           ],
           "outputs": []

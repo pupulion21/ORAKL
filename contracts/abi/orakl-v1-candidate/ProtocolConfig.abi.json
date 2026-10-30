@@ -484,6 +484,19 @@
   },
   {
     "type": "function",
+    "name": "requireChallengeActivity",
+    "inputs": [
+      {
+        "name": "facade",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "requireFinancialActivity",
     "inputs": [
       {
