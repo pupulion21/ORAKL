@@ -48,7 +48,7 @@ No claim of exhaustive vulnerability discovery is made. Existing invariants do n
 
 ## Executed baseline checks
 
-`cd contracts && forge test -vvv` exited 0: **61 passed, 0 failed, 0 skipped**, including 256-run payout fuzzing and five invariants at 64 runs / depth 32. Full captured output: `../testing/evidence/baseline-foundry.log` (added with the refactor branch). Tool: Foundry 1.8.1, commit `982849d3140c01fd3b72905759581a132df7aa98`; Solidity 0.8.37, Paris, optimizer off, metadata hash none (`contracts/foundry.toml:7`). No frontend test success is claimed at this audit stage.
+`cd contracts && forge test -vvv` exited 0: **61 passed, 0 failed, 0 skipped**, including 256-run payout fuzzing and five invariants at 64 runs / depth 32. Full captured output: `../testing/evidence/baseline-foundry.txt` (added with the refactor branch). Tool: Foundry 1.8.1, commit `982849d3140c01fd3b72905759581a132df7aa98`; Solidity 0.8.37, Paris, optimizer off, metadata hash none (`contracts/foundry.toml:7`). No frontend test success is claimed at this audit stage.
 
 Heuristic scan of all tracked files found zero private-key assignments, PEM private keys, GitHub-token patterns or AWS access-key patterns. It emitted paths/counts only, never values. `git check-ignore` confirmed both local signing paths are ignored; no `secrets/` path is tracked. This is not a comprehensive secret-detection guarantee. Summary: `../testing/evidence/baseline-secrets-scan.json`.
 

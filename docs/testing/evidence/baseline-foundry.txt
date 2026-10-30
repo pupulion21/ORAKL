@@ -1,0 +1,100 @@
+Compiling 10 files with Solc 0.8.37
+Solc 0.8.37 finished in 383.73ms
+Compiler run successful!
+
+Ran 60 tests for test/QiePredictionMarket.t.sol:QiePredictionMarketTest
+[PASS] testCancelAfterResolutionReverts() (gas: 408757)
+[PASS] testCancelAtDeadlineSucceeds() (gas: 390107)
+[PASS] testCancelBeforeDeadlineReverts() (gas: 372396)
+[PASS] testCancelTwiceReverts() (gas: 404824)
+[PASS] testClaimBeforeResolutionReverts() (gas: 476953)
+[PASS] testClaimLeavesExactRoundingDustLocked() (gas: 853287)
+[PASS] testClaimLosingSideReverts() (gas: 666183)
+[PASS] testClaimOnInvalidMarketReverts() (gas: 513292)
+[PASS] testClaimPaysWinnersProRata() (gas: 902915)
+[PASS] testClaimReentrancyBlockedByGuard() (gas: 1331256)
+[PASS] testClaimToAfterClaimReverts() (gas: 776261)
+[PASS] testClaimToPaysChosenRecipient() (gas: 744577)
+[PASS] testClaimToRejectsZeroAndMarketRecipient() (gas: 688848)
+[PASS] testClaimTwiceReverts() (gas: 773452)
+[PASS] testClaimWhenWinningSideEmptyReverts() (gas: 524654)
+[PASS] testClaimWithoutPositionReverts() (gas: 668207)
+[PASS] testCreateMarketAcceptsMaximumMetadata() (gas: 2791742)
+[PASS] testCreateMarketRejectsCloseTimeNotInFuture() (gas: 68467)
+[PASS] testCreateMarketRejectsCriteriaTooLong() (gas: 332282)
+[PASS] testCreateMarketRejectsDeadlineNotAfterClose() (gas: 68939)
+[PASS] testCreateMarketRejectsEmptyCriteria() (gas: 39179)
+[PASS] testCreateMarketRejectsEmptyQuestion() (gas: 39138)
+[PASS] testCreateMarketRejectsEmptySource() (gas: 39266)
+[PASS] testCreateMarketRejectsQuestionTooLong() (gas: 81705)
+[PASS] testCreateMarketRejectsSourceTooLong() (gas: 115804)
+[PASS] testCreateMarketRejectsZeroResolver() (gas: 37145)
+[PASS] testCreateMarketStoresImmutableFields() (gas: 406157)
+[PASS] testDirectNativeTransferRejected() (gas: 71508)
+[PASS] testForcedBalanceIsReportedButNotSpendable() (gas: 652329)
+[PASS] testFuzzClaimPayoutMatchesMulDiv(uint96,uint96) (runs: 256, μ: 686531, ~: 686222)
+[PASS] testFuzzWinnerPayoutsNeverExceedPool(uint96,uint96,uint96) (runs: 256, μ: 838255, ~: 838452)
+[PASS] testMarketCountIncrements() (gas: 647713)
+[PASS] testMarketsAreIsolated() (gas: 1407861)
+[PASS] testRefundCancelledMarket() (gas: 585802)
+[PASS] testRefundExpiredMarketRequiresCancel() (gas: 637680)
+[PASS] testRefundInvalidReturnsBothSides() (gas: 776113)
+[PASS] testRefundMixedPositionReturnsSum() (gas: 641306)
+[PASS] testRefundOnValidResolutionReverts() (gas: 698348)
+[PASS] testRefundReentrancyBlockedByGuard() (gas: 1347578)
+[PASS] testRefundToPaysChosenRecipient() (gas: 595127)
+[PASS] testRefundToRejectsZeroAndMarketRecipient() (gas: 542883)
+[PASS] testRefundTwiceReverts() (gas: 622473)
+[PASS] testRefundWhenWinningSideEmpty() (gas: 609870)
+[PASS] testRefundWithoutPositionReverts() (gas: 413202)
+[PASS] testResolveAtCloseTimeSucceeds() (gas: 392951)
+[PASS] testResolveAtDeadlineReverts() (gas: 373122)
+[PASS] testResolveBeforeCloseTimeReverts() (gas: 372095)
+[PASS] testResolveInvalidEnablesRefund() (gas: 379035)
+[PASS] testResolveOnlyResolver() (gas: 372657)
+[PASS] testResolveTwiceReverts() (gas: 408917)
+[PASS] testResolveUnknownMarketReverts() (gas: 41381)
+[PASS] testResolveUnresolvedOutcomeRejected() (gas: 373493)
+[PASS] testRevertingReceiverRollsBackClaimAndAllowsRedirect() (gas: 1346749)
+[PASS] testRevertingReceiverRollsBackRefundAndAllowsRedirect() (gas: 1316731)
+[PASS] testStakeRejectsAtAndAfterCloseTime() (gas: 420475)
+[PASS] testStakeRejectsPoolCapExceeded() (gas: 497257)
+[PASS] testStakeRejectsUnknownMarket() (gas: 47154)
+[PASS] testStakeRejectsZeroAmount() (gas: 371894)
+[PASS] testStakeSplitsPoolsAndPositions() (gas: 614504)
+[PASS] testThirdPartyCannotClaimAnotherPosition() (gas: 669101)
+Suite result: ok. 60 passed; 0 failed; 0 skipped; finished in 126.01ms (256.22ms CPU time)
+
+Ran 1 test for test/QiePredictionMarketInvariant.t.sol:QiePredictionMarketInvariantTest
+[PASS]
+QiePredictionMarketInvariantTest invariants:
+[PASS] invariant_balanceEqualsEscrowPlusSurplus
+[PASS] invariant_globalEscrowMatchesMarketSum
+[PASS] invariant_marketAccountingMatchesGhost
+[PASS] invariant_positionsMatchGhost
+[PASS] invariant_totalPaidOutNeverExceedsReceived
+ QiePredictionMarketInvariantTest invariants (runs: 64, calls: 2048, reverts: 0)
+
+╭---------------+-----------------+-------+---------+----------╮
+| Contract      | Selector        | Calls | Reverts | Discards |
++==============================================================+
+| MarketHandler | cancelIfExpired | 255   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | claim           | 234   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | createMarket    | 262   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | forcedTransfer  | 237   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | refund          | 259   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | resolve         | 298   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | stake           | 242   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | warp            | 261   | 0       | 0        |
+╰---------------+-----------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.50s (2.46s CPU time)
+
+Ran 2 test suites in 2.51s (2.62s CPU time): 61 tests passed, 0 failed, 0 skipped (61 total tests)
