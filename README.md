@@ -9,9 +9,9 @@ ORAKL targets a native-QIE binary pari-mutuel prediction market with optimistic 
 Two implementations coexist:
 
 - **Legacy Testnet prototype:** the functioning English Vite/TypeScript/viem frontend and `contracts/src/QiePredictionMarket.sol`, using manual trusted resolution. Its [public manifest](frontend/public/deployments/qie-testnet.json) and [actual deployment history](results/deployment/README.md) are preserved. Contract: `0x43A666a9a305232E6a10fae8507d67EF64F02C98`, chain 1983.
-- **ORAKL P0 protocol:** new modular Solidity source and local Foundry tests. Financial entry points initialize disabled; the frontend is not migrated to the new ABI. No Mainnet deployment or activation was performed. These changes do not complete the PRD's backend, indexer, metadata service or eligibility requirements.
+- **ORAKL P0.1 protocol:** new modular Solidity source and local Foundry tests. Financial entry points initialize disabled; the frontend is not migrated to the new ABI. No Mainnet deployment or activation was performed. These changes do not complete the PRD's backend, indexer, metadata service or eligibility requirements.
 
-[Initial repository audit](docs/audit/INITIAL_REPOSITORY_AUDIT.md) · [Architecture](docs/protocol/ARCHITECTURE.md) · [State machine](docs/protocol/STATE_MACHINE.md) · [Accounting](docs/protocol/ACCOUNTING_INVARIANTS.md) · [Bonds](docs/protocol/BOND_ECONOMICS.md) · [Resolution](docs/protocol/RESOLUTION.md) · [Threat model](docs/security/THREAT_MODEL.md) · [Frontend migration](docs/migration/FRONTEND_ABI_MIGRATION.md) · [Mainnet readiness](docs/deployment/QIE_MAINNET_READINESS.md) · [Executed tests](docs/testing/FOUNDRY_TEST_REPORT.md).
+[Initial repository audit](docs/audit/INITIAL_REPOSITORY_AUDIT.md) · [Architecture](docs/protocol/ARCHITECTURE.md) · [State machine](docs/protocol/STATE_MACHINE.md) · [Accounting](docs/protocol/ACCOUNTING_INVARIANTS.md) · [Bonds](docs/protocol/BOND_ECONOMICS.md) · [Resolution](docs/protocol/RESOLUTION.md) · [Threat model](docs/security/THREAT_MODEL.md) · [Frontend migration](docs/migration/FRONTEND_ABI_MIGRATION.md) · [Mainnet readiness](docs/deployment/QIE_MAINNET_READINESS.md) · [Current executed tests](docs/testing/P0_1_VERIFICATION_REPORT.md).
 
 Earlier specifications and UI delivery reports are [archived](docs/archive/README.md). They are not current product requirements. Third-party licenses and live deployment history remain in place.
 
@@ -49,3 +49,5 @@ forge fmt --check
 Legacy tests remain part of the full suite. Formatting ignores only untouched legacy files to preserve their artifact/source identity. The new deployment rehearsal is local-chain-only and constructs unbound, unapproved, inactive contracts; it has no broadcast or activation call.
 
 Passing local checks is not an independent security audit or authorization for a real-value launch. Mainnet configuration and remaining release gates are tracked in the readiness document.
+
+P0.1 adds [reviewed emergency recovery](docs/security/EMERGENCY_RECOVERY.md), [security findings](docs/audit/P0_1_SECURITY_REVIEW.md), a [bond policy awaiting approval](docs/protocol/BOND_POLICY_PROPOSAL.md) and [migration impact](docs/migration/P0_1_MIGRATION_IMPACT.md). The v1 compiler roots select an optimized additional profile; legacy compiler identity is preserved. Production economics, role verification and financial launch remain blocked.

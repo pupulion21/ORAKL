@@ -1,0 +1,20 @@
+# P0.1 migration impact
+
+Scope: new ORAKL v1 protocol only. No change to the legacy Testnet contract/address, legacy artifacts/generated ABI, frontend source, assets or network constants. No frontend migration, Mainnet configuration activation, deployment or fund movement is performed. There is no upgrade mechanism for already deployed contracts.
+
+| Surface | P0.1 change |
+| --- | --- |
+| Market ABI | getMarket adds immutable creationActivityEpoch and arbitratorFingerprint. Existing proposalActivityEpoch remains; current epoch must match for new financial operations. Regenerate the v1 ABI from the selected optimized profile after review; never replace the legacy ABI. |
+| Emergency actions | New interruptionRefundTime(id) returns zero if unaffected/terminal, otherwise immutable earliest emergency cancellation. cancelInterruptedMarket(id) is permissionless after that time; cancellation reason 3 means emergency. Existing ordinary reason 1 and INVALID reason 2 remain. |
+| State UX | Existing enum values retained. OPEN/CLOSED/PROPOSED may be quarantined while their enum still shows the original phase. Show a distinct non-actionable emergency state and refund countdown from the new getter. No refill/reproposal/challenge or uncontested finalization can resume after an epoch break. A new market requires a new ID and fresh collateral, never a transfer of old escrow. |
+| Disputes | Existing disputes retain original decision/timeout deadlines. Settlement also verifies immutable arbitrator declared-control fingerprint and current declared owner independence. Changed/malformed controls require timeout refunds, not an administrative reassignment. |
+| Operator release | Pause/deactivation revokes finance and pending approval; fresh compliance approveRelease plus full 24-hour delay, then explicit governance unpause/activateFinance. activateFinance never clears pause. Existing approvedRelease/digest storage is reset on every intervention. Approval cannot overwrite a still-active release. |
+| Approval/events | ReleaseApproved adds activationAfter. New ActivityInterrupted(epoch,time,caller) and RoleDriftReported events; indexed chain/contract/log identity remains necessary for replay. releaseDigest additionally binds config runtime, activityEpoch and declared controls. |
+| Config views/checks | New currentRoleState, roleFingerprint, interruptedAt, approvedRoleState, activeRoleState, activationAfter and validation helpers. requireGovernanceAuthority also gates protocol-fee withdrawals. Terminal participant/refund/bond calls still avoid wallet views. |
+| Drift reporting | reportRoleDrift is permissionless for currently active releases. UI/operator tools must provide enough gas for its explicit full-check budget; InsufficientCheckGas cannot be treated as a confirmed drift. It detects observable changes/failures, not hidden module/implementation truth. |
+| Compiler artifacts | Legacy retains optimizer off/runs 200. New Factory/Config roots and importing tests use additional compiler profile orakl, optimizer on/runs 50, same solc 0.8.37/Paris, viaIR false, metadata hash none. Settings, runtime hashes and deployment manifests must be v1-specific. No external linked math library is adopted. |
+| Bonds/fees | No punitive policy change. Full principal return remains; proposed slashing choices require explicit approval. Pool model, fee/minimum/cap bounds and per-market economic snapshots remain unchanged. |
+
+Client error handling must distinguish inactive/paused release, expired/unapproved review, control drift/malformed wallet views, quarantined market and ordinary timing errors. A failed report/simulation/hash is not a successful write. Preserve original-hash receipt recovery, account/chain binding, same-block liability reconciliation and honest payout estimates.
+
+Production migration remains blocked by the bond policy decision, independent audit, verified role implementations/modules/guards, emergency-abort trust approval, exact QIE Mainnet configuration/limits/gas/explorer compatibility, operational services and required compliance authorization. Passing local tests does not approve any of these.

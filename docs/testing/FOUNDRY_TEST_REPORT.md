@@ -1,5 +1,7 @@
 # Foundry test and security-tool report — ORAKL P0
 
+Historical P0 snapshot at 7b8ac4e. Current remediation verification is in [P0.1 verification report](P0_1_VERIFICATION_REPORT.md); the results below are preserved, not current P0.1 claims.
+
 Date: 2026-10-30. Branch: `refactor/orakl-protocol-v1`. Baseline: `b555a87`. Code under final verification: `8697cee` (subsequent closeout edits are documentation/evidence only). No live signing, transaction, deployment or activation was used. Tests simulate funding, multisig callers, activation, chain identity and forced transfers in the local Foundry VM; mocks are not real multisig implementations.
 
 ## Executed results

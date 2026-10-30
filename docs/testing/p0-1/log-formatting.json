@@ -1,0 +1,40 @@
+{
+  "normalization": "Only trailing line whitespace and redundant blank EOF removed; result lines unchanged; detector JSON untouched.",
+  "files": [
+    {
+      "path": "docs/testing/p0-1/build-final.txt",
+      "rawSha256": "812e6133f70a6ea759107daeaad07f420c4f91f8b9f6b4133997434c8f577e12",
+      "normalizedSha256": "5428ec9f7064e052f86e228cddeda224d342b205ead24d56585430c7560514da"
+    },
+    {
+      "path": "docs/testing/p0-1/build.txt",
+      "rawSha256": "4b29c6866acc23b45d5e761e95ec11093930c628a740ae28445071f81f698826",
+      "normalizedSha256": "bbd5c3a9aa6e5b1448f0b128e3573dcfa1e22c794d0443a39a881318a4a7867d"
+    },
+    {
+      "path": "docs/testing/p0-1/frontend-typecheck.txt",
+      "rawSha256": "dca6ea3c0d1d0418d3886657c170d00af9bc1df48a5e2071e5267076d09481c8",
+      "normalizedSha256": "47b22b2e636639dd061909a8870a9b10bb71bb59360ec9a8d8ea08831acbf477"
+    },
+    {
+      "path": "docs/testing/p0-1/pre-return-bound-build-final.txt",
+      "rawSha256": "c2ea3e3b05430c33a4bbebc54b73996bde8a6666b6ef20ee122de1b16e2b7485",
+      "normalizedSha256": "6102a1027538ef2216cc5599053498d1e9b299c4f624ea476cc69f6d207aea4c"
+    },
+    {
+      "path": "docs/testing/p0-1/pre-return-bound-slither.txt",
+      "rawSha256": "9da4b3099b82a27c48fa1ad4f6e785a015514a0de257cf42772c962405e591b4",
+      "normalizedSha256": "f0181385f0e4772e94724c4d0c3d856006df16d097801699f8ee1d529e414f72"
+    },
+    {
+      "path": "docs/testing/p0-1/slither-factory.txt",
+      "rawSha256": "3e0ffa6eef5aab08fbf591a27f82d7470f76b97853b2ce1e6bf40fbafb733e4a",
+      "normalizedSha256": "9a88157e9ae3411f7381671a136d40d08c032f2a03a922204c328ce71f2ecdc4"
+    },
+    {
+      "path": "docs/testing/p0-1/slither.txt",
+      "rawSha256": "7995b69bf77d49fd9a8a58483a723d5d8dec75fffaaa759ec93ac277b2ef1092",
+      "normalizedSha256": "39cf1156deb1c902a911d17c7c856fc5417b560dd8f4a8a977e9769c626bdde6"
+    }
+  ]
+}

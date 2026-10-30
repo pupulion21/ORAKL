@@ -1,11 +1,11 @@
 {
-  "label": "P0.1-final-candidate",
+  "label": "P0.1-fc5b8be",
   "solc": "solc, the solidity compiler commandline interface\nVersion: 0.8.37+commit.f401782d.Linux.g++",
   "sourceSha256": {
     "src/MarketFactory.sol": "f8e94b9b8403ffa64f29f3f1874377fbfb281d70962c67ba0fabb6c04806ae2c",
     "src/MarketResolver.sol": "4d129e8ea8013046052960ed678e363a9dbf10b5bf19f7b20070af61bb498cc2",
     "src/PredictionPool.sol": "e447b04c751182f6fdacb7429072bf27790fd6948d1ec22cba4997d49f07945c",
-    "src/ProtocolConfig.sol": "2f47975cc0aa94d5fa349afbf0f0377c91188fa795382622741edddc2c362fa6",
+    "src/ProtocolConfig.sol": "5666c2a0a5d693a36f4af1f6cba7be2179a01f7e45d91c96302b02937fea6383",
     "src/ProtocolStorage.sol": "4531649bf6bc829b68373b1caeec11824dc1c2219dab3768c6cac81a599be793",
     "src/QiePredictionMarket.sol": "d0356652e6384665361c164b3014c40c10eb8d514508381570e7cdb46a74c610",
     "src/interfaces/IMultisig.sol": "ad114a3e5e25a572e08a846dd19eb32e5127ab9e23f4c044b831de4666c3291d",
@@ -23,7 +23,7 @@
       "runs": 200,
       "viaIR": false,
       "evmVersion": "paris",
-      "durationSeconds": 0.406,
+      "durationSeconds": 0.501,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -31,8 +31,8 @@
           "initcodeBytes": 27373
         },
         "ProtocolConfig": {
-          "runtimeBytes": 15337,
-          "initcodeBytes": 20428
+          "runtimeBytes": 15267,
+          "initcodeBytes": 20164
         },
         "QiePredictionMarket": {
           "runtimeBytes": 13906,
@@ -46,7 +46,7 @@
       "runs": 1,
       "viaIR": false,
       "evmVersion": "paris",
-      "durationSeconds": 1.102,
+      "durationSeconds": 1.317,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -54,8 +54,8 @@
           "initcodeBytes": 15637
         },
         "ProtocolConfig": {
-          "runtimeBytes": 8497,
-          "initcodeBytes": 11526
+          "runtimeBytes": 8427,
+          "initcodeBytes": 11339
         },
         "QiePredictionMarket": {
           "runtimeBytes": 7964,
@@ -69,7 +69,7 @@
       "runs": 50,
       "viaIR": false,
       "evmVersion": "paris",
-      "durationSeconds": 1.169,
+      "durationSeconds": 1.235,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -77,8 +77,8 @@
           "initcodeBytes": 15692
         },
         "ProtocolConfig": {
-          "runtimeBytes": 8530,
-          "initcodeBytes": 11559
+          "runtimeBytes": 8460,
+          "initcodeBytes": 11372
         },
         "QiePredictionMarket": {
           "runtimeBytes": 7974,
@@ -92,7 +92,7 @@
       "runs": 200,
       "viaIR": false,
       "evmVersion": "paris",
-      "durationSeconds": 1.144,
+      "durationSeconds": 1.222,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -100,8 +100,8 @@
           "initcodeBytes": 15831
         },
         "ProtocolConfig": {
-          "runtimeBytes": 8546,
-          "initcodeBytes": 11575
+          "runtimeBytes": 8476,
+          "initcodeBytes": 11388
         },
         "QiePredictionMarket": {
           "runtimeBytes": 7998,
@@ -115,7 +115,7 @@
       "runs": 1000,
       "viaIR": false,
       "evmVersion": "paris",
-      "durationSeconds": 1.126,
+      "durationSeconds": 1.328,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -123,8 +123,8 @@
           "initcodeBytes": 16535
         },
         "ProtocolConfig": {
-          "runtimeBytes": 8930,
-          "initcodeBytes": 11959
+          "runtimeBytes": 8927,
+          "initcodeBytes": 11839
         },
         "QiePredictionMarket": {
           "runtimeBytes": 8869,
@@ -138,7 +138,7 @@
       "runs": 200,
       "viaIR": true,
       "evmVersion": "paris",
-      "durationSeconds": 3.975,
+      "durationSeconds": 4.815,
       "errors": [],
       "sizes": {
         "MarketFactory": {
@@ -146,8 +146,8 @@
           "initcodeBytes": 13103
         },
         "ProtocolConfig": {
-          "runtimeBytes": 7243,
-          "initcodeBytes": 9574
+          "runtimeBytes": 7324,
+          "initcodeBytes": 9695
         },
         "QiePredictionMarket": {
           "runtimeBytes": 6318,

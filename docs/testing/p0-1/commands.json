@@ -1,0 +1,168 @@
+[
+  {
+    "name": "slither",
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/p0-1/slither.json"
+    ],
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T08:42:25.149690+00:00",
+    "finishedAt": "2026-10-30T08:42:31.152009+00:00"
+  },
+  {
+    "name": "slither-factory",
+    "argv": [
+      "slither",
+      "src/MarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-1/slither-factory.json"
+    ],
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T08:42:31.152471+00:00",
+    "finishedAt": "2026-10-30T08:42:33.749984+00:00"
+  },
+  {
+    "name": "slither-config",
+    "argv": [
+      "slither",
+      "src/ProtocolConfig.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/p0-1/slither-config.json"
+    ],
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T08:42:33.750408+00:00",
+    "finishedAt": "2026-10-30T08:42:34.725221+00:00"
+  },
+  {
+    "name": "slither-legacy",
+    "argv": [
+      "slither",
+      "src/QiePredictionMarket.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none",
+      "--json",
+      "../docs/testing/p0-1/slither-legacy.json"
+    ],
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T08:42:34.725658+00:00",
+    "finishedAt": "2026-10-30T08:42:36.469512+00:00"
+  },
+  {
+    "name": "build",
+    "argv": [
+      "forge",
+      "build"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:42:36.469984+00:00",
+    "finishedAt": "2026-10-30T08:42:42.443193+00:00"
+  },
+  {
+    "name": "forge-test",
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:42:42.443634+00:00",
+    "finishedAt": "2026-10-30T08:44:03.373631+00:00"
+  },
+  {
+    "name": "invariant-seed-2",
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "--fuzz-seed",
+      "0x4f52414b4c503032",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:44:04.143534+00:00",
+    "finishedAt": "2026-10-30T08:45:19.549840+00:00"
+  },
+  {
+    "name": "coverage",
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:45:19.550378+00:00",
+    "finishedAt": "2026-10-30T08:47:16.559954+00:00"
+  },
+  {
+    "name": "build-final",
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:47:16.560798+00:00",
+    "finishedAt": "2026-10-30T08:47:22.899620+00:00"
+  },
+  {
+    "name": "fmt",
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:47:22.900017+00:00",
+    "finishedAt": "2026-10-30T08:47:22.930790+00:00"
+  },
+  {
+    "name": "gas-local",
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/remediation/*",
+      "--gas-report"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:47:22.931242+00:00",
+    "finishedAt": "2026-10-30T08:47:23.995541+00:00"
+  }
+]

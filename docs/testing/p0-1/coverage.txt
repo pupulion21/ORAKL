@@ -1,0 +1,343 @@
+Warning: optimizer settings and `viaIR` have been disabled for accurate coverage reports.
+If you encounter "stack too deep" errors, consider using `--ir-minimum` which enables `viaIR` with minimum optimization resolving most of the errors.
+See more: https://book.getfoundry.sh/guides/best-practices/stack-too-deep
+Compiling 18 files with Solc 0.8.37
+Compiling 30 files with Solc 0.8.37
+Solc 0.8.37 finished in 486.00ms
+Solc 0.8.37 finished in 5.90s
+Compiler run successful with warnings:
+Warning (6335): "at" will be promoted to keyword in the future and will not be allowed as an identifier anymore.
+  --> test/remediation/EmergencyRecovery.t.sol:47:9:
+   |
+47 |         uint64 at = config.interruptedAt(0);
+   |         ^^^^^^^^^
+
+Warning (5159): "selfdestruct" has been deprecated. Note that, starting from the Cancun hard fork, the underlying opcode no longer deletes the code and data associated with an account and only transfers its Ether to the beneficiary, unless executed in the same transaction in which the contract was created (see EIP-6780). Any use in newly deployed contracts is strongly discouraged even if the new behavior is taken into account. Future changes to the EVM might further reduce the functionality of the opcode.
+  --> test/unit/BondsAndTransfers.t.sol:42:9:
+   |
+42 |         selfdestruct(target);
+   |         ^^^^^^^^^^^^
+
+Analysing contracts...
+Running tests...
+
+Ran 1 test for test/remediation/LegacyValueFlow.t.sol:LegacyValueFlowTest
+[PASS] testLegacyClaimAndRefundOnlyUseCallerEntitlementAcrossMarkets() (gas: 878028)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 2.16ms (1.66ms CPU time)
+
+Ran 1 test for test/integration/Lifecycle.t.sol:LifecycleTest
+[PASS] testParallelMarketsUncontestedDisputedInvalidAndExpired() (gas: 6343380)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 37.75ms (33.46ms CPU time)
+
+Ran 8 tests for test/unit/ConfigurationBoundaries.t.sol:ConfigurationBoundariesTest
+[PASS] testFutureArbitratorDoesNotReplaceExistingMarketAuthority() (gas: 2726276)
+[PASS] testInvalidInitialRolesAndConfigurationContract() (gas: 25835)
+[PASS] testLocalDeploymentRehearsalLeavesFinanceDisabledAndUnbound() (gas: 11241657)
+[PASS] testRejectMalformedMultisigOwnerSets() (gas: 2674193)
+[PASS] testReleaseBoundToRuntimeAndChainIdentity() (gas: 317517)
+[PASS] testRemainingEconomicBounds() (gas: 393040)
+[PASS] testUnauthorizedEmergencyControlsAndRepeatedPauseEpoch() (gas: 333388)
+[PASS] testUnboundFactoryAndBindingVerification() (gas: 174591)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 41.39ms (31.89ms CPU time)
+
+Ran 4 tests for test/remediation/ValueFlow.t.sol:ValueFlowTest
+[PASS] testContractOwnersCanRedirectEachBondCategoryAfterRejectedTransfer() (gas: 4575506)
+[PASS] testNoExposedTransferHelperAndNoCrossOwnerClaims() (gas: 1529015)
+[PASS] testPartialFeeWithdrawalsCannotConsumeBondsPoolsOrForcedSurplus() (gas: 2500726)
+[PASS] testZeroBondClaimDoesNotInvokeRejectingRecipient() (gas: 1821759)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 45.69ms (42.01ms CPU time)
+
+Ran 4 tests for test/remediation/P0_1Regression.t.sol:P0_1RegressionTest
+[PASS] testGuardianPauseNeedsFreshIndependentApproval() (gas: 81596)
+[PASS] testInterruptedProposalHasBoundedRefundBeforeDistantMax() (gas: 1388706)
+[PASS] testMutatedArbitratorCodeCannotSettleExistingDispute() (gas: 1222900)
+[PASS] testMutatedGovernanceCodeBlocksNewDeposits() (gas: 519257)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 23.49ms (18.98ms CPU time)
+
+Ran 5 tests for test/unit/MarketCreation.t.sol:MarketCreationTest
+[PASS] testExactCreationBondAndNoArbitratorCreation() (gas: 344884)
+[PASS] testInvalidDeadlinesAndHorizon() (gas: 568996)
+[PASS] testInvalidMetadata() (gas: 520815)
+[PASS] testPermissionlessCreationUniqueIdsAndCommitment() (gas: 991062)
+[PASS] testUnknownMarketViewsRevert() (gas: 54040)
+Suite result: ok. 5 passed; 0 failed; 0 skipped; finished in 30.79ms (22.51ms CPU time)
+
+Ran 10 tests for test/unit/ProtocolConfig.t.sol:ProtocolConfigTest
+[PASS] testConfigurationBoundsAndUnauthorizedMutation() (gas: 320242)
+[PASS] testDirectAndUnknownTransfersRejectedOnFacadeAndConfig() (gas: 125461)
+[PASS] testDistinctApprovalsRequiredAndBoundToRelease() (gas: 445291)
+[PASS] testFactoryBindingCannotChangeOrBypassGate() (gas: 421642)
+[PASS] testGuardianCanPauseCannotUnpauseOrConfigure() (gas: 1052214)
+[PASS] testInactiveByDefaultAndAllPayableSelectorsFailClosed() (gas: 344243)
+[PASS] testParametersDeactivateAndRequireFreshApproval() (gas: 2035468)
+[PASS] testRoleIndependenceAndMultisigThreshold() (gas: 783188)
+[PASS] testRuntimeWithinEIP170() (gas: 106230)
+[PASS] testZeroReleaseCannotActivate() (gas: 57429)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 71.33ms (64.67ms CPU time)
+
+Ran 9 tests for test/unit/BondsAndTransfers.t.sol:BondsAndTransfersTest
+[PASS] testAllBondPrincipalsReturnAfterDisputeNoPunitiveSlash() (gas: 1797691)
+[PASS] testArbitrationTimeoutReturnsEveryBondUnslashed() (gas: 1546267)
+[PASS] testBondClaimsRequireTerminalOwnerAndSingleWithdrawal() (gas: 1348975)
+[PASS] testNoSlashingOrAdminRescueEntryPoint() (gas: 535599)
+[PASS] testReentrantClaimRefundBondAndFeeAreGuarded() (gas: 3312215)
+[PASS] testRejectedClaimRollsBackAndOwnerCanRedirect() (gas: 2320528)
+[PASS] testRejectedFeeWithdrawalRollback() (gas: 2266431)
+[PASS] testRejectedRefundAndBondReleaseRollbackAndRedirect() (gas: 2342738)
+[PASS] testSelfdestructSurplusExcludedFromEveryLedger() (gas: 835133)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 95.39ms (86.95ms CPU time)
+
+Ran 10 tests for test/unit/PredictionPool.t.sol:PredictionPoolTest
+[PASS] testBothSidesRepeatedAndPoolTotals() (gas: 1155893)
+[PASS] testClaimBeforeSettlementAndInvalidRecipients() (gas: 1842008)
+[PASS] testContributionMinimumCloseAndCapBoundaries() (gas: 1193750)
+[PASS] testFeeAndProportionalPayoutsExactlyOnce() (gas: 2170803)
+[PASS] testFeesCannotSpendParticipantsOrBondsAndAreAuthorized() (gas: 2077794)
+[PASS] testForcedBalanceHasNoEffectOnPayout() (gas: 1747643)
+[PASS] testInvalidRefundsBothSidesAndNoFees() (gas: 1751218)
+[PASS] testPausePreservesFinalizedClaimsAndBonds() (gas: 2020837)
+[PASS] testTinyWinningPayoutRoundsToZeroWithoutDoubleSettlement() (gas: 1807639)
+[PASS] testZeroWinningSideFullRefundAndEmptyMarket() (gas: 2075828)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 97.15ms (92.89ms CPU time)
+
+Ran 11 tests for test/unit/MarketResolver.t.sol:MarketResolverTest
+[PASS] testArbitrationTimeoutIsBoundedAndCannotRaceDecision() (gas: 1845563)
+[PASS] testArbitratorCannotProposeAndProposerCannotSelfChallenge() (gas: 1158566)
+[PASS] testChallengesValidateEvidenceBondAndDeadline() (gas: 1419529)
+[PASS] testDeactivationInvalidatesUncontestedProposalButDisputesCanSettle() (gas: 2623698)
+[PASS] testDerivedCloseAndProposalWindow() (gas: 1671077)
+[PASS] testDisputeRequiresArbitratorAndBlocksDirectFinalization() (gas: 1746316)
+[PASS] testDisputedInvalidDecisionEnablesRefundAndNoFee() (gas: 1705595)
+[PASS] testInterruptedChallengeWindowCannotFinalizeEvenAfterResume() (gas: 1838505)
+[PASS] testLateProposalRejectedReservesFullDisputeWindow() (gas: 873220)
+[PASS] testPauseAndDeactivationBlockProposalAndChallengeDeposits() (gas: 1576673)
+[PASS] testUnproposedAndUnfinalizedMarketsExpireWithRefunds() (gas: 1533022)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 108.00ms (100.53ms CPU time)
+
+Ran 12 tests for test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[PASS] testArbitratorRotationBlocksDisputeDecisionButPreservesTimeout() (gas: 1796695)
+[PASS] testControlDriftBlocksUncontestedFinalizationAndFees() (gas: 2786298)
+[PASS] testFuzzReporterGasCannotCreateFalseDrift(uint32) (runs: 2048, μ: 38346, ~: 25250)
+[PASS] testGasStarvationCannotManufactureRoleDrift() (gas: 148365)
+[PASS] testHiddenModulesGuardsAndImplementationCanEvadeViewFingerprint_RESIDUAL() (gas: 1623727)
+[PASS] testInvalidObservableMultisigCannotReceiveFreshApproval() (gas: 169823)
+[PASS] testMaximumDeclaredOwnerSetsFitReporterBudgetWithoutFalsePositive() (gas: 10073507)
+[PASS] testOverlappingOwnersOrGuardianOwnerFailClosed() (gas: 168133)
+[PASS] testOversizedReturnRejectedWithinBoundedCallerBudget() (gas: 77697)
+[PASS] testRevertingGasBurningOversizedMalformedViewsCanBeReportedSafely() (gas: 16118150)
+[PASS] testSignerDriftBeforeActivationInvalidatesApprovalAndDelay() (gas: 805856)
+[PASS] testThresholdDowngradeBlocksDepositsAndPermissionlessReportEnablesExit() (gas: 1128219)
+Suite result: ok. 12 passed; 0 failed; 0 skipped; finished in 659.12ms (653.62ms CPU time)
+
+Ran 60 tests for test/QiePredictionMarket.t.sol:QiePredictionMarketTest
+[PASS] testCancelAfterResolutionReverts() (gas: 408757)
+[PASS] testCancelAtDeadlineSucceeds() (gas: 390107)
+[PASS] testCancelBeforeDeadlineReverts() (gas: 372396)
+[PASS] testCancelTwiceReverts() (gas: 404824)
+[PASS] testClaimBeforeResolutionReverts() (gas: 476953)
+[PASS] testClaimLeavesExactRoundingDustLocked() (gas: 853287)
+[PASS] testClaimLosingSideReverts() (gas: 666183)
+[PASS] testClaimOnInvalidMarketReverts() (gas: 513292)
+[PASS] testClaimPaysWinnersProRata() (gas: 902915)
+[PASS] testClaimReentrancyBlockedByGuard() (gas: 1331256)
+[PASS] testClaimToAfterClaimReverts() (gas: 776261)
+[PASS] testClaimToPaysChosenRecipient() (gas: 744577)
+[PASS] testClaimToRejectsZeroAndMarketRecipient() (gas: 688848)
+[PASS] testClaimTwiceReverts() (gas: 773452)
+[PASS] testClaimWhenWinningSideEmptyReverts() (gas: 524654)
+[PASS] testClaimWithoutPositionReverts() (gas: 668207)
+[PASS] testCreateMarketAcceptsMaximumMetadata() (gas: 2791742)
+[PASS] testCreateMarketRejectsCloseTimeNotInFuture() (gas: 68467)
+[PASS] testCreateMarketRejectsCriteriaTooLong() (gas: 332282)
+[PASS] testCreateMarketRejectsDeadlineNotAfterClose() (gas: 68939)
+[PASS] testCreateMarketRejectsEmptyCriteria() (gas: 39179)
+[PASS] testCreateMarketRejectsEmptyQuestion() (gas: 39138)
+[PASS] testCreateMarketRejectsEmptySource() (gas: 39266)
+[PASS] testCreateMarketRejectsQuestionTooLong() (gas: 81705)
+[PASS] testCreateMarketRejectsSourceTooLong() (gas: 115804)
+[PASS] testCreateMarketRejectsZeroResolver() (gas: 37145)
+[PASS] testCreateMarketStoresImmutableFields() (gas: 406157)
+[PASS] testDirectNativeTransferRejected() (gas: 71508)
+[PASS] testForcedBalanceIsReportedButNotSpendable() (gas: 652329)
+[PASS] testFuzzClaimPayoutMatchesMulDiv(uint96,uint96) (runs: 2048, μ: 686516, ~: 686222)
+[PASS] testFuzzWinnerPayoutsNeverExceedPool(uint96,uint96,uint96) (runs: 2048, μ: 838239, ~: 837731)
+[PASS] testMarketCountIncrements() (gas: 647713)
+[PASS] testMarketsAreIsolated() (gas: 1407861)
+[PASS] testRefundCancelledMarket() (gas: 585802)
+[PASS] testRefundExpiredMarketRequiresCancel() (gas: 637680)
+[PASS] testRefundInvalidReturnsBothSides() (gas: 776113)
+[PASS] testRefundMixedPositionReturnsSum() (gas: 641306)
+[PASS] testRefundOnValidResolutionReverts() (gas: 698348)
+[PASS] testRefundReentrancyBlockedByGuard() (gas: 1347578)
+[PASS] testRefundToPaysChosenRecipient() (gas: 595127)
+[PASS] testRefundToRejectsZeroAndMarketRecipient() (gas: 542883)
+[PASS] testRefundTwiceReverts() (gas: 622473)
+[PASS] testRefundWhenWinningSideEmpty() (gas: 609870)
+[PASS] testRefundWithoutPositionReverts() (gas: 413202)
+[PASS] testResolveAtCloseTimeSucceeds() (gas: 392951)
+[PASS] testResolveAtDeadlineReverts() (gas: 373122)
+[PASS] testResolveBeforeCloseTimeReverts() (gas: 372095)
+[PASS] testResolveInvalidEnablesRefund() (gas: 379035)
+[PASS] testResolveOnlyResolver() (gas: 372657)
+[PASS] testResolveTwiceReverts() (gas: 408917)
+[PASS] testResolveUnknownMarketReverts() (gas: 41381)
+[PASS] testResolveUnresolvedOutcomeRejected() (gas: 373493)
+[PASS] testRevertingReceiverRollsBackClaimAndAllowsRedirect() (gas: 1346749)
+[PASS] testRevertingReceiverRollsBackRefundAndAllowsRedirect() (gas: 1316731)
+[PASS] testStakeRejectsAtAndAfterCloseTime() (gas: 420475)
+[PASS] testStakeRejectsPoolCapExceeded() (gas: 497257)
+[PASS] testStakeRejectsUnknownMarket() (gas: 47154)
+[PASS] testStakeRejectsZeroAmount() (gas: 371894)
+[PASS] testStakeSplitsPoolsAndPositions() (gas: 614504)
+[PASS] testThirdPartyCannotClaimAnotherPosition() (gas: 669101)
+Suite result: ok. 60 passed; 0 failed; 0 skipped; finished in 5.80s (5.83s CPU time)
+
+Ran 4 tests for test/fuzz/Accounting.t.sol:AccountingFuzzTest
+[PASS] testFuzzDeadlineAndCallerBoundaries(uint32,bool) (runs: 2048, μ: 1416013, ~: 1400433)
+[PASS] testFuzzPayoutFeeRoundingAndClaimOrder(uint96,uint96,uint96,uint16,bool,bool) (runs: 2048, μ: 2618859, ~: 2624522)
+[PASS] testFuzzRefundAndNonpunitiveBondDistribution(uint96,uint96,uint96,uint96,uint8) (runs: 2048, μ: 2582897, ~: 2588785)
+[PASS] testFuzzVariableParticipantsAndSettlementOrder(uint8,uint256,bool) (runs: 2048, μ: 2311959, ~: 2183715)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 13.42s (47.63s CPU time)
+
+Ran 1 test for test/QiePredictionMarketInvariant.t.sol:QiePredictionMarketInvariantTest
+[PASS]
+QiePredictionMarketInvariantTest invariants:
+[PASS] invariant_balanceEqualsEscrowPlusSurplus
+[PASS] invariant_globalEscrowMatchesMarketSum
+[PASS] invariant_marketAccountingMatchesGhost
+[PASS] invariant_positionsMatchGhost
+[PASS] invariant_totalPaidOutNeverExceedsReceived
+ QiePredictionMarketInvariantTest invariants (runs: 128, calls: 8192, reverts: 0)
+
+╭---------------+-----------------+-------+---------+----------╮
+| Contract      | Selector        | Calls | Reverts | Discards |
++==============================================================+
+| MarketHandler | cancelIfExpired | 1067  | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | claim           | 1078  | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | createMarket    | 991   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | forcedTransfer  | 975   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | refund          | 963   | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | resolve         | 1036  | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | stake           | 1063  | 0       | 0        |
+|---------------+-----------------+-------+---------+----------|
+| MarketHandler | warp            | 1019  | 0       | 0        |
+╰---------------+-----------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 32.61s (32.60s CPU time)
+
+Ran 1 test for test/invariant/OraklInvariant.t.sol:OraklInvariantTest
+[PASS]
+OraklInvariantTest invariants:
+[PASS] invariant_A_Solvency
+[PASS] invariant_B_NoDoubleClaim
+[PASS] invariant_C_PayoutBound
+[PASS] invariant_D_RefundBound
+[PASS] invariant_E_FeeIsolation
+[PASS] invariant_F_BondIsolation
+[PASS] invariant_G_TerminalConsistency
+[PASS] invariant_H_Finality
+[PASS] invariant_I_UserAccounting
+[PASS] invariant_J_Conservation
+[PASS] invariant_K_ReleaseAndEpochAuthorization
+[PASS] invariant_L_ImmutableEmergencyExit
+ OraklInvariantTest invariants (runs: 128, calls: 8192, reverts: 0)
+
+╭--------------+------------------------+-------+---------+----------╮
+| Contract     | Selector               | Calls | Reverts | Discards |
++====================================================================+
+| OraklHandler | advance                | 429   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | arbitrate              | 408   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | cancel                 | 450   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | challenge              | 439   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claim                  | 471   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claimBond              | 440   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | create                 | 454   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | emergencyCancel        | 446   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | fees                   | 406   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | finalize               | 445   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | forceNative            | 386   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | futureTerms            | 427   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | predict                | 409   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | propose                | 466   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | rejectingReceiverClaim | 442   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | togglePause            | 430   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryEarlyCancellation   | 409   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryQuarantinedWrites   | 411   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | unauthorizedResume     | 424   | 0       | 0        |
+╰--------------+------------------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 110.73s (110.65s CPU time)
+
+Ran 9 tests for test/remediation/EmergencyRecovery.t.sol:EmergencyRecoveryTest
+[PASS] testAllUnresolvedPhasesQuarantinedAndPrincipalRefundedDuringLongHalt() (gas: 5212481)
+[PASS] testAlreadyFinalizedOutcomeAndClaimsUnaffectedByAllInterventions() (gas: 1755455)
+[PASS] testCannotReplaceLiveReleaseApprovalWithoutInterruption() (gas: 45533)
+[PASS] testEmergencyDeadlineCappedAtOriginalMaxAndZeroBondCases() (gas: 1994590)
+[PASS] testFreshApprovalAndFullDelayRequiredToUnpauseAndActivate() (gas: 660391)
+[PASS] testFuzzFirstExitDoesNotMove(uint8,uint32) (runs: 2048, μ: 1470979, ~: 1404181)
+[PASS] testNoEmergencyCancellationWithoutInterruptionAndNoArbitraryDecision() (gas: 556719)
+[PASS] testRepeatInterventionRevokesPendingReviewWithoutDelayingOldExit() (gas: 1396293)
+[PASS] testResumeCannotRefuelReproposeChallengeOrFinalizeQuarantinedMarkets() (gas: 2499512)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 110.88s (13.46s CPU time)
+
+Ran 16 test suites in 110.89s (274.66s CPU time): 150 tests passed, 0 failed, 0 skipped (150 total tests)
+
+╭-----------------------------------------+--------------------+--------------------+------------------+------------------╮
+| File                                    | % Lines            | % Statements       | % Branches       | % Funcs          |
++=========================================================================================================================+
+| script/DeployInactive.s.sol             | 100.00% (4/4)      | 100.00% (4/4)      | 100.00% (1/1)    | 100.00% (1/1)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/MarketFactory.sol                   | 100.00% (27/27)    | 97.73% (43/44)     | 80.00% (4/5)     | 100.00% (2/2)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/MarketResolver.sol                  | 100.00% (81/81)    | 99.19% (123/124)   | 96.15% (25/26)   | 100.00% (8/8)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/PredictionPool.sol                  | 100.00% (73/73)    | 98.90% (90/91)     | 94.12% (16/17)   | 100.00% (10/10)  |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/ProtocolConfig.sol                  | 97.95% (143/146)   | 97.48% (232/238)   | 86.21% (25/29)   | 96.15% (25/26)   |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/ProtocolStorage.sol                 | 100.00% (60/60)    | 98.51% (66/67)     | 88.89% (8/9)     | 100.00% (19/19)  |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| src/QiePredictionMarket.sol             | 87.50% (133/152)   | 84.97% (164/193)   | 86.67% (39/45)   | 89.29% (25/28)   |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/QiePredictionMarketInvariant.t.sol | 74.31% (81/109)    | 74.81% (101/135)   | 45.45% (10/22)   | 55.56% (10/18)   |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/doubles/MutableMultisig.sol        | 91.67% (33/36)     | 89.66% (26/29)     | 75.00% (6/8)     | 100.00% (10/10)  |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/doubles/NativeReentrancy.sol       | 100.00% (28/28)    | 100.00% (20/20)    | 100.00% (8/8)    | 100.00% (10/10)  |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/helpers/OraklTestBase.sol          | 75.41% (46/61)     | 75.00% (39/52)     | 100.00% (4/4)    | 81.82% (9/11)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/helpers/TestBase.sol               | 63.41% (26/41)     | 47.73% (21/44)     | 9.09% (1/11)     | 84.62% (11/13)   |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/invariant/OraklInvariant.t.sol     | 92.83% (259/279)   | 94.21% (374/397)   | 79.49% (31/39)   | 77.42% (24/31)   |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/unit/BondsAndTransfers.t.sol       | 100.00% (18/18)    | 100.00% (14/14)    | 100.00% (3/3)    | 100.00% (5/5)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| test/unit/ConfigurationBoundaries.t.sol | 100.00% (7/7)      | 100.00% (4/4)      | N/A (0/0)        | 100.00% (3/3)    |
+|-----------------------------------------+--------------------+--------------------+------------------+------------------|
+| Total                                   | 90.82% (1019/1122) | 90.73% (1321/1456) | 79.74% (181/227) | 88.21% (172/195) |
+╰-----------------------------------------+--------------------+--------------------+------------------+------------------╯

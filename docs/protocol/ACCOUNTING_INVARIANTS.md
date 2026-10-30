@@ -42,3 +42,7 @@ Forced native funds cannot create contributions, fees, bonds or entitlements. Th
 | J | Independent total inflows less three withdrawal categories equal all remaining liabilities. |
 
 Handler actions randomize creators, actors, markets, sides, amounts, future fees/bonds/minimums, time boundaries, outcomes, challengers, arbitration authorization, pause state, claim ordering and forced credits. Dedicated unit tests cover failed-transfer rollback and cross-function reentrancy. See the executed test report for settings/results; invariants are bounded tests, not formal proof.
+
+## P0.1 extensions
+
+Accounting formulas and bond principals are unchanged. The stateful handler now uses eight actors including a rejecting receiver, 24-market bound, independent epoch/first-interruption ghost state, premature cancellation/revival/unauthorized resume attempts and redirected failed payments. New invariant K checks review delay/epoch authorization; L checks immutable first-interruption exit times. Default reproducible campaign: 2,048 fuzz runs, 128 invariant sequences × depth 64, fail_on_revert=true, seed 0x4f52414b4c503031. See the P0.1 executed report for actual results and second-seed evidence.

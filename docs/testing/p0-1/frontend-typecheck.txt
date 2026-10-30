@@ -1,0 +1,7 @@
+
+> typecheck
+> npm --prefix frontend run typecheck
+
+
+> qie-prediction-market-frontend@0.1.0 typecheck
+> tsc --noEmit

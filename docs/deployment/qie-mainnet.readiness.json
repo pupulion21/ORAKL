@@ -14,7 +14,10 @@
     "Verify v1 creation, opcode, gas, wallet and explorer compatibility",
     "Approve economics, role control and dispute incentives",
     "Complete independent audit and applicable compliance authorization",
-    "Complete operational services and explicit deployment authorization"
+    "Complete operational services and explicit deployment authorization",
+    "Approve P0.1 emergency abort policy and release review minimum",
+    "Independently verify admitted wallet execution including proxy singleton, modules, guards and fallback",
+    "Verify QIE-specific code/initcode limits and reporter/wallet getter gas; standard EVM local limits only are tested"
   ],
   "evidence": "evidence/mainnet-rpc-observation.json"
 }

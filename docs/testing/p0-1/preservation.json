@@ -1,0 +1,61 @@
+{
+  "baseline": "7b8ac4e3f009c46631d88f5094e632972885aaaa",
+  "checks": [
+    {
+      "path": "frontend",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/src/QiePredictionMarket.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/test/QiePredictionMarket.t.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/test/QiePredictionMarketInvariant.t.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/test/helpers/TestBase.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/test/helpers/Vm.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/test/doubles/NativeReentrancy.sol",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/lib",
+      "unchanged": true
+    },
+    {
+      "path": "contracts/abi",
+      "unchanged": true
+    },
+    {
+      "path": "results/deployment/live-deployment.json",
+      "unchanged": true
+    },
+    {
+      "path": "scripts/gen-abi-ts.mjs",
+      "unchanged": true
+    },
+    {
+      "path": "package.json",
+      "unchanged": true
+    },
+    {
+      "path": "package-lock.json",
+      "unchanged": true
+    }
+  ],
+  "benchmarkSourceDigestsMatch": true,
+  "mainRef": "b555a87e82d40560e50c8ce102239b10eb3bd365",
+  "p0Ref": "7b8ac4e3f009c46631d88f5094e632972885aaaa",
+  "sourceRevision": "fc5b8be"
+}

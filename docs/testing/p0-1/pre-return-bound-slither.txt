@@ -1,0 +1,98 @@
+
+Detector: arbitrary-send-eth
+ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: arbitrary-send-eth
+QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: uninitialized-state
+ProtocolStorage.marketCount (src/ProtocolStorage.sol#25) is never initialized. It is used in:
+	- ProtocolStorage._market(uint256) (src/ProtocolStorage.sol#108-111)
+ProtocolStorage._markets (src/ProtocolStorage.sol#35) is never initialized. It is used in:
+	- ProtocolStorage._market(uint256) (src/ProtocolStorage.sol#108-111)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#uninitialized-state-variables
+
+Detector: return-bomb
+ProtocolConfig._walletState(address) (src/ProtocolConfig.sol#232-250) tries to limit the gas of an external call that controls implicit decoding
+	(ok,data) = wallet.staticcall{gas: 200_000}(abi.encodeCall(IMultisig.getOwners,())) (src/ProtocolConfig.sol#234)
+	(ok,data) = wallet.staticcall{gas: 30_000}(abi.encodeCall(IMultisig.getThreshold,())) (src/ProtocolConfig.sol#237)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#return-bomb
+
+Detector: timestamp
+MarketFactory.createMarket(bytes32,string,uint64,uint64,uint64) (src/MarketFactory.sol#25-60) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp || closeTime > block.timestamp + 31536000 || resolutionTime < closeTime || uint256(maxResolutionTime) <= uint256(resolutionTime) + terms.challengePeriod + terms.arbitrationPeriod || uint256(maxResolutionTime) > uint256(closeTime) + 31536000 (src/MarketFactory.sol#39-42)
+MarketResolver.proposeResult(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#23-47) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolutionTime || block.timestamp >= latest (src/MarketResolver.sol#34)
+MarketResolver.challengeResult(uint256,bytes32) (src/MarketResolver.sol#49-62) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.challengeDeadline (src/MarketResolver.sol#53)
+MarketResolver.finalizeResult(uint256) (src/MarketResolver.sol#64-72) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime (src/MarketResolver.sol#69)
+MarketResolver.settleDispute(uint256,ProtocolTypes.Outcome,bytes32) (src/MarketResolver.sol#74-85) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.arbitrationDeadline (src/MarketResolver.sol#79)
+MarketResolver.cancelExpiredMarket(uint256) (src/MarketResolver.sol#87-96) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < expiry (src/MarketResolver.sol#91)
+MarketResolver.cancelInterruptedMarket(uint256) (src/MarketResolver.sol#107-116) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < readyAt (src/MarketResolver.sol#111)
+ProtocolConfig._requireApproved(bytes32) (src/ProtocolConfig.sol#186-191) uses timestamp for comparisons
+	Dangerous comparisons:
+	- release == bytes32(0) || approvedRelease != release || block.timestamp < activationAfter || block.chainid != deploymentChainId || approvedDigest != releaseDigest(release) (src/ProtocolConfig.sol#188-189)
+ProtocolStorage.marketState(uint256) (src/ProtocolStorage.sol#71-75) uses timestamp for comparisons
+	Dangerous comparisons:
+	- m.storedState == ProtocolTypes.State.OPEN && block.timestamp >= m.closeTime (src/ProtocolStorage.sol#73)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: timestamp
+QiePredictionMarket.createMarket(string,string,string,address,uint64,uint64) (src/QiePredictionMarket.sol#176-198) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp (src/QiePredictionMarket.sol#187)
+QiePredictionMarket.stake(uint256,QiePredictionMarket.Side) (src/QiePredictionMarket.sol#205-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.closeTime (src/QiePredictionMarket.sol#207)
+QiePredictionMarket.resolve(uint256,QiePredictionMarket.Outcome) (src/QiePredictionMarket.sol#238-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.closeTime (src/QiePredictionMarket.sol#241)
+	- block.timestamp >= m.resolveDeadline (src/QiePredictionMarket.sol#242)
+QiePredictionMarket.cancelIfExpired(uint256) (src/QiePredictionMarket.sol#253-261) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolveDeadline (src/QiePredictionMarket.sol#255)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in ProtocolConfig.bindFactory(address) (src/ProtocolConfig.sol#68-75):
+	- (ok,data) = facade.staticcall(abi.encodeWithSignature(protocolConfig())) (src/ProtocolConfig.sol#71)
+Low level call in ProtocolConfig._walletState(address) (src/ProtocolConfig.sol#232-250):
+	- (ok,data) = wallet.staticcall{gas: 200_000}(abi.encodeCall(IMultisig.getOwners,())) (src/ProtocolConfig.sol#234)
+	- (ok,data) = wallet.staticcall{gas: 30_000}(abi.encodeCall(IMultisig.getThreshold,())) (src/ProtocolConfig.sol#237)
+Low level call in ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134):
+	- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: low-level-calls
+Low level call in QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466):
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+
+Detector: constable-states
+ProtocolStorage.marketCount (src/ProtocolStorage.sol#25) should be constant
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+
+Detector: var-read-using-this
+The function ProtocolConfig.reportRoleDrift() (src/ProtocolConfig.sol#175-184) reads observed = this.currentRoleState{gas: ROLE_CHECK_GAS}() (src/ProtocolConfig.sol#179-181) with `this` which adds an extra STATICCALL.
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#public-variable-read-in-external-context
+. analyzed (23 contracts with 102 detectors), 24 result(s) found
+'forge clean' running (wd: /home/pupulion/prediction-market-mvp/contracts)
+'forge config --json' running
+'forge build --build-info --deny never --skip ./test/** ./script/** --force' running (wd: /home/pupulion/prediction-market-mvp/contracts)

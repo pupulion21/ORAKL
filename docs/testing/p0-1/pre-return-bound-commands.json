@@ -1,0 +1,82 @@
+[
+  {
+    "name": "invariant-seed-2",
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "--fuzz-seed",
+      "0x4f52414b4c503032",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:30:53.088754+00:00",
+    "finishedAt": "2026-10-30T08:32:10.836129+00:00"
+  },
+  {
+    "name": "slither",
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/p0-1/slither.json"
+    ],
+    "cwd": "contracts",
+    "exitCode": 255,
+    "startedAt": "2026-10-30T08:32:10.836547+00:00",
+    "finishedAt": "2026-10-30T08:32:16.605733+00:00"
+  },
+  {
+    "name": "coverage",
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:32:16.606121+00:00",
+    "finishedAt": "2026-10-30T08:34:15.000003+00:00"
+  },
+  {
+    "name": "build-final",
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:34:15.000573+00:00",
+    "finishedAt": "2026-10-30T08:34:21.376306+00:00"
+  },
+  {
+    "name": "fmt",
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:34:21.376777+00:00",
+    "finishedAt": "2026-10-30T08:34:21.401735+00:00"
+  },
+  {
+    "name": "gas-local",
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/remediation/*",
+      "--gas-report"
+    ],
+    "cwd": "contracts",
+    "exitCode": 0,
+    "startedAt": "2026-10-30T08:34:21.402283+00:00",
+    "finishedAt": "2026-10-30T08:34:22.444432+00:00"
+  }
+]

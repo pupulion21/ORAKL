@@ -1,5 +1,7 @@
 # ORAKL P0 threat model and security review
 
+Historical P0 model. Current P0.1 findings and trust boundaries are in [P0.1 security review](../audit/P0_1_SECURITY_REVIEW.md), [value-flow review](../audit/P0_1_VALUE_FLOW_REVIEW.md) and [emergency recovery](EMERGENCY_RECOVERY.md).
+
 Scope: new native-collateral protocol and preserved legacy boundary. This is first-party engineering review with automated testing, not an independent audit. See [initial audit](../audit/INITIAL_REPOSITORY_AUDIT.md), [accounting model](../protocol/ACCOUNTING_INVARIANTS.md) and [executed test report](../testing/FOUNDRY_TEST_REPORT.md).
 
 ## Assets and authority

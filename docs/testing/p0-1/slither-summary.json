@@ -1,0 +1,91 @@
+{
+  "slither": {
+    "analysisSuccess": true,
+    "countsBySeverity": {
+      "High": 4,
+      "Low": 13,
+      "Informational": 4,
+      "Optimization": 2
+    },
+    "countsByDetector": {
+      "arbitrary-send-eth": 2,
+      "uninitialized-state": 2,
+      "timestamp": 13,
+      "assembly": 1,
+      "low-level-calls": 3,
+      "constable-states": 1,
+      "var-read-using-this": 1
+    },
+    "highs": [
+      {
+        "check": "arbitrary-send-eth",
+        "description": "ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134) sends eth to arbitrary user\n\tDangerous calls:\n\t- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)\n"
+      },
+      {
+        "check": "arbitrary-send-eth",
+        "description": "QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466) sends eth to arbitrary user\n\tDangerous calls:\n\t- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)\n"
+      },
+      {
+        "check": "uninitialized-state",
+        "description": "ProtocolStorage.marketCount (src/ProtocolStorage.sol#25) is never initialized. It is used in:\n\t- ProtocolStorage._market(uint256) (src/ProtocolStorage.sol#108-111)\n"
+      },
+      {
+        "check": "uninitialized-state",
+        "description": "ProtocolStorage._markets (src/ProtocolStorage.sol#35) is never initialized. It is used in:\n\t- ProtocolStorage._market(uint256) (src/ProtocolStorage.sol#108-111)\n"
+      }
+    ]
+  },
+  "slither-factory": {
+    "analysisSuccess": true,
+    "countsBySeverity": {
+      "High": 1,
+      "Low": 8,
+      "Informational": 1
+    },
+    "countsByDetector": {
+      "arbitrary-send-eth": 1,
+      "timestamp": 8,
+      "low-level-calls": 1
+    },
+    "highs": [
+      {
+        "check": "arbitrary-send-eth",
+        "description": "ProtocolStorage._send(address,uint256) (src/ProtocolStorage.sol#130-134) sends eth to arbitrary user\n\tDangerous calls:\n\t- (ok,None) = address(recipient).call{value: amount}() (src/ProtocolStorage.sol#132)\n"
+      }
+    ]
+  },
+  "slither-config": {
+    "analysisSuccess": true,
+    "countsBySeverity": {
+      "Low": 1,
+      "Informational": 2,
+      "Optimization": 1
+    },
+    "countsByDetector": {
+      "timestamp": 1,
+      "assembly": 1,
+      "low-level-calls": 1,
+      "var-read-using-this": 1
+    },
+    "highs": []
+  },
+  "slither-legacy": {
+    "analysisSuccess": true,
+    "countsBySeverity": {
+      "High": 1,
+      "Low": 4,
+      "Informational": 1
+    },
+    "countsByDetector": {
+      "arbitrary-send-eth": 1,
+      "timestamp": 4,
+      "low-level-calls": 1
+    },
+    "highs": [
+      {
+        "check": "arbitrary-send-eth",
+        "description": "QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466) sends eth to arbitrary user\n\tDangerous calls:\n\t- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)\n"
+      }
+    ]
+  }
+}
