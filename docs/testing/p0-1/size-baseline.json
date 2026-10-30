@@ -1,0 +1,159 @@
+{
+  "label": "P0-7b8ac4e",
+  "solc": "solc, the solidity compiler commandline interface\nVersion: 0.8.37+commit.f401782d.Linux.g++",
+  "sourceSha256": {
+    "src/MarketFactory.sol": "d0be4fb9a3cb0ec409411fde5c334869ed78b857bbaed47095214fe75a829e53",
+    "src/MarketResolver.sol": "0ef34306da384810b750fa516d12bc4f67e2cff7331c75b33253c50d8150aaf8",
+    "src/PredictionPool.sol": "0a84cb7886f352eac5d22549a53703340f703915663ad2465c4a5b7ec8f75abe",
+    "src/ProtocolConfig.sol": "c8bde69fed22d1b151bb04cf61dcd0f53bf84339c481304317f65bac3ff43d75",
+    "src/ProtocolStorage.sol": "d00bf5cb15905183a97bdcaaa1e49f550e3df588b46a9f7390761bdee848222d",
+    "src/QiePredictionMarket.sol": "d0356652e6384665361c164b3014c40c10eb8d514508381570e7cdb46a74c610",
+    "src/interfaces/IMultisig.sol": "ad114a3e5e25a572e08a846dd19eb32e5127ab9e23f4c044b831de4666c3291d",
+    "src/interfaces/IProtocolConfig.sol": "a9d6a17185c70819ab896a9b869ee046b05a11de6e656591612a2731b04d5e45",
+    "src/libraries/ProtocolTypes.sol": "f8e4ce7d61ff45d094b40182bc016b63dc4fcf9db272cd206b283a32b872847d",
+    "lib/openzeppelin-contracts/contracts/utils/Panic.sol": "270fc8401c1a13fae6a7a4a2dd6e381b95d658896701e51f0d3e2688acab3dec",
+    "lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol": "32fbb1c908ec1b4de85cc1bb10091aebd5816ffe80dfdd5ca5e084fbea67a462",
+    "lib/openzeppelin-contracts/contracts/utils/math/Math.sol": "92fee281fd46a1b058b190cf21d6b1a528f0433a907850ae1c9bcf36c5c0cd98",
+    "lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol": "9769274bf53f26a7c7896c526ea1980dc9bea5bf5c2a5fd04870008c4afc1de9"
+  },
+  "results": [
+    {
+      "name": "off",
+      "optimizer": false,
+      "runs": 200,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.401,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 24302,
+          "initcodeBytes": 24732
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 11717,
+          "initcodeBytes": 15761
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 13906,
+          "initcodeBytes": 13945
+        }
+      }
+    },
+    {
+      "name": "runs-1",
+      "optimizer": true,
+      "runs": 1,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.982,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 13567,
+          "initcodeBytes": 13791
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 6328,
+          "initcodeBytes": 8755
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7964,
+          "initcodeBytes": 8000
+        }
+      }
+    },
+    {
+      "name": "runs-50",
+      "optimizer": true,
+      "runs": 50,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.903,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 13625,
+          "initcodeBytes": 13849
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 6342,
+          "initcodeBytes": 8769
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7974,
+          "initcodeBytes": 8010
+        }
+      }
+    },
+    {
+      "name": "runs-200",
+      "optimizer": true,
+      "runs": 200,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.949,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 13746,
+          "initcodeBytes": 13970
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 6297,
+          "initcodeBytes": 8724
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7998,
+          "initcodeBytes": 8034
+        }
+      }
+    },
+    {
+      "name": "runs-1000",
+      "optimizer": true,
+      "runs": 1000,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.94,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 14284,
+          "initcodeBytes": 14508
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 6563,
+          "initcodeBytes": 8990
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 8869,
+          "initcodeBytes": 8905
+        }
+      }
+    },
+    {
+      "name": "ir-200",
+      "optimizer": true,
+      "runs": 200,
+      "viaIR": true,
+      "evmVersion": "paris",
+      "durationSeconds": 3.443,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 11176,
+          "initcodeBytes": 11382
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 5574,
+          "initcodeBytes": 7579
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 6318,
+          "initcodeBytes": 6350
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+Compiling 1 files with Solc 0.8.37
+Solc 0.8.37 finished in 110.90ms
+Compiler run successful!
+
+Ran 4 tests for test/remediation/P0_1Regression.t.sol:P0_1RegressionTest
+[FAIL: governance must not override independent emergency alone] testGuardianPauseNeedsFreshIndependentApproval() (gas: 71684)
+[FAIL: early emergency refund must be permissionless after full grace] testInterruptedProposalHasBoundedRefundBeforeDistantMax() (gas: 928099)
+[FAIL: changed arbitration control requires rejection and timeout fallback] testMutatedArbitratorCodeCannotSettleExistingDispute() (gas: 1043261)
+[FAIL: role mutation must fail closed] testMutatedGovernanceCodeBlocksNewDeposits() (gas: 539467)
+Suite result: FAILED. 0 passed; 4 failed; 0 skipped; finished in 3.21ms (3.72ms CPU time)
+
+Ran 1 test suite in 16.67ms (3.21ms CPU time): 0 tests passed, 4 failed, 0 skipped (4 total tests)
+
+Failing tests:
+Encountered 4 failing tests in test/remediation/P0_1Regression.t.sol:P0_1RegressionTest
+[FAIL: governance must not override independent emergency alone] testGuardianPauseNeedsFreshIndependentApproval() (gas: 71684)
+[FAIL: early emergency refund must be permissionless after full grace] testInterruptedProposalHasBoundedRefundBeforeDistantMax() (gas: 928099)
+[FAIL: changed arbitration control requires rejection and timeout fallback] testMutatedArbitratorCodeCannotSettleExistingDispute() (gas: 1043261)
+[FAIL: role mutation must fail closed] testMutatedGovernanceCodeBlocksNewDeposits() (gas: 539467)
+
+Encountered a total of 4 failing tests, 0 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 4 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
