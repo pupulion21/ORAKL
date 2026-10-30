@@ -117,5 +117,22 @@
     "exit_code": 0,
     "output": "docs/testing/selected-economics/preservation-3.txt",
     "output_sha256": "d2562ab4674622f18971ef75894d88eeca67c243077d639948c2c258e3530088"
+  },
+  {
+    "step": "exposure-before",
+    "attempt": 3,
+    "argv": [
+      "python3",
+      "scripts/reproduce-selected-exposure-before.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:39:18.541626+00:00",
+    "elapsed_seconds": 1.294,
+    "head_at_execution": "3921709d93fba8709ab7fc3d936d2bd01d69402b",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/selected-economics/exposure-before-3.txt",
+    "output_sha256": "1b28780fba6a403871199eed77a658b8aea97b4d2a888f23441f71fd39042b80"
   }
 ]

@@ -16,7 +16,9 @@ pragma solidity 0.8.37;
 import {OraklTestBase,T} from "./helpers/OraklTestBase.sol";
 contract ExposureBefore is OraklTestBase {
 function testActualAggregateAdmissionMustRejectThirdMarket() public {
-_deploy(true);uint256 a=_create();uint256 b=_create();uint256 c=_create();
+_deploy(true);T.Parameters memory terms=config.parameters();terms.poolCap=100 ether;
+vm.prank(governance);config.setParameters(terms);_activate();
+uint256 a=_create();uint256 b=_create();uint256 c=_create();
 _predict(a,bob,T.Side.YES,100 ether);_predict(b,bob,T.Side.YES,100 ether);
 vm.prank(bob);(bool admitted,)=address(factory).call{value:1 ether}(abi.encodeCall(factory.predict,(c,T.Side.YES)));
 assertFalse(admitted,"P0.3 admits third market beyond selected per-arbitrator budget");

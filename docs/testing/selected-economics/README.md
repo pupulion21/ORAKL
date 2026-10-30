@@ -43,10 +43,11 @@ Exact stdout/stderr bytes and analyzer JSON are retained. Regenerate outputs onl
 | tool-identity / 1 | 0 | 1.236 | [tool-identity-1.txt](tool-identity-1.txt) |
 | preservation / 2 | 0 | 1.243 | [preservation-2.txt](preservation-2.txt) |
 | preservation / 3 | 0 | 1.281 | [preservation-3.txt](preservation-3.txt) |
+| exposure-before / 3 | 1 | 1.294 | [exposure-before-3.txt](exposure-before-3.txt) |
 | interface-tests-v2 / 1 | 0 | 1.617 | [interface-tests-v2-1.txt](interface-tests-v2-1.txt) |
 | rounding-model / 1 | 0 | 0.257 | [rounding-model-1.txt](rounding-model-1.txt) |
 | selected-export-final / 1 | 0 | 0.355 | [selected-export-final-1.txt](selected-export-final-1.txt) |
 | selected-interface-final / 1 | 0 | 0.391 | [selected-interface-final-1.txt](selected-interface-final-1.txt) |
 | interface-tests-v2 / 2 | 0 | 1.672 | [interface-tests-v2-2.txt](interface-tests-v2-2.txt) |
 
-All 44 registered output SHA256 values were recomputed and matched. Commands include actual execution HEAD; production source is99acc8f and final Solidity testsafebfe6, with later docs/tooling changes. `preservation.json` and `artifact-check.json` are latest derived reports; prior exact command stdout remains. Earlier snapshots are preserved under their original evidence paths.
+All 45 registered output SHA256 values were recomputed and matched. Commands include actual execution HEAD; production source is99acc8f and final Solidity testsafebfe6, with later docs/tooling changes. `preservation.json` and `artifact-check.json` are latest derived reports; prior exact command stdout remains. Earlier snapshots are preserved under their original evidence paths.

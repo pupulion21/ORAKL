@@ -1,0 +1,739 @@
+Exact baseline f3b35a1fb25bc08f2e5cd6c31addb6396c238181 isolated source from git archive; expecting test failure
+Compiling 16 files with Solc 0.8.37
+Compiling 18 files with Solc 0.8.37
+Solc 0.8.37 finished in 148.51ms
+Solc 0.8.37 finished in 988.12ms
+Compiler run successful with warnings:
+Warning (3628): This contract has a payable fallback function, but no receive ether function. Consider adding a receive ether function.
+  --> test/security/ArbitrationDoubles.sol:40:1:
+   |
+40 | contract MutableProxyWalletMock {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+Note: The payable fallback function is defined here.
+  --> test/security/ArbitrationDoubles.sol:66:5:
+   |
+66 |     fallback() external payable {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Ran 3 tests for test/ExposureBefore.t.sol:ExposureBefore
+[FAIL: P0.3 admits third market beyond selected per-arbitrator budget] testActualAggregateAdmissionMustRejectThirdMarket() (gas: 3733196)
+Traces:
+  [3733196] ExposureBefore::testActualAggregateAdmissionMustRejectThirdMarket()
+    ├─ [210401] → new MultisigViewMock@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210401] → new MultisigViewMock@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210413] → new MultisigViewMock@0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [0] VM::deployCode("src/ProtocolConfig.sol:ProtocolConfig", 0x0000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b000000000000000000000000000000000000000000000000000000000000998800000000000000000000000000000000000000000000000000000000000000c80000000000000000000000000000000000000000000000004563918244f400000000000000000000000000000000000000000000000000001bc16d674ec8000000000000000000000000000000000000000000000000000029a2241af62c0000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000e100000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a)
+    │   ├─ [1815077] → new ProtocolConfig@0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 8508 bytes of code
+    │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    ├─ [0] VM::deployCode("src/MarketFactory.sol:MarketFactory", 0x0000000000000000000000005991a2df15a8f6a256d3ec51e99254cd3fb576a9)
+    │   ├─ [3198197] → new MarketFactory@0xc7183455a4C133Ae270771860664b6B7ec320bB1
+    │   │   └─ ← [Return] 15860 bytes of code
+    │   └─ ← [Return] MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [49200] ProtocolConfig::bindFactory(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   ├─ [394] MarketFactory::protocolConfig() [staticcall]
+    │   │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    │   ├─ emit FactoryBound(factory: MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(MultisigViewMock: [0x2e234DAe75C793f67A35089C9d99245E1C58470b])
+    │   └─ ← [Return]
+    ├─ [197651] ProtocolConfig::approveRelease(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit ReleaseApproved(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5, activationAfter: 86401 [8.64e4])
+    │   └─ ← [Stop]
+    ├─ [2513] ProtocolConfig::activationAfter() [staticcall]
+    │   └─ ← [Return] 86401 [8.64e4]
+    ├─ [0] VM::warp(86401 [8.64e4])
+    │   └─ ← [Return]
+    ├─ [2438] ProtocolConfig::paused() [staticcall]
+    │   └─ ← [Return] false
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [121513] ProtocolConfig::activateFinance(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit FinanceActivated(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5)
+    │   └─ ← [Stop]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000A11cE, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x0000000000000000000000000000000000000B0b, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000cA201, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [124943] ProtocolConfig::setParameters(Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit ActivityInterrupted(epoch: 0, interruptedAt: 86401 [8.64e4], caller: MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   ├─ emit FinanceDeactivated(caller: MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   ├─ emit PauseChanged(paused: true, caller: MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   ├─ emit ParametersConfigured(parametersHash: 0xb417db61f21c9e4042d0885faeb23ba206537f1c1983fd3e40b8fae4c17b3f70)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(MultisigViewMock: [0x2e234DAe75C793f67A35089C9d99245E1C58470b])
+    │   └─ ← [Return]
+    ├─ [197651] ProtocolConfig::approveRelease(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit ReleaseApproved(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0x23945fa8dd728385a8e7b30aa3777f0c95e4797df387f596bf3ba47e38237cf0, activationAfter: 172801 [1.728e5])
+    │   └─ ← [Stop]
+    ├─ [2513] ProtocolConfig::activationAfter() [staticcall]
+    │   └─ ← [Return] 172801 [1.728e5]
+    ├─ [0] VM::warp(172801 [1.728e5])
+    │   └─ ← [Return]
+    ├─ [2438] ProtocolConfig::paused() [staticcall]
+    │   └─ ← [Return] true
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [96532] ProtocolConfig::unpause()
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit PauseChanged(paused: false, caller: MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [101613] ProtocolConfig::activateFinance(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit FinanceActivated(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0x23945fa8dd728385a8e7b30aa3777f0c95e4797df387f596bf3ba47e38237cf0)
+    │   └─ ← [Stop]
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [448797] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 172901 [1.729e5], 173001 [1.73e5], 183801 [1.838e5])
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ [6057] ProtocolConfig::roleFingerprint(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 172901 [1.729e5], resolutionTime: 173001 [1.73e5], maxResolutionTime: 183801 [1.838e5], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [397497] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 172901 [1.729e5], 173001 [1.73e5], 183801 [1.838e5])
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ [6057] ProtocolConfig::roleFingerprint(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc
+    │   ├─ emit BondDeposited(marketId: 1, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 1, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 172901 [1.729e5], resolutionTime: 173001 [1.73e5], maxResolutionTime: 183801 [1.838e5], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 1
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [397497] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 172901 [1.729e5], 173001 [1.73e5], 183801 [1.838e5])
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ [6057] ProtocolConfig::roleFingerprint(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc
+    │   ├─ emit BondDeposited(marketId: 2, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 2, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 172901 [1.729e5], resolutionTime: 173001 [1.73e5], maxResolutionTime: 183801 [1.838e5], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 100000000000000000000 [1e20], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 2
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [190921] MarketFactory::predict{value: 100000000000000000000}(0, 0)
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ emit PredictionPlaced(marketId: 0, participant: 0x0000000000000000000000000000000000000B0b, side: 0, amount: 100000000000000000000 [1e20])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [156733] MarketFactory::predict{value: 100000000000000000000}(1, 0)
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ emit PredictionPlaced(marketId: 1, participant: 0x0000000000000000000000000000000000000B0b, side: 0, amount: 100000000000000000000 [1e20])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [156733] MarketFactory::predict{value: 1000000000000000000}(2, 0)
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 1
+    │   ├─ emit PredictionPlaced(marketId: 2, participant: 0x0000000000000000000000000000000000000B0b, side: 0, amount: 1000000000000000000 [1e18])
+    │   └─ ← [Stop]
+    └─ ← [Revert] P0.3 admits third market beyond selected per-arbitrator budget
+
+Backtrace:
+  at ExposureBefore.testActualAggregateAdmissionMustRejectThirdMarket
+
+[FAIL: P0.3 accepts short proposal opportunity forbidden by selected policy] testInsufficientProposalOpportunityMustReject() (gas: 1718280)
+Traces:
+  [1718280] ExposureBefore::testInsufficientProposalOpportunityMustReject()
+    ├─ [210401] → new MultisigViewMock@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210401] → new MultisigViewMock@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210413] → new MultisigViewMock@0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [0] VM::deployCode("src/ProtocolConfig.sol:ProtocolConfig", 0x0000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b000000000000000000000000000000000000000000000000000000000000998800000000000000000000000000000000000000000000000000000000000000c80000000000000000000000000000000000000000000000004563918244f400000000000000000000000000000000000000000000000000001bc16d674ec8000000000000000000000000000000000000000000000000000029a2241af62c0000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000e100000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a)
+    │   ├─ [1815077] → new ProtocolConfig@0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 8508 bytes of code
+    │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    ├─ [0] VM::deployCode("src/MarketFactory.sol:MarketFactory", 0x0000000000000000000000005991a2df15a8f6a256d3ec51e99254cd3fb576a9)
+    │   ├─ [3198197] → new MarketFactory@0xc7183455a4C133Ae270771860664b6B7ec320bB1
+    │   │   └─ ← [Return] 15860 bytes of code
+    │   └─ ← [Return] MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [49200] ProtocolConfig::bindFactory(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   ├─ [394] MarketFactory::protocolConfig() [staticcall]
+    │   │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    │   ├─ emit FactoryBound(factory: MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(MultisigViewMock: [0x2e234DAe75C793f67A35089C9d99245E1C58470b])
+    │   └─ ← [Return]
+    ├─ [197651] ProtocolConfig::approveRelease(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit ReleaseApproved(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5, activationAfter: 86401 [8.64e4])
+    │   └─ ← [Stop]
+    ├─ [2513] ProtocolConfig::activationAfter() [staticcall]
+    │   └─ ← [Return] 86401 [8.64e4]
+    ├─ [0] VM::warp(86401 [8.64e4])
+    │   └─ ← [Return]
+    ├─ [2438] ProtocolConfig::paused() [staticcall]
+    │   └─ ← [Return] false
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [121513] ProtocolConfig::activateFinance(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit FinanceActivated(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5)
+    │   └─ ← [Stop]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000A11cE, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x0000000000000000000000000000000000000B0b, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000cA201, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [428861] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://short", 86501 [8.65e4], 86601 [8.66e4], 97401 [9.74e4])
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [6057] ProtocolConfig::roleFingerprint(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://short", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    └─ ← [Revert] P0.3 accepts short proposal opportunity forbidden by selected policy
+
+Backtrace:
+  at ExposureBefore.testInsufficientProposalOpportunityMustReject
+
+[FAIL: P0.3 returns only P on uphold instead of P+C | left: 2000000000000000000, right: 5000000000000000000] testUpholdMustAllocateAllChallengePrincipalToProposer() (gas: 2997116)
+Traces:
+  [2997116] ExposureBefore::testUpholdMustAllocateAllChallengePrincipalToProposer()
+    ├─ [210401] → new MultisigViewMock@0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210401] → new MultisigViewMock@0x2e234DAe75C793f67A35089C9d99245E1C58470b
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [210413] → new MultisigViewMock@0xF62849F9A0B5Bf2913b396098F7c7019b51A820a
+    │   └─ ← [Return] 293 bytes of code
+    ├─ [0] VM::deployCode("src/ProtocolConfig.sol:ProtocolConfig", 0x0000000000000000000000005615deb798bb3e4dfa0139dfa1b3d433cc23b72f0000000000000000000000002e234dae75c793f67a35089c9d99245e1c58470b000000000000000000000000000000000000000000000000000000000000998800000000000000000000000000000000000000000000000000000000000000c80000000000000000000000000000000000000000000000004563918244f400000000000000000000000000000000000000000000000000001bc16d674ec8000000000000000000000000000000000000000000000000000029a2241af62c0000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000ffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000e100000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000f62849f9a0b5bf2913b396098f7c7019b51a820a)
+    │   ├─ [1815077] → new ProtocolConfig@0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 8508 bytes of code
+    │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    ├─ [0] VM::deployCode("src/MarketFactory.sol:MarketFactory", 0x0000000000000000000000005991a2df15a8f6a256d3ec51e99254cd3fb576a9)
+    │   ├─ [3198197] → new MarketFactory@0xc7183455a4C133Ae270771860664b6B7ec320bB1
+    │   │   └─ ← [Return] 15860 bytes of code
+    │   └─ ← [Return] MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [49200] ProtocolConfig::bindFactory(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   ├─ [394] MarketFactory::protocolConfig() [staticcall]
+    │   │   └─ ← [Return] ProtocolConfig: [0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9]
+    │   ├─ emit FactoryBound(factory: MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1])
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(MultisigViewMock: [0x2e234DAe75C793f67A35089C9d99245E1C58470b])
+    │   └─ ← [Return]
+    ├─ [197651] ProtocolConfig::approveRelease(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit ReleaseApproved(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5, activationAfter: 86401 [8.64e4])
+    │   └─ ← [Stop]
+    ├─ [2513] ProtocolConfig::activationAfter() [staticcall]
+    │   └─ ← [Return] 86401 [8.64e4]
+    ├─ [0] VM::warp(86401 [8.64e4])
+    │   └─ ← [Return]
+    ├─ [2438] ProtocolConfig::paused() [staticcall]
+    │   └─ ← [Return] false
+    ├─ [0] VM::prank(MultisigViewMock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f])
+    │   └─ ← [Return]
+    ├─ [121513] ProtocolConfig::activateFinance(0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e)
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   └─ ← [Return] 2
+    │   ├─ emit FinanceActivated(release: 0xe08942f8e47c411be0a0cf6dbbc1c70ee0b772390df39d35f9bbd793eb4db05e, digest: 0xdb9ecea536950ab45702129451731f9149384d6db3f8000c8cb9c4e61d1a3cc5)
+    │   └─ ← [Stop]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000A11cE, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x0000000000000000000000000000000000000B0b, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [0] VM::deal(0x00000000000000000000000000000000000cA201, 1000000000000000000000000000000 [1e30])
+    │   └─ ← [Return]
+    ├─ [9894] ProtocolConfig::parameters() [staticcall]
+    │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [428897] MarketFactory::createMarket{value: 5000000000000000000}(0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, "ipfs://test-cid", 86501 [8.65e4], 86601 [8.66e4], 97401 [9.74e4])
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [7894] ProtocolConfig::parameters() [staticcall]
+    │   │   └─ ← [Return] Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a })
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [6057] ProtocolConfig::roleFingerprint(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a]) [staticcall]
+    │   │   ├─ [1245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Return] 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 0, owner: 0x00000000000000000000000000000000000A11cE, amount: 5000000000000000000 [5e18])
+    │   ├─ emit MarketCreated(marketId: 0, creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }))
+    │   └─ ← [Return] 0
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [190921] MarketFactory::predict{value: 1000000000000000000}(0, 0)
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit PredictionPlaced(marketId: 0, participant: 0x0000000000000000000000000000000000000B0b, side: 0, amount: 1000000000000000000 [1e18])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 1000000000000000000 [1e18], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 1000000000000000000 [1e18], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(86601 [8.66e4])
+    │   └─ ← [Return]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc, storedState: 0, proposedOutcome: 0, finalOutcome: 0, proposer: 0x0000000000000000000000000000000000000000, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 0, arbitrationDeadline: 0, yesPool: 1000000000000000000 [1e18], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [228939] MarketFactory::proposeResult{value: 2000000000000000000}(0, 1, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [59504] ProtocolConfig::requireFinancialActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, amount: 2000000000000000000 [2e18])
+    │   ├─ emit MarketOutcomeProposed(marketId: 0, proposer: 0x00000000000000000000000000000000000A11cE, outcome: 1, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeDeadline: 90201 [9.02e4])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc, storedState: 2, proposedOutcome: 1, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000000, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 90201 [9.02e4], arbitrationDeadline: 93801 [9.38e4], yesPool: 1000000000000000000 [1e18], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::prank(0x0000000000000000000000000000000000000B0b)
+    │   └─ ← [Return]
+    ├─ [151318] MarketFactory::challengeResult{value: 3000000000000000000}(0, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [2971] ProtocolConfig::requireChallengeActivity(MarketFactory: [0xc7183455a4C133Ae270771860664b6B7ec320bB1]) [staticcall]
+    │   │   └─ ← [Stop]
+    │   ├─ [532] ProtocolConfig::activityEpoch() [staticcall]
+    │   │   └─ ← [Return] 0
+    │   ├─ emit BondDeposited(marketId: 0, bondType: 2, owner: 0x0000000000000000000000000000000000000B0b, amount: 3000000000000000000 [3e18])
+    │   ├─ emit MarketChallenged(marketId: 0, challenger: 0x0000000000000000000000000000000000000B0b, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, arbitrationDeadline: 93801 [9.38e4])
+    │   └─ ← [Stop]
+    ├─ [54497] MarketFactory::getMarket(0) [staticcall]
+    │   └─ ← [Return] Market({ creator: 0x00000000000000000000000000000000000A11cE, metadataHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, metadataURI: "ipfs://test-cid", closeTime: 86501 [8.65e4], resolutionTime: 86601 [8.66e4], maxResolutionTime: 97401 [9.74e4], terms: Parameters({ feeBps: 200, creationBond: 5000000000000000000 [5e18], proposalBond: 2000000000000000000 [2e18], challengeBond: 3000000000000000000 [3e18], minContribution: 1, poolCap: 340282366920938463463374607431768211455 [3.402e38], challengePeriod: 3600, arbitrationPeriod: 3600, arbitrator: 0xF62849F9A0B5Bf2913b396098F7c7019b51A820a }), creationActivityEpoch: 0, arbitratorFingerprint: 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc, storedState: 3, proposedOutcome: 1, finalOutcome: 0, proposer: 0x00000000000000000000000000000000000A11cE, challenger: 0x0000000000000000000000000000000000000B0b, proposalEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, challengeEvidence: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6, decisionEvidence: 0x0000000000000000000000000000000000000000000000000000000000000000, proposalActivityEpoch: 0, challengeDeadline: 90201 [9.02e4], arbitrationDeadline: 93801 [9.38e4], yesPool: 1000000000000000000 [1e18], noPool: 0, distributablePool: 0, protocolFee: 0, paidOut: 0, refunded: 0, refundable: false })
+    ├─ [0] VM::warp(90201 [9.02e4])
+    │   └─ ← [Return]
+    ├─ [0] VM::prank(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a])
+    │   └─ ← [Return]
+    ├─ [220588] MarketFactory::settleDispute(0, 1, 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ [49750] ProtocolConfig::requireArbitrator(MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a], 0x5e7846af8a6373a36aa7087a7cea3ba78742a6354182c2c367117f819aa919bc) [staticcall]
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x000000000000000000000000000000000000012c, 0x000000000000000000000000000000000000012D]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x0000000000000000000000000000000000000064, 0x0000000000000000000000000000000000000065]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   ├─ [7245] MultisigViewMock::getOwners() [staticcall]
+    │   │   │   └─ ← [Return] [0x00000000000000000000000000000000000000C8, 0x00000000000000000000000000000000000000C9]
+    │   │   ├─ [2280] MultisigViewMock::getThreshold() [staticcall]
+    │   │   │   └─ ← [Return] 2
+    │   │   └─ ← [Stop]
+    │   ├─ emit DisputeSettled(marketId: 0, arbitrator: MultisigViewMock: [0xF62849F9A0B5Bf2913b396098F7c7019b51A820a], decision: 1, evidenceHash: 0xa03ed488666e2b00a3372ba0a5b1a1f1f5fa9be0c1d5f79956ee5c2f52fdb7d6)
+    │   ├─ emit ProtocolFeeAccrued(marketId: 0, amount: 20000000000000000 [2e16])
+    │   ├─ emit MarketFinalized(marketId: 0, outcome: 1, refundable: false)
+    │   └─ ← [Stop]
+    ├─ [0] VM::prank(0x00000000000000000000000000000000000A11cE)
+    │   └─ ← [Return]
+    ├─ [76368] MarketFactory::claimBond(0, 1, 0x00000000000000000000000000000000000cA201)
+    │   ├─ [0] 0x00000000000000000000000000000000000cA201::receive{value: 2000000000000000000}()
+    │   │   └─ ← [Stop]
+    │   ├─ emit BondReleased(marketId: 0, bondType: 1, owner: 0x00000000000000000000000000000000000A11cE, recipient: 0x00000000000000000000000000000000000cA201, amount: 2000000000000000000 [2e18])
+    │   └─ ← [Stop]
+    └─ ← [Revert] P0.3 returns only P on uphold instead of P+C | left: 2000000000000000000, right: 5000000000000000000
+
+Backtrace:
+  at ExposureBefore.testUpholdMustAllocateAllChallengePrincipalToProposer
+
+Suite result: FAILED. 0 passed; 3 failed; 0 skipped; finished in 7.92ms (12.79ms CPU time)
+
+Ran 1 test suite in 31.62ms (7.92ms CPU time): 0 tests passed, 3 failed, 0 skipped (3 total tests)
+
+Failing tests:
+Encountered 3 failing tests in test/ExposureBefore.t.sol:ExposureBefore
+[FAIL: P0.3 admits third market beyond selected per-arbitrator budget] testActualAggregateAdmissionMustRejectThirdMarket() (gas: 3733196)
+[FAIL: P0.3 accepts short proposal opportunity forbidden by selected policy] testInsufficientProposalOpportunityMustReject() (gas: 1718280)
+[FAIL: P0.3 returns only P on uphold instead of P+C | left: 2000000000000000000, right: 5000000000000000000] testUpholdMustAllocateAllChallengePrincipalToProposer() (gas: 2997116)
+
+Encountered a total of 3 failing tests, 0 tests succeeded
+
+Tip: Run `forge test --rerun` to retry only the 3 failed tests
+Tip: Run `forge test --debug --match-test <TEST_NAME>` to inspect one failing test in the debugger
