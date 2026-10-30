@@ -18,6 +18,7 @@ abstract contract PredictionPool is ProtocolStorage {
         if (msg.value < m.terms.minContribution) revert BelowMinimum();
         uint256 total = uint256(m.yesPool) + m.noPool;
         if (msg.value > uint256(m.terms.poolCap) - total) revert PoolCapExceeded();
+        _beforePrediction(m, msg.value);
         T.Position storage p = _positions[id][msg.sender];
         if (side == T.Side.YES) {
             m.yesPool += uint128(msg.value);

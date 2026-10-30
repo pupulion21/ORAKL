@@ -17,6 +17,7 @@ bytecode_hash = "none"
 # P0.1: isolate optimized v1 roots; preserve default legacy compiler/runtime identity.
 additional_compiler_profiles = [{ name = "orakl", optimizer = true, optimizer_runs = 50, via_ir = false }]
 compilation_restrictions = [
+    { paths = "src/SelectedMarketFactory.sol", optimizer_runs = 50 },
     { paths = "src/MarketFactory.sol", optimizer_runs = 50 },
     { paths = "src/ProtocolConfig.sol", optimizer_runs = 50 },
 ]

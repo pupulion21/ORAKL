@@ -58,7 +58,7 @@ abstract contract MarketResolver is PredictionPool {
         emit MarketOutcomeProposed(id, msg.sender, outcome, evidenceHash, m.challengeDeadline);
     }
 
-    function challengeResult(uint256 id, bytes32 evidenceHash) external payable nonReentrant {
+    function challengeResult(uint256 id, bytes32 evidenceHash) external payable virtual nonReentrant {
         protocolConfig.requireChallengeActivity(address(this));
         T.Market storage m = _market(id);
         _requireCurrentMarket(m);
@@ -105,6 +105,7 @@ abstract contract MarketResolver is PredictionPool {
         m.finalOutcome = T.Outcome.INVALID;
         m.storedState = T.State.CANCELLED;
         m.refundable = true;
+        _onTerminal(id, m);
         emit MarketCancelled(id, msg.sender, 1);
     }
 
@@ -125,6 +126,7 @@ abstract contract MarketResolver is PredictionPool {
         m.finalOutcome = T.Outcome.INVALID;
         m.storedState = T.State.CANCELLED;
         m.refundable = true;
+        _onTerminal(id, m);
         emit MarketCancelled(id, msg.sender, 3);
     }
 
@@ -137,5 +139,6 @@ abstract contract MarketResolver is PredictionPool {
             m.storedState = T.State.FINALIZED;
             emit MarketFinalized(id, outcome, m.refundable);
         }
+        _onTerminal(id, m);
     }
 }

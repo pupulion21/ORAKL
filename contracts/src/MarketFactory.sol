@@ -28,12 +28,13 @@ contract MarketFactory is MarketResolver {
         uint64 closeTime,
         uint64 resolutionTime,
         uint64 maxResolutionTime
-    ) external payable nonReentrant financialEntry returns (uint256 id) {
+    ) public payable virtual nonReentrant financialEntry returns (uint256 id) {
         bytes memory uri = bytes(metadataURI);
         if (metadataHash == bytes32(0) || uri.length < 8 || uri.length > 256 || bytes7(uri) != bytes7("ipfs://")) {
             revert InvalidMetadata();
         }
         T.Parameters memory terms = protocolConfig.parameters();
+        _validateCreation(terms, resolutionTime, maxResolutionTime);
         if (msg.sender == terms.arbitrator) revert Unauthorized();
         if (
             closeTime <= block.timestamp || closeTime > block.timestamp + 365 days || resolutionTime < closeTime
@@ -58,4 +59,5 @@ contract MarketFactory is MarketResolver {
             id, msg.sender, metadataHash, metadataURI, closeTime, resolutionTime, maxResolutionTime, terms
         );
     }
+    function _validateCreation(T.Parameters memory, uint64, uint64) internal view virtual {}
 }

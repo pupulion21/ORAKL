@@ -63,7 +63,7 @@ abstract contract ProtocolStorage is ReentrancyGuard {
         return _positions[id][user];
     }
 
-    function getBond(uint256 id, T.BondType kind) external view returns (T.Bond memory) {
+    function getBond(uint256 id, T.BondType kind) external view virtual returns (T.Bond memory) {
         _market(id);
         return _bonds[id][kind];
     }
@@ -87,7 +87,7 @@ abstract contract ProtocolStorage is ReentrancyGuard {
         return address(this).balance - totalAccounted();
     }
 
-    function claimBond(uint256 id, T.BondType kind, address recipient) external nonReentrant {
+    function claimBond(uint256 id, T.BondType kind, address recipient) external virtual nonReentrant {
         T.Market storage m = _market(id);
         if (!_terminal(m)) revert InvalidState();
         T.Bond storage b = _bonds[id][kind];
@@ -100,6 +100,10 @@ abstract contract ProtocolStorage is ReentrancyGuard {
         _send(recipient, b.amount);
         emit BondReleased(id, kind, msg.sender, recipient, b.amount);
     }
+
+    function _beforePrediction(T.Market storage, uint256) internal virtual {}
+
+    function _onTerminal(uint256, T.Market storage) internal virtual {}
 
     function _requireCurrentMarket(T.Market storage m) internal view {
         if (m.creationActivityEpoch != protocolConfig.activityEpoch()) revert InvalidState();
