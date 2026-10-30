@@ -1,5 +1,7 @@
 # ORAKL v1 owner decision ledger
 
+Historical baseline ledger: the later user authorization ORAKL-ECON-SELECTED-2026-10-30 selects LOCAL M1, neutral-INVALID and hard exposure in [selected decision](ORAKL_V1_SELECTED_ECONOMICS.md). That versioned SelectedMarketFactory is the new local candidate; rows below preserve pre-selection recommendations and the behavior of the old MarketFactory. Production amounts, optional fee F, network operations and release approvals remain unapproved.
+
 Baseline `9e256c1451d666889f9f248edee3e2e2d61f6d48`. **All rows: PROPOSED_NOT_APPROVED; approval evidence/reference: none.** This file is an engineering proposal, not owner approval; recording a recommendation here does not authorize implementation, deployment, or activation. An approval must identify the owner, exact choice and version, dated durable external reference, and scope; no such evidence was supplied.
 
 Current behavior: [bond principals](../../contracts/src/ProtocolStorage.sol#L90) return to depositors; [fees/payouts](../../contracts/src/PredictionPool.sol#L94) follow snapshotted values and refunds have no fee. One bonded challenger and independent evidence are implemented. Finance is disabled initially. For detailed trade-offs and nine-row candidate matrix see [economic candidate](ORAKL_V1_ECONOMIC_POLICY_CANDIDATE.md), [challenger analysis](../economics/ORAKL_V1_BOND_AND_REWARD_ANALYSIS.md), [exposure](../economics/ORAKL_V1_EXPOSURE_AND_SPAM_MODEL.md) and [P0.3 matrix](../protocol/P0_3_ECONOMIC_APPROVAL_MATRIX.md).

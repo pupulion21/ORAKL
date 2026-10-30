@@ -1,0 +1,91 @@
+[
+  {
+    "step": "interface-tests-v2",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-selected-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:26:24.266335+00:00",
+    "elapsed_seconds": 1.617,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/interface-tests-v2-1.txt",
+    "output_sha256": "dcf35846a83fde786366dd7562c817baedebc343a34a3ca055f07555bde4b01d"
+  },
+  {
+    "step": "rounding-model",
+    "attempt": 1,
+    "argv": [
+      "python3",
+      "scripts/model-selected-rounding.py"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:27:58.150467+00:00",
+    "elapsed_seconds": 0.257,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/rounding-model-1.txt",
+    "output_sha256": "dc1959a4f3ebb05797b6591d346fe5ebac95cbc4f853320b954e6d32844b902a"
+  },
+  {
+    "step": "selected-export-final",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-selected-interface.mjs",
+      "--write"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:32:07.117829+00:00",
+    "elapsed_seconds": 0.355,
+    "head_at_execution": "eefa23cdfa21c59ed1472bd666e72b7255366bc3",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/selected-export-final-1.txt",
+    "output_sha256": "be353d27b353c86b402bad723b0a54d08c72c39c45d5c821ccde3ee8295b8fa1"
+  },
+  {
+    "step": "selected-interface-final",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-selected-interface.mjs",
+      "--check"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:32:07.565193+00:00",
+    "elapsed_seconds": 0.391,
+    "head_at_execution": "eefa23cdfa21c59ed1472bd666e72b7255366bc3",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/selected-interface-final-1.txt",
+    "output_sha256": "2677b3f4d025ae2047fa7c740a0c9b91b5fa702668953e8dae5db7a8dd682933"
+  },
+  {
+    "step": "interface-tests-v2",
+    "attempt": 2,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-selected-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:32:08.061852+00:00",
+    "elapsed_seconds": 1.672,
+    "head_at_execution": "eefa23cdfa21c59ed1472bd666e72b7255366bc3",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/interface-tests-v2-2.txt",
+    "output_sha256": "7a5329a7d71639f7016647a825c5f1b31300af1371616029d73138ac0a024747"
+  }
+]

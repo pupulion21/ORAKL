@@ -1,0 +1,116 @@
+Compiling 2 files with Solc 0.8.37
+Solc 0.8.37 finished in 2.45s
+Compiler run successful!
+
+Ran 1 test for test/invariant/SelectedInvariant.t.sol:SelectedInvariantTest
+[PASS]
+SelectedInvariantTest invariants:
+[PASS] invariant_SelectedExactBondEntitlements
+[PASS] invariant_SelectedExposureGlobalAndArbitrator
+[PASS] invariant_SelectedPoolsFeesAndFinality
+[PASS] invariant_SelectedSolvencyAndConservation
+ SelectedInvariantTest invariants (runs: 128, calls: 8192, reverts: 0)
+
+╭-----------------+-----------------+-------+---------+----------╮
+| Contract        | Selector        | Calls | Reverts | Discards |
++================================================================+
+| SelectedHandler | advance         | 595   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | cancel          | 656   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | claim           | 645   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | claimBondAction | 626   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | create          | 647   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | decide          | 620   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | deposit         | 637   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | evidence        | 607   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | force           | 635   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | interrupt       | 621   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | propose         | 626   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | recover         | 642   | 0       | 0        |
+|-----------------+-----------------+-------+---------+----------|
+| SelectedHandler | stake           | 635   | 0       | 0        |
+╰-----------------+-----------------+-------+---------+----------╯
+
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 43.12s (43.11s CPU time)
+
+Ran 2 tests for test/invariant/OraklInvariant.t.sol:OraklInvariantTest
+[PASS]
+OraklInvariantTest invariants:
+[PASS] invariant_A_Solvency
+[PASS] invariant_B_NoDoubleClaim
+[PASS] invariant_C_PayoutBound
+[PASS] invariant_D_RefundBound
+[PASS] invariant_E_FeeIsolation
+[PASS] invariant_F_BondIsolation
+[PASS] invariant_G_TerminalConsistency
+[PASS] invariant_H_Finality
+[PASS] invariant_I_UserAccounting
+[PASS] invariant_J_Conservation
+[PASS] invariant_K_ReleaseAndEpochAuthorization
+[PASS] invariant_L_ImmutableEmergencyExit
+[PASS] invariant_M_ImmutableTermsAndEvidence
+[PASS] invariant_N_QuotedEntitlementsAndDustReconcile
+[PASS] invariant_O_EvidenceAndChallengeIntegrity
+[PASS] invariant_P_FullDisputeWindow
+ OraklInvariantTest invariants (runs: 128, calls: 8192, reverts: 0)
+
+╭--------------+------------------------+-------+---------+----------╮
+| Contract     | Selector               | Calls | Reverts | Discards |
++====================================================================+
+| OraklHandler | advance                | 397   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | arbitrate              | 368   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | cancel                 | 371   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | challenge              | 391   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claim                  | 380   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | claimBond              | 380   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | create                 | 372   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | emergencyCancel        | 385   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | fees                   | 376   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | finalize               | 418   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | forceNative            | 442   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | futureTerms            | 378   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | predict                | 386   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | propose                | 395   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | rejectingReceiverClaim | 357   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | submitEvidence         | 394   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | togglePause            | 405   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | transientRoleChallenge | 405   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryEarlyCancellation   | 401   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | tryQuarantinedWrites   | 383   | 0       | 0        |
+|--------------+------------------------+-------+---------+----------|
+| OraklHandler | unauthorizedResume     | 408   | 0       | 0        |
+╰--------------+------------------------+-------+---------+----------╯
+
+[PASS] testTransientRoleHandlerAcceptsMaximumActorSeed() (gas: 1391147)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 103.17s (103.15s CPU time)
+
+Ran 2 test suites in 103.18s (146.29s CPU time): 3 tests passed, 0 failed, 0 skipped (3 total tests)

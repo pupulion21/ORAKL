@@ -1,0 +1,31 @@
+
+Detector: arbitrary-send-eth
+QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466) sends eth to arbitrary user
+	Dangerous calls:
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#functions-that-send-ether-to-arbitrary-destinations
+
+Detector: timestamp
+QiePredictionMarket.createMarket(string,string,string,address,uint64,uint64) (src/QiePredictionMarket.sol#176-198) uses timestamp for comparisons
+	Dangerous comparisons:
+	- closeTime <= block.timestamp (src/QiePredictionMarket.sol#187)
+QiePredictionMarket.stake(uint256,QiePredictionMarket.Side) (src/QiePredictionMarket.sol#205-233) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp >= m.closeTime (src/QiePredictionMarket.sol#207)
+QiePredictionMarket.resolve(uint256,QiePredictionMarket.Outcome) (src/QiePredictionMarket.sol#238-248) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.closeTime (src/QiePredictionMarket.sol#241)
+	- block.timestamp >= m.resolveDeadline (src/QiePredictionMarket.sol#242)
+QiePredictionMarket.cancelIfExpired(uint256) (src/QiePredictionMarket.sol#253-261) uses timestamp for comparisons
+	Dangerous comparisons:
+	- block.timestamp < m.resolveDeadline (src/QiePredictionMarket.sol#255)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+
+Detector: low-level-calls
+Low level call in QiePredictionMarket._sendNative(address,uint256) (src/QiePredictionMarket.sol#463-466):
+	- (ok,None) = address(recipient).call{value: amount}() (src/QiePredictionMarket.sol#464)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#low-level-calls
+src/QiePredictionMarket.sol analyzed (5 contracts with 102 detectors), 6 result(s) found
+'forge config --json' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 --version' running
+'/home/pupulion/.solc-select/artifacts/solc-0.8.37/solc-0.8.37 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/ openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/ src/QiePredictionMarket.sol --combined-json abi,ast,bin,bin-runtime,srcmap,srcmap-runtime,userdoc,devdoc,hashes --optimize-runs 200 --evm-version paris --allow-paths .,/home/pupulion/prediction-market-mvp/contracts/src' running

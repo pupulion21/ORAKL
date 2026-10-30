@@ -1,0 +1,43 @@
+Compiling 1 files with Solc 0.8.37
+Solc 0.8.37 finished in 395.46ms
+Compiler run successful!
+
+Ran 3 tests for test/selected/Before.t.sol:SelectedBeforeTest
+[PASS] testExposureBudgetMustExist() (gas: 5886)
+[PASS] testReversalMustTransferProposalBondToChallenger() (gas: 1909086)
+[PASS] testSecondChallengerMustBeAccepted() (gas: 1294701)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 10.22ms (6.34ms CPU time)
+
+Ran 10 tests for test/selected/SelectedSafety.t.sol:SelectedSafetyTest
+[PASS] testArbitratorDriftRejectsThenTimeoutNeutral() (gas: 1573506)
+[PASS] testCreationValidatesExactTermsAndProposalOpportunity() (gas: 805022)
+[PASS] testEveryRoleGetterFailureCannotCensorAdditionalStakes() (gas: 4808638)
+[PASS] testExposureSaturationSwitchingArbitratorAndExactlyOnceRelease() (gas: 5097573)
+[PASS] testForcedFundsAndExpiredButNotCancelledStillCount() (gas: 889567)
+[PASS] testLocalRehearsalInactiveByDefault() (gas: 135854)
+[PASS] testOwnerOverlapUnauthorizedClaimAndOldGetterReject() (gas: 1438302)
+[PASS] testProposalOpportunityExactBoundaryAndTermMutation() (gas: 833686)
+[PASS] testReceiverFailureRollbackAndRedirectReentry() (gas: 2784962)
+[PASS] testZeroCapAndNonRatioConfigRejected() (gas: 155842)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 29.32ms (38.77ms CPU time)
+
+Ran 6 tests for test/selected/SelectedAdversaries.t.sol:SelectedAdversariesTest
+[PASS] testCeilRatiosAtSmallAtomicTier() (gas: 31805)
+[PASS] testCoalitionCanStillRecoverOwnBondsAndBiasInvalid_RESIDUAL() (gas: 2144613)
+[PASS] testLargeStakeCannotOverflowFullPrecisionReward() (gas: 1973020)
+[PASS] testNoStakeWithdrawalBeforeTerminalAndZeroEntitlementMarkedOnce() (gas: 1963938)
+[PASS] testSplitAndOrderingRoundingIsBoundedNotIdentitySecurity() (gas: 2055967)
+[PASS] testThinFalseWinnerAndNoHonestChallenge_RESIDUAL() (gas: 1846597)
+Suite result: ok. 6 passed; 0 failed; 0 skipped; finished in 1.26s (23.06ms CPU time)
+
+Ran 7 tests for test/selected/SelectedEconomics.t.sol:SelectedEconomicsTest
+[PASS] testDuplicateLateEarlyAndUnauthorized() (gas: 1821448)
+[PASS] testFuzzTelescopingAndSplit(uint96,uint96,uint96) (runs: 2048, μ: 2112669, ~: 2112669)
+[PASS] testHundredTwentyEightChallengersAndClaimOrder() (gas: 31193062)
+[PASS] testMatrixAllNineTimesFourPoolShapes() (gas: 85031713)
+[PASS] testMinimumStakeAndForbiddenCallers() (gas: 1118089)
+[PASS] testPauseEvidenceAndNeutralEmergencyExit() (gas: 2057673)
+[PASS] testTimeoutAndNoChallengeReturnPrincipals() (gas: 3678828)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 1.30s (1.66s CPU time)
+
+Ran 4 test suites in 1.30s (2.60s CPU time): 26 tests passed, 0 failed, 0 skipped (26 total tests)

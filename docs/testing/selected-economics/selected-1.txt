@@ -1,0 +1,23 @@
+Compiling 10 files with Solc 0.8.37
+Compiling 3 files with Solc 0.8.37
+Solc 0.8.37 finished in 48.55ms
+Solc 0.8.37 finished in 1.41s
+Compiler run successful!
+
+Ran 3 tests for test/selected/Before.t.sol:SelectedBeforeTest
+[PASS] testExposureBudgetMustExist() (gas: 5886)
+[PASS] testReversalMustTransferProposalBondToChallenger() (gas: 1815556)
+[PASS] testSecondChallengerMustBeAccepted() (gas: 1245488)
+Suite result: ok. 3 passed; 0 failed; 0 skipped; finished in 7.68ms (5.02ms CPU time)
+
+Ran 7 tests for test/selected/SelectedEconomics.t.sol:SelectedEconomicsTest
+[PASS] testDuplicateLateEarlyAndUnauthorized() (gas: 1727431)
+[PASS] testFuzzTelescopingAndSplit(uint96,uint96,uint96) (runs: 2048, μ: 2019139, ~: 2019139)
+[PASS] testHundredTwentyEightChallengersAndClaimOrder() (gas: 31099532)
+[PASS] testMatrixAllNineTimesFourPoolShapes() (gas: 81664633)
+[PASS] testMinimumStakeAndForbiddenCallers() (gas: 1068876)
+[PASS] testPauseEvidenceAndNeutralEmergencyExit() (gas: 1986545)
+[PASS] testTimeoutAndNoChallengeReturnPrincipals() (gas: 3486872)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 909.65ms (1.14s CPU time)
+
+Ran 2 test suites in 911.00ms (917.33ms CPU time): 10 tests passed, 0 failed, 0 skipped (10 total tests)

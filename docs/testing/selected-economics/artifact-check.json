@@ -1,0 +1,118 @@
+{
+  "status": "PASS",
+  "scope": "offline artifact templates; standard EVM limits, not live QIE compatibility or deployed immutable-patched runtime verification",
+  "contracts": [
+    {
+      "name": "SelectedMarketFactory",
+      "compiler": "0.8.37+commit.f401782d",
+      "settings": {
+        "remappings": [
+          "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+          "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
+        ],
+        "optimizer": {
+          "enabled": true,
+          "runs": 50
+        },
+        "metadata": {
+          "bytecodeHash": "none"
+        },
+        "compilationTarget": {
+          "src/SelectedMarketFactory.sol": "SelectedMarketFactory"
+        },
+        "evmVersion": "paris",
+        "libraries": {}
+      },
+      "runtimeBytes": 19084,
+      "constructorArgsBytes": 32,
+      "initcodeWithArgsBytes": 20400,
+      "runtimeMarginBytes": 5492,
+      "runtimeTemplateKeccak256": "0xc161294828d00ae957972ba8bc0d983680f2393fe6cdd650c12ed5cfadb4332f",
+      "hasImmutablePatches": true
+    },
+    {
+      "name": "MarketFactory",
+      "compiler": "0.8.37+commit.f401782d",
+      "settings": {
+        "remappings": [
+          "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+          "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
+        ],
+        "optimizer": {
+          "enabled": true,
+          "runs": 50
+        },
+        "metadata": {
+          "bytecodeHash": "none"
+        },
+        "compilationTarget": {
+          "src/MarketFactory.sol": "MarketFactory"
+        },
+        "evmVersion": "paris",
+        "libraries": {}
+      },
+      "runtimeBytes": 15859,
+      "constructorArgsBytes": 32,
+      "initcodeWithArgsBytes": 16178,
+      "runtimeMarginBytes": 8717,
+      "runtimeTemplateKeccak256": "0x33e9b1bc63bede274a4b23b09358b6e50ceb57969f54aacddd04506c629069c1",
+      "hasImmutablePatches": true
+    },
+    {
+      "name": "ProtocolConfig",
+      "compiler": "0.8.37+commit.f401782d",
+      "settings": {
+        "remappings": [
+          "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+          "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
+        ],
+        "optimizer": {
+          "enabled": true,
+          "runs": 50
+        },
+        "metadata": {
+          "bytecodeHash": "none"
+        },
+        "compilationTarget": {
+          "src/ProtocolConfig.sol": "ProtocolConfig"
+        },
+        "evmVersion": "paris",
+        "libraries": {}
+      },
+      "runtimeBytes": 8508,
+      "constructorArgsBytes": 384,
+      "initcodeWithArgsBytes": 11804,
+      "runtimeMarginBytes": 16068,
+      "runtimeTemplateKeccak256": "0xaed346cc6bdb2d85536b5d320058822be4a355b2ef417bffe07ce3bfcd25b5fe",
+      "hasImmutablePatches": true
+    },
+    {
+      "name": "QiePredictionMarket",
+      "compiler": "0.8.37+commit.f401782d",
+      "settings": {
+        "remappings": [
+          "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+          "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
+        ],
+        "optimizer": {
+          "enabled": false,
+          "runs": 200
+        },
+        "metadata": {
+          "bytecodeHash": "none"
+        },
+        "compilationTarget": {
+          "src/QiePredictionMarket.sol": "QiePredictionMarket"
+        },
+        "evmVersion": "paris",
+        "libraries": {}
+      },
+      "runtimeBytes": 13906,
+      "constructorArgsBytes": 0,
+      "initcodeWithArgsBytes": 13945,
+      "runtimeMarginBytes": 10670,
+      "runtimeTemplateKeccak256": "0x0d478010629faa5104f39d3e3ede0343f47ac2996affb676c7a6be6e499b256b",
+      "hasImmutablePatches": false
+    }
+  ]
+}

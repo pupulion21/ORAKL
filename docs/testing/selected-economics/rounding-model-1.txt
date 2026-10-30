@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "cases": 32760,
+  "units": "synthetic atomic integers",
+  "worstPositiveCoalitionDifference": 2,
+  "example": {
+    "P": 3,
+    "stakes": [
+      1,
+      1,
+      1,
+      2,
+      3
+    ],
+    "coalition": [
+      0,
+      2,
+      4
+    ],
+    "rewards": [
+      0,
+      0,
+      1,
+      0,
+      2
+    ],
+    "differenceFromSingleFloor": 2
+  },
+  "limits": "bounded enumeration; inclusion order and separated Sybil intervals can affect rounding; no proof of honest detection, arbitration or economic Sybil resistance"
+}

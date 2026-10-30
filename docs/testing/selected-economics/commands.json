@@ -1,0 +1,649 @@
+[
+  {
+    "step": "baseline",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:06:44.322837+00:00",
+    "elapsed_seconds": 108.723,
+    "head_at_execution": "18b31ae367ddeb5e86bd0a2f62697a89e063b2c7",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/baseline-1.txt",
+    "output_sha256": "be5bed816e9def46c5d9aaf7bec811005b1ab8c5383afd62d2fc01fa3adb8fda"
+  },
+  {
+    "step": "before",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/selected/Before.t.sol",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:08:38.388344+00:00",
+    "elapsed_seconds": 1.132,
+    "head_at_execution": "18b31ae367ddeb5e86bd0a2f62697a89e063b2c7",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 1,
+    "output": "docs/testing/selected-economics/before-1.txt",
+    "output_sha256": "8c0e290de8778b20b51acad44936396bf790a8e4a141a1e0a41ce9ff84e52e01"
+  },
+  {
+    "step": "selected",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/selected/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:10:21.147287+00:00",
+    "elapsed_seconds": 2.575,
+    "head_at_execution": "5692bf6b18ef35f2dd49f8c1bc67d599ea94848e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/selected-1.txt",
+    "output_sha256": "c84edd0cefb162e54dfe774ffaa3c2b7eb07ba1505970ce22f21ea660d1a311e"
+  },
+  {
+    "step": "selected",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/selected/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:11:47.732132+00:00",
+    "elapsed_seconds": 2.854,
+    "head_at_execution": "5692bf6b18ef35f2dd49f8c1bc67d599ea94848e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/selected-2.txt",
+    "output_sha256": "47fbf48922a87387a028003ddc8b4f9222b35bfe219fe3284d58c02eb5451baa"
+  },
+  {
+    "step": "invariant",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:13:28.248574+00:00",
+    "elapsed_seconds": 105.902,
+    "head_at_execution": "5692bf6b18ef35f2dd49f8c1bc67d599ea94848e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/invariant-1.txt",
+    "output_sha256": "57a1e579425dbe69e5d0e251824c3dd0432fb9e71d440329b26fffa509c7e511"
+  },
+  {
+    "step": "selected",
+    "attempt": 3,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/selected/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:16:15.843628+00:00",
+    "elapsed_seconds": 1.906,
+    "head_at_execution": "99acc8f286a91dc6b4f4d54da382c4936b0b936d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/selected-3.txt",
+    "output_sha256": "3371c86154d1056b04d1137814cee132e4c3c188ea0dc661d1086b444d842fea"
+  },
+  {
+    "step": "build",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:16:42.079536+00:00",
+    "elapsed_seconds": 11.254,
+    "head_at_execution": "99acc8f286a91dc6b4f4d54da382c4936b0b936d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/build-1.txt",
+    "output_sha256": "df28ddf90f6d5457b5c0ab85e1e49099115a98db9d7c817746a27fd0ceb9333f"
+  },
+  {
+    "step": "sizes",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--sizes",
+      "--skip",
+      "test",
+      "--skip",
+      "script"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:16:53.419010+00:00",
+    "elapsed_seconds": 0.171,
+    "head_at_execution": "99acc8f286a91dc6b4f4d54da382c4936b0b936d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/sizes-1.txt",
+    "output_sha256": "bdcfcf31a5bd6b755a2559642e158c1ccfc6903655f9efa3cfd52058266e5f85"
+  },
+  {
+    "step": "artifact-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/check-orakl-selected-artifacts.mjs",
+      "docs/testing/selected-economics/artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:16:53.686197+00:00",
+    "elapsed_seconds": 0.331,
+    "head_at_execution": "99acc8f286a91dc6b4f4d54da382c4936b0b936d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/artifact-check-1.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "forge-test",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:17:46.661665+00:00",
+    "elapsed_seconds": 109.494,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/forge-test-1.txt",
+    "output_sha256": "89749ba9cdc9a9e4f3f0eb7185bdfebeaacf1d27715b577cbcba4603446b4293"
+  },
+  {
+    "step": "security",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/security/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:19:36.161350+00:00",
+    "elapsed_seconds": 2.472,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/security-1.txt",
+    "output_sha256": "4fbc23748a71381ac6b7f735a11951b76c36adec47c4d43fe0a2995890e076f6"
+  },
+  {
+    "step": "economics",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/economics/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:19:38.637553+00:00",
+    "elapsed_seconds": 2.149,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/economics-1.txt",
+    "output_sha256": "9217efab52879cda48bc5b2ee69ddd4af652b938115eadf80c7b923ec72670c8"
+  },
+  {
+    "step": "remediation",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/remediation/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:19:40.791577+00:00",
+    "elapsed_seconds": 0.811,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/remediation-1.txt",
+    "output_sha256": "669895323466bbffd6266113be39e41f44d678bf5faf18be0463e935c76fb538"
+  },
+  {
+    "step": "invariant",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:19:41.607172+00:00",
+    "elapsed_seconds": 102.965,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/invariant-2.txt",
+    "output_sha256": "06ebae2ae4dc89b3dfe370b7d0a535394e69c728265e91981be81ac506ad23ae"
+  },
+  {
+    "step": "coverage",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "coverage"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:21:24.576473+00:00",
+    "elapsed_seconds": 155.493,
+    "head_at_execution": "afebfe604c724285a27806c10bcea8af79390e5e",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/coverage-1.txt",
+    "output_sha256": "ad66df0f48394bfb95c450e5121df83970d763656d6a2f6130589dc48efcee71"
+  },
+  {
+    "step": "fmt",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "fmt",
+      "--check"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:00.073371+00:00",
+    "elapsed_seconds": 0.039,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/fmt-1.txt",
+    "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "step": "sizes",
+    "attempt": 2,
+    "argv": [
+      "forge",
+      "build",
+      "--sizes",
+      "--skip",
+      "test",
+      "--skip",
+      "script"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:00.116141+00:00",
+    "elapsed_seconds": 0.188,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/sizes-2.txt",
+    "output_sha256": "97a0f6faf6bf5902baff4332f4ede16441364c2a1ed6674c3b9c875ec7236975"
+  },
+  {
+    "step": "slither",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      ".",
+      "--filter-paths",
+      "test/|lib/|script/",
+      "--json",
+      "../docs/testing/selected-economics/slither.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:00.308622+00:00",
+    "elapsed_seconds": 6.754,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/selected-economics/slither-1.txt",
+    "output_sha256": "6cc349facc811080514c589709cb5d1d1a542f33cca81b26e1dd5382a6ccb4bc"
+  },
+  {
+    "step": "slither-selected",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/SelectedMarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/selected-economics/slither-selected.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:07.068951+00:00",
+    "elapsed_seconds": 3.206,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/selected-economics/slither-selected-1.txt",
+    "output_sha256": "e759dc681db580124b7e1a75b0d902ee15a1d01cdc5ffe0c611a115f76564d4b"
+  },
+  {
+    "step": "slither-factory",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/MarketFactory.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/selected-economics/slither-factory.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:10.278855+00:00",
+    "elapsed_seconds": 2.216,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/selected-economics/slither-factory-1.txt",
+    "output_sha256": "d99d1595b42d3cb02f02aebd4cff231988e5243f560ff572b4de6e6e573430fb"
+  },
+  {
+    "step": "slither-config",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/ProtocolConfig.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none --optimize --optimize-runs 50",
+      "--json",
+      "../docs/testing/selected-economics/slither-config.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:12.498791+00:00",
+    "elapsed_seconds": 0.833,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/selected-economics/slither-config-1.txt",
+    "output_sha256": "42412f098345609f8c22414f518ef6ca4fde5428475fa5af59c64eedbbc79cd5"
+  },
+  {
+    "step": "slither-legacy",
+    "attempt": 1,
+    "argv": [
+      "slither",
+      "src/QiePredictionMarket.sol",
+      "--compile-force-framework",
+      "solc",
+      "--solc-remaps",
+      "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+      "--filter-paths",
+      "lib/",
+      "--solc-args",
+      "--evm-version paris --metadata-hash none",
+      "--json",
+      "../docs/testing/selected-economics/slither-legacy.json"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:13.335499+00:00",
+    "elapsed_seconds": 1.493,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 255,
+    "output": "docs/testing/selected-economics/slither-legacy-1.txt",
+    "output_sha256": "57d6bb52f1c04d835a22bf529ddb48b5fb15d46861af4128bfcf1ec3307f3206"
+  },
+  {
+    "step": "build-final",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "build",
+      "--force"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:14.832110+00:00",
+    "elapsed_seconds": 11.25,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/build-final-1.txt",
+    "output_sha256": "dedeaa036b91bdf0002650c24e9d36ac7bb17187674b2d2fda3b11f6beef4305"
+  },
+  {
+    "step": "artifact-check",
+    "attempt": 2,
+    "argv": [
+      "node",
+      "scripts/check-orakl-selected-artifacts.mjs",
+      "docs/testing/selected-economics/artifact-check.json"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:26.087354+00:00",
+    "elapsed_seconds": 0.393,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/artifact-check-2.txt",
+    "output_sha256": "18767017ba18fc757ef0df9328f8b3c17b15d748dfba50bfb8f53124de2d2092"
+  },
+  {
+    "step": "interface-export",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-selected-interface.mjs",
+      "--write"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:26.484543+00:00",
+    "elapsed_seconds": 0.337,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/interface-export-1.txt",
+    "output_sha256": "be353d27b353c86b402bad723b0a54d08c72c39c45d5c821ccde3ee8295b8fa1"
+  },
+  {
+    "step": "interface-check",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "scripts/export-orakl-selected-interface.mjs",
+      "--check"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:26.826092+00:00",
+    "elapsed_seconds": 0.36,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/interface-check-1.txt",
+    "output_sha256": "2677b3f4d025ae2047fa7c740a0c9b91b5fa702668953e8dae5db7a8dd682933"
+  },
+  {
+    "step": "interface-tests",
+    "attempt": 1,
+    "argv": [
+      "node",
+      "--test",
+      "scripts/test/orakl-selected-interface.test.mjs"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:27.190518+00:00",
+    "elapsed_seconds": 1.459,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/interface-tests-1.txt",
+    "output_sha256": "8a7b6f0f4d3bd3a93fc094b1205333c85188986ebbf7fc12a4079acd35026b86"
+  },
+  {
+    "step": "frontend-test",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "test"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:28.652996+00:00",
+    "elapsed_seconds": 0.93,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/frontend-test-1.txt",
+    "output_sha256": "027927a5064692bba80259fb0bb8fd624043668bfb05f9c6ae2c1b4a2ba2515c"
+  },
+  {
+    "step": "frontend-typecheck",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:29.588674+00:00",
+    "elapsed_seconds": 5.557,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/frontend-typecheck-1.txt",
+    "output_sha256": "dca6ea3c0d1d0418d3886657c170d00af9bc1df48a5e2071e5267076d09481c8"
+  },
+  {
+    "step": "frontend-build",
+    "attempt": 1,
+    "argv": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "cwd": ".",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:24:35.149714+00:00",
+    "elapsed_seconds": 2.791,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/frontend-build-1.txt",
+    "output_sha256": "1eef3213b8363d683696c349503d89a46abbf8bf4aea82863ac56745e7a596fa"
+  },
+  {
+    "step": "invariant-intensive",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--match-path",
+      "test/invariant/*",
+      "-vvv"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {
+      "FOUNDRY_INVARIANT_RUNS": "256",
+      "FOUNDRY_INVARIANT_DEPTH": "128",
+      "FOUNDRY_FUZZ_SEED": "0x4f52414b4c503032"
+    },
+    "start_utc": "2026-10-30T15:24:37.944498+00:00",
+    "elapsed_seconds": 487.921,
+    "head_at_execution": "863710e57474edab81ffa729b2fa3ce45e35f28d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/invariant-intensive-1.txt",
+    "output_sha256": "963a5271147d72bad2301135717e62355b1504262baca60cb8582e1d7bd039ef"
+  },
+  {
+    "step": "gas-selected",
+    "attempt": 1,
+    "argv": [
+      "forge",
+      "test",
+      "--gas-report",
+      "--match-path",
+      "test/selected/*"
+    ],
+    "cwd": "contracts",
+    "explicit_env": {},
+    "start_utc": "2026-10-30T15:33:20.501446+00:00",
+    "elapsed_seconds": 1.339,
+    "head_at_execution": "6dd59ad89fe156219bfcda1ac01c25e11c95bf6d",
+    "working_tree_may_include_reviewed_uncommitted_changes": true,
+    "exit_code": 0,
+    "output": "docs/testing/selected-economics/gas-selected-1.txt",
+    "output_sha256": "d7189491dc0278f187454b0f733266a6ef931a7f7734fae5d34367b772abe123"
+  }
+]

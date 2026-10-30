@@ -1,0 +1,1 @@
+Checked 4 candidate interface files; artifact/source/settings identity and selector uniqueness PASS. No legacy/frontend writes.

@@ -1,0 +1,54 @@
+No files changed, compilation skipped
+
+Ran 11 tests for test/security/P0_3Arbitration.t.sol:P0_3ArbitrationTest
+[PASS] testBiasedArbitratorCanChooseInvalidToRefundItsLosingStake_RESIDUAL() (gas: 2041173)
+[PASS] testDecisionAndEvidenceValidationStillApplyAtPermittedBoundary() (gas: 1596846)
+[PASS] testDeclaredOwnerOverlapCannotPassArbitrationAuthorityChecks() (gas: 1702168)
+[PASS] testDisjointDeclaredOwnersCanShareOneExecutionController_RESIDUAL() (gas: 2891181)
+[PASS] testEvidenceContributorsAndEmergencyRolesHaveNoArbitrationOverride() (gas: 1560164)
+[PASS] testFuzzOriginalArbitrationBoundaries(uint8,uint8) (runs: 2048, μ: 1919599, ~: 1917751)
+[PASS] testHiddenModuleCannotBypassTimingButRemainsArbitrationTrust_RESIDUAL() (gas: 1841954)
+[PASS] testMutableProxySingletonCannotBypassTimingButCanHideExecutionDrift_RESIDUAL() (gas: 2956477)
+[PASS] testNoDecisionCanResetEvidenceOrArbitrationDeadlines() (gas: 2117463)
+[PASS] testPausedDisputeMustWaitThenCanHonorOriginalArbitrationAuthority() (gas: 2280713)
+[PASS] testUnsafeGuardHasBoundedRefundExitAndNoUnauthorizedFallback() (gas: 2849597)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 2.14s (1.84s CPU time)
+
+Ran 8 tests for test/security/P0_3Regression.t.sol:P0_3RegressionTest
+[PASS] testArbitratorDriftCannotVetoExistingChallenge() (gas: 1328970)
+[PASS] testComplianceDriftCannotVetoExistingChallenge() (gas: 1329026)
+[PASS] testEarlyDisputedDecisionRejectedUntilOriginalChallengeBoundary() (gas: 1733064)
+[PASS] testGovernanceDriftCannotVetoExistingChallenge() (gas: 1328758)
+[PASS] testIndependentEvidenceAcceptedBeforeFirstChallenge() (gas: 1021970)
+[PASS] testIndependentEvidenceRemainsOpenAfterCapturedFirstChallenge() (gas: 1659787)
+[PASS] testRestoringRoleAfterFailedBadValueAttemptCannotFinalizeAnAcceptedObjection() (gas: 1994042)
+[PASS] testRevertingMalformedGasBurningRoleViewsCannotVetoChallenges() (gas: 18136640)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 2.14s (50.74ms CPU time)
+
+Ran 10 tests for test/security/P0_3Evidence.t.sol:P0_3EvidenceTest
+[PASS] testEvidenceAloneDoesNotGrantEconomicObjectionOrSettlementAuthority() (gas: 1650847)
+[PASS] testEvidenceEndBoundaryAndTerminalFinality() (gas: 1217509)
+[PASS] testEvidenceIntakeSurvivesPauseDeactivationAndRepeatedInterruptions() (gas: 3063622)
+[PASS] testEvidenceIsNonpayableAndMalformedCallsDoNotFundAnything() (gas: 1033034)
+[PASS] testEvidencePermissionlessWithImmutableMarketAndContributorProvenance() (gas: 1968295)
+[PASS] testEvidenceRejectsUnknownOpenClosedAndZeroCommitments() (gas: 1115550)
+[PASS] testForcedBalanceAndEvidenceCannotAlterPayoutDenominators() (gas: 1683835)
+[PASS] testFuzzEvidenceWindowAndDuplicateCommitments(uint8,bool,bool) (runs: 2048, μ: 1362992, ~: 1253007)
+[PASS] testNativeCallbackCannotReenterEvidenceAcrossMarkets() (gas: 3274550)
+[PASS] testSpamAndDuplicateCommitmentsCannotExhaustEvidenceSlots() (gas: 18914054)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 2.19s (2.20s CPU time)
+
+Ran 10 tests for test/security/P0_3Admission.t.sol:P0_3AdmissionTest
+[PASS] testBoundFacadeAndChainChecksRemainRequired() (gas: 1245986)
+[PASS] testChallengeGateIsPublicPreflightNotExternalSettlementAuthority() (gas: 1058754)
+[PASS] testExplicitEmergencyActionsStillBlockNativeChallengesAndKeepEvidenceOpen() (gas: 19818632)
+[PASS] testFuzzRoleRestorationKeepsObjectionAndExactBondAccounting(uint8,uint8,bool) (runs: 2048, μ: 1449020, ~: 1517757)
+[PASS] testInactiveChallengeGateCannotAdmitValueOrUnknownMarket() (gas: 1793332)
+[PASS] testOldEpochCannotResumeChallengesAfterFreshReviewedActivation() (gas: 1769952)
+[PASS] testOtherFinancialPathsRetainFullLiveRoleChecks() (gas: 4913752)
+[PASS] testProposerAndArbitratorStillCannotTakeChallengeBondSlot() (gas: 1325090)
+[PASS] testThresholdReductionCannotCensorAnExistingObjection() (gas: 3407788)
+[PASS] testZeroChallengeBondStillRequiresExplicitActivationAndNoPause() (gas: 2693046)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 2.34s (2.37s CPU time)
+
+Ran 4 test suites in 2.34s (8.81s CPU time): 39 tests passed, 0 failed, 0 skipped (39 total tests)

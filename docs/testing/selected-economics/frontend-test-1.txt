@@ -1,0 +1,55 @@
+
+> test
+> npm --prefix frontend test
+
+
+> qie-prediction-market-frontend@0.1.0 test
+> node --test "test/**/*.test.ts"
+
+✔ verification reads runtime, accounting and balance at one fresh block (3.363231ms)
+✔ verification stops on a wrong-chain RPC before looking up the contract (0.921911ms)
+✔ historical read failure is reported without silently retrying latest state (0.678583ms)
+✔ market ID comes from the target contract event rather than another log or latest count (5.448358ms)
+✔ formatUnits and parseUnits keep integer accounting exact (3.728643ms)
+✔ formatQie truncates for display and keeps dust visible (0.627877ms)
+✔ untrusted uint64 timestamps cannot crash market rendering (35.881423ms)
+✔ poolShareBps is a pool proportion, not a price (0.530308ms)
+✔ market phases split stake, resolve and cancel windows exactly (0.501813ms)
+✔ estimatePayoutForStake uses floor division on the post-stake pool (0.380148ms)
+✔ human and machine errors are mapped to actionable text (1.035963ms)
+✔ discovery ideas filter by category and case-insensitive text together (2.648819ms)
+✔ on-chain questions receive a topic without changing their market data (1.689123ms)
+✔ saved market IDs are isolated by deployment and normalize address casing (0.910248ms)
+✔ corrupt or unrelated stored values do not break discovery (0.791098ms)
+✔ ideas have distinct identities and do not carry invented stakes or probabilities (0.579827ms)
+✔ a timed-out receipt is recovered by its original hash exactly once (4.85547ms)
+✔ failed application verification stays recoverable after a successful receipt (1.148268ms)
+✔ simultaneous watcher and manual checks share one application callback (0.766444ms)
+✔ a reverted transaction never applies success state (0.917721ms)
+✔ more than six pending transactions retain their recovery callbacks (1.061176ms)
+✔ a receipt for another hash cannot activate a deployment (1.234314ms)
+✔ a late watcher timeout cannot overwrite a successful manual recovery (2.553834ms)
+✔ connect observes chain and account only after explicit connect (3.148538ms)
+✔ user rejection stays disconnected and clears account state (0.774685ms)
+✔ wrong chain at connect drops the account and never auto-switches (0.557686ms)
+✔ 4902 is surfaced as testnet not enabled, not as a silent add-chain (0.766932ms)
+✔ accountsChanged swaps account and empty accounts disconnect (8.040884ms)
+✔ chainChanged to another chain invalidates the session (0.660494ms)
+✔ sendTransaction supports contract creation without a to field (0.614887ms)
+✔ sendTransaction encodes value as hex and includes a valid to address (0.662588ms)
+✔ sendTransaction re-checks chain and refuses to send after a chain change (1.1651ms)
+✔ sendTransaction rejects malformed calldata and malformed tx hashes (0.667548ms)
+✔ wallet errors do not auto-retry a write (0.596029ms)
+✔ a dispose during the final chain check cancels a write (3.980283ms)
+✔ a disconnect during the final chain check cancels a write (1.094141ms)
+✔ a accountsChanged during the final chain check cancels a write (0.877492ms)
+✔ a chainChanged during the final chain check cancels a write (0.755618ms)
+✔ requests are blocked while not ready (0.35312ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 593.286487

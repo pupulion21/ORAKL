@@ -1,0 +1,14 @@
+✔ candidate encodes the exact new native contribution selector and Side enum (7.219452ms)
+✔ indexer decodes a binary FINALIZED event with refund eligibility (4.081021ms)
+✔ candidate identity check rejects changed ABI instead of silently regenerating (827.207558ms)
+✔ candidate identity check rejects stale compiler artifacts after a source edit (312.895132ms)
+✔ selected M1 event carries market, contributor, commitment and immutable interval (4.119016ms)
+✔ selected tranche tuple is ordered amount, prefixBefore, claimed and manifest remains inactive (1.95656ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1611.026193

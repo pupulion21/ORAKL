@@ -1,5 +1,7 @@
 # ORAKL v1 protocol candidate specification
 
+This baseline specification describes the retained P0.3 MarketFactory. The current LOCAL selected-economics root is SelectedMarketFactory, governed by [selected economics](../decisions/ORAKL_V1_SELECTED_ECONOMICS.md), [M1 review](../security/ORAKL_V1_MULTI_CHALLENGER_REVIEW.md) and [versioned interface](../migration/ORAKL_V1_SELECTED_INTERFACE_DELTA.md). No production release is approved.
+
 Status: **candidate, not frozen**. The executable implementation is the P0.3 source at `9e256c1451d666889f9f248edee3e2e2d61f6d48`; this document does not authorize activation, deployment, or a change in economic policy. The [owner decision ledger](../decisions/ORAKL_V1_OWNER_DECISIONS.md) records unapproved choices.
 
 ## Components and immutable terms
