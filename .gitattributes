@@ -1,2 +1,3 @@
 # Keep verification output byte-for-byte, including tools' own trailing whitespace.
 docs/testing/p0-2/*.txt -whitespace
+docs/testing/p0-3/*.txt -whitespace
