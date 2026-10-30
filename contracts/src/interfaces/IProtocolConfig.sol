@@ -5,5 +5,6 @@ import {ProtocolTypes as T} from "../libraries/ProtocolTypes.sol";
 interface IProtocolConfig {
     function parameters() external view returns (T.Parameters memory);
     function requireFinancialActivity(address facade) external view;
+    function activityEpoch() external view returns (uint64);
     function governance() external view returns (address);
 }

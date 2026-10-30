@@ -11,11 +11,20 @@ import {ProtocolTypes as T} from "../../src/libraries/ProtocolTypes.sol";
 contract MultisigViewMock {
     address[] private owners;
     uint256 private threshold;
+
     constructor(uint160 seed, uint256 threshold_) {
-        owners.push(address(seed)); owners.push(address(seed + 1)); threshold = threshold_;
+        owners.push(address(seed));
+        owners.push(address(seed + 1));
+        threshold = threshold_;
     }
-    function getOwners() external view returns (address[] memory) { return owners; }
-    function getThreshold() external view returns (uint256) { return threshold; }
+
+    function getOwners() external view returns (address[] memory) {
+        return owners;
+    }
+
+    function getThreshold() external view returns (uint256) {
+        return threshold;
+    }
 }
 
 abstract contract OraklTestBase is TestBase {
@@ -38,45 +47,65 @@ abstract contract OraklTestBase is TestBase {
         governance = address(new MultisigViewMock(100, 2));
         compliance = address(new MultisigViewMock(200, 2));
         arbitrator = address(new MultisigViewMock(300, 2));
-        T.Parameters memory p = T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator);
+        T.Parameters memory p =
+            T.Parameters(200, 5 ether, 2 ether, 3 ether, 1, type(uint128).max, 1 hours, 1 hours, arbitrator);
         config = new ProtocolConfig(governance, compliance, guardian, p);
         factory = new MarketFactory(IProtocolConfig(address(config)));
-        vm.prank(governance); config.bindFactory(address(factory));
+        vm.prank(governance);
+        config.bindFactory(address(factory));
         if (activate) _activate();
         close = uint64(block.timestamp + 100);
         resolution = close + 100;
         expiry = resolution + 3 hours;
-        vm.deal(alice, 1e30); vm.deal(bob, 1e30); vm.deal(carol, 1e30);
+        vm.deal(alice, 1e30);
+        vm.deal(bob, 1e30);
+        vm.deal(carol, 1e30);
     }
+
     function _activate() internal {
-        vm.prank(compliance); config.approveRelease(RELEASE);
-        vm.prank(governance); config.activateFinance(RELEASE);
+        vm.prank(compliance);
+        config.approveRelease(RELEASE);
+        vm.prank(governance);
+        config.activateFinance(RELEASE);
     }
+
     function _create() internal returns (uint256) {
         uint256 bond = config.parameters().creationBond;
         vm.prank(alice);
         return factory.createMarket{value: bond}(HASH, "ipfs://test-cid", close, resolution, expiry);
     }
+
     function _predict(uint256 id, address who, T.Side side, uint256 amount) internal {
-        vm.prank(who); factory.predict{value: amount}(id, side);
+        vm.prank(who);
+        factory.predict{value: amount}(id, side);
     }
+
     function _propose(uint256 id, T.Outcome outcome) internal {
         vm.warp(factory.getMarket(id).resolutionTime);
         uint256 bond = factory.getMarket(id).terms.proposalBond;
-        vm.prank(alice); factory.proposeResult{value: bond}(id, outcome, HASH);
+        vm.prank(alice);
+        factory.proposeResult{value: bond}(id, outcome, HASH);
     }
+
     function _finalize(uint256 id, T.Outcome outcome) internal {
         _propose(id, outcome);
         vm.warp(factory.getMarket(id).challengeDeadline);
         factory.finalizeResult(id);
     }
+
     function _challenge(uint256 id) internal {
         uint256 bond = factory.getMarket(id).terms.challengeBond;
-        vm.prank(bob); factory.challengeResult{value: bond}(id, HASH);
+        vm.prank(bob);
+        factory.challengeResult{value: bond}(id, HASH);
     }
+
     function _assertConservation() internal view {
-        assertEq(factory.totalAccounted(), factory.totalContributions() + factory.totalBondsDeposited()
-            - factory.totalParticipantPaid() - factory.totalBondsPaid() - factory.totalFeesWithdrawn(), "conservation");
+        assertEq(
+            factory.totalAccounted(),
+            factory.totalContributions() + factory.totalBondsDeposited() - factory.totalParticipantPaid()
+                - factory.totalBondsPaid() - factory.totalFeesWithdrawn(),
+            "conservation"
+        );
         assertLe(factory.totalAccounted(), address(factory).balance, "solvency");
     }
 }

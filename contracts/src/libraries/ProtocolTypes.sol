@@ -2,10 +2,29 @@
 pragma solidity 0.8.37;
 
 library ProtocolTypes {
-    enum Side { YES, NO }
-    enum Outcome { UNRESOLVED, YES, NO, INVALID }
-    enum State { OPEN, CLOSED, PROPOSED, DISPUTED, FINALIZED, CANCELLED }
-    enum BondType { CREATION, PROPOSAL, CHALLENGE }
+    enum Side {
+        YES,
+        NO
+    }
+    enum Outcome {
+        UNRESOLVED,
+        YES,
+        NO,
+        INVALID
+    }
+    enum State {
+        OPEN,
+        CLOSED,
+        PROPOSED,
+        DISPUTED,
+        FINALIZED,
+        CANCELLED
+    }
+    enum BondType {
+        CREATION,
+        PROPOSAL,
+        CHALLENGE
+    }
 
     struct Parameters {
         uint16 feeBps;
@@ -35,6 +54,7 @@ library ProtocolTypes {
         bytes32 proposalEvidence;
         bytes32 challengeEvidence;
         bytes32 decisionEvidence;
+        uint64 proposalActivityEpoch;
         uint64 challengeDeadline;
         uint64 arbitrationDeadline;
         uint128 yesPool;
@@ -46,6 +66,15 @@ library ProtocolTypes {
         bool refundable;
     }
 
-    struct Position { uint128 yes; uint128 no; bool settled; }
-    struct Bond { address owner; uint128 amount; bool claimed; }
+    struct Position {
+        uint128 yes;
+        uint128 no;
+        bool settled;
+    }
+
+    struct Bond {
+        address owner;
+        uint128 amount;
+        bool claimed;
+    }
 }

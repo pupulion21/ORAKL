@@ -4,13 +4,28 @@ import {PredictionPool} from "./PredictionPool.sol";
 import {ProtocolTypes as T} from "./libraries/ProtocolTypes.sol";
 
 abstract contract MarketResolver is PredictionPool {
-    event MarketOutcomeProposed(uint256 indexed marketId, address indexed proposer, T.Outcome outcome, bytes32 evidenceHash, uint64 challengeDeadline);
-    event MarketChallenged(uint256 indexed marketId, address indexed challenger, bytes32 evidenceHash, uint64 arbitrationDeadline);
-    event DisputeSettled(uint256 indexed marketId, address indexed arbitrator, T.Outcome decision, bytes32 evidenceHash);
+    event MarketOutcomeProposed(
+        uint256 indexed marketId,
+        address indexed proposer,
+        T.Outcome outcome,
+        bytes32 evidenceHash,
+        uint64 challengeDeadline
+    );
+    event MarketChallenged(
+        uint256 indexed marketId, address indexed challenger, bytes32 evidenceHash, uint64 arbitrationDeadline
+    );
+    event DisputeSettled(
+        uint256 indexed marketId, address indexed arbitrator, T.Outcome decision, bytes32 evidenceHash
+    );
     event MarketFinalized(uint256 indexed marketId, T.Outcome outcome, bool refundable);
     event MarketCancelled(uint256 indexed marketId, address indexed caller, uint8 reasonCode);
 
-    function proposeResult(uint256 id, T.Outcome outcome, bytes32 evidenceHash) external payable nonReentrant financialEntry {
+    function proposeResult(uint256 id, T.Outcome outcome, bytes32 evidenceHash)
+        external
+        payable
+        nonReentrant
+        financialEntry
+    {
         T.Market storage m = _market(id);
         if (marketState(id) != T.State.CLOSED) revert InvalidState();
         if (msg.sender == m.terms.arbitrator) revert Unauthorized();
@@ -19,6 +34,7 @@ abstract contract MarketResolver is PredictionPool {
         if (outcome == T.Outcome.UNRESOLVED) revert InvalidOutcome();
         if (evidenceHash == bytes32(0)) revert InvalidEvidence();
         if (msg.value != m.terms.proposalBond) revert IncorrectValue();
+        m.proposalActivityEpoch = protocolConfig.activityEpoch();
         m.proposer = msg.sender;
         m.proposedOutcome = outcome;
         m.proposalEvidence = evidenceHash;
@@ -45,7 +61,9 @@ abstract contract MarketResolver is PredictionPool {
 
     function finalizeResult(uint256 id) external nonReentrant {
         T.Market storage m = _market(id);
-        if (m.storedState != T.State.PROPOSED) revert InvalidState();
+        if (m.storedState != T.State.PROPOSED || m.proposalActivityEpoch != protocolConfig.activityEpoch()) {
+            revert InvalidState();
+        }
         if (block.timestamp < m.challengeDeadline || block.timestamp >= m.maxResolutionTime) revert InvalidTime();
         _finish(id, m, m.proposedOutcome);
     }

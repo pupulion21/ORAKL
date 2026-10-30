@@ -24,4 +24,6 @@ All payable facade entries (creation, contribution, proposal, challenge) check a
 
 Proposals and challenges are permissionless except the designated arbitrator cannot propose/challenge and a proposer cannot challenge its own proposal. Creators may propose but cannot arbitrate their own market or bypass a challenge. Every disputed decision must have nonzero evidence. All bond principals return to their original depositors after any terminal result, including INVALID and timeout; no slashing or dispute bounty exists until punitive economics are approved. This mitigates arbitrary confiscation but does not economically deter dishonest challenges. Dust/unclaimed entitlements stay reserved indefinitely; no sweep exists.
 
+Any pause/deactivation advances an activity epoch; an earlier proposal cannot later finalize uncontested. Its immutable timeout still allows refunds. Existing disputes and terminal claims remain accessible.
+
 No backend, metadata pinning, jurisdiction enforcement, production multisig setup or frontend migration is implemented by P0. Refer to the user-supplied PRD for the complete product scope and open decisions.

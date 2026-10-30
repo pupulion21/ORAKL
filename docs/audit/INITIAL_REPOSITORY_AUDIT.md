@@ -6,7 +6,7 @@ Scope: every tracked first-party source, contract test/helper, frontend integrat
 ## Repository inventory
 
 - `contracts/src/QiePredictionMarket.sol`: single native-collateral escrow.
-- `contracts/test/QiePredictionMarket.t.sol`: 56 unit/fuzz tests; `contracts/test/QiePredictionMarketInvariant.t.sol`: five handler-based invariants. Helpers and malicious receiver doubles are under `contracts/test/helpers/` and `contracts/test/doubles/`.
+- `contracts/test/QiePredictionMarket.t.sol`: 60 unit/fuzz tests; `contracts/test/QiePredictionMarketInvariant.t.sol`: five handler-based invariants. Helpers and malicious receiver doubles are under `contracts/test/helpers/` and `contracts/test/doubles/`.
 - `contracts/lib/openzeppelin-contracts/`: four vendored OpenZeppelin 5.4.0 utility files with hashes/provenance in `VENDORED.md`; no forge-std dependency.
 - `contracts/abi/`, `scripts/gen-abi-ts.mjs`, `frontend/src/abi.ts`: legacy compiled artifact and generated integration.
 - `frontend/src/`: Vite/TypeScript/viem UI, wallet session, receipt recovery, deployment verification, forms and pool arithmetic. Five frontend test files.
@@ -20,8 +20,8 @@ Scope: every tracked first-party source, contract test/helper, frontend integrat
 | `contracts/src/QiePredictionMarket.sol:176`, `:184` | Permissionless creation with immutable metadata, resolver and deadlines; byte-length validation. |
 | `contracts/src/QiePredictionMarket.sol:205`, `:219` | Nonreentrant native staking; checked nonzero amount, close boundary, uint128 total-pool cap and independent YES/NO positions. |
 | `contracts/src/QiePredictionMarket.sol:238`, `:253` | Resolver-only result in a bounded window; permissionless expiry cancellation. Trusted resolver can choose the real-world answer; this is an explicit trust assumption, not proof of truth. |
-| `contracts/src/QiePredictionMarket.sol:390`, `:407` | Full-precision floor `Math.mulDiv`, once-only settlement and effects before native transfer. |
-| `contracts/src/QiePredictionMarket.sol:432`, `:446` | Invalid/cancelled/zero-winner refunds; recipient redirection owned by the claimant; failed transfer reverts all accounting. |
+| `contracts/src/QiePredictionMarket.sol:392`, `:413` | Full-precision floor `Math.mulDiv`, once-only settlement and effects before native transfer. |
+| `contracts/src/QiePredictionMarket.sol:426`, `:449` | Invalid/cancelled/zero-winner refunds; recipient redirection owned by the claimant; failed transfer reverts all accounting. |
 | `contracts/src/QiePredictionMarket.sol:356`, `:362`, `:463` | Accounted escrow separated from unsolicited balance; direct receive/fallback rejected; no administrator withdrawal, upgrade or sweep. |
 | `contracts/test/QiePredictionMarket.t.sol:654`, `:688`, `:736`, `:770`, `:790` | Reentrancy, malicious recipient, cross-market isolation, forced balance and payout fuzz tests. |
 | `contracts/test/QiePredictionMarketInvariant.t.sol:18`, `:227` | Independent ghost pool/position/settlement accounting and five executable invariants. |

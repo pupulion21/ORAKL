@@ -21,3 +21,8 @@ runs = 256
 runs = 64
 depth = 32
 fail_on_revert = false
+
+# Preserve the legacy artifact/source and historical test formatting byte-for-byte.
+# All new ORAKL source, tests and scripts remain covered by forge fmt --check.
+[fmt]
+ignore = ["src/QiePredictionMarket.sol", "test/QiePredictionMarket.t.sol", "test/QiePredictionMarketInvariant.t.sol", "test/helpers/TestBase.sol", "test/helpers/Vm.sol", "test/doubles/NativeReentrancy.sol"]
