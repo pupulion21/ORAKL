@@ -1,0 +1,20 @@
+{
+  "normalization": "Only trailing line whitespace and redundant blank lines at EOF removed from captured text outputs; no result lines removed or changed. JSON detector reports unchanged.",
+  "files": [
+    {
+      "path": "docs/testing/evidence/forge-build.txt",
+      "rawSha256": "d28f24d770b5f637b7e841c64d794b446e3f67cf96e1d6644822aaa276867152",
+      "normalizedSha256": "2dc0304e88c93fa8005b31680b6b19bb3a99f223519b36dd2824e5d0bc389332"
+    },
+    {
+      "path": "docs/testing/evidence/forge-sizes.txt",
+      "rawSha256": "e6f022ab1ca67e83ec8d3ecb991c5a6eccd0a1feb535bf3f59d3ebfb20b8121c",
+      "normalizedSha256": "357a42aa6732f21406fd52ce8ee584f4c0352240b799845375b2f43f3d4dda1c"
+    },
+    {
+      "path": "docs/testing/evidence/frontend-typecheck.txt",
+      "rawSha256": "dca6ea3c0d1d0418d3886657c170d00af9bc1df48a5e2071e5267076d09481c8",
+      "normalizedSha256": "47b22b2e636639dd061909a8870a9b10bb71bb59360ec9a8d8ea08831acbf477"
+    }
+  ]
+}

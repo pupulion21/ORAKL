@@ -4,7 +4,7 @@ Date: 2026-10-30. Branch: `refactor/orakl-protocol-v1`. Baseline: `b555a87`. Cod
 
 ## Executed results
 
-[Timestamped command/exit records](evidence/verification-commands.json). Commands ran sequentially from `contracts/` so Slither's clean/build could not race other artifact producers.
+[Timestamped command/exit records](evidence/verification-commands.json). Commands ran sequentially from `contracts/` so Slither's clean/build could not race other artifact producers. Captured text outputs have trailing whitespace/redundant blank EOF removed; [raw/normalized hashes](evidence/log-formatting.json) record this formatting-only normalization. Detector JSON is unchanged.
 
 | Command | Exit | Result / captured output |
 | --- | --- | --- |
