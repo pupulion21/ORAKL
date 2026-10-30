@@ -41,6 +41,7 @@ STEPS = {
     "interface-tests": (".", ["node", "--test", "scripts/test/orakl-candidate-interface.test.mjs"], {}),
     "economic-model": (".", ["python3", "scripts/model-orakl-p0-2-economics.py", "--output",
                              "docs/testing/p0-2/economic-model.json"], {}),
+    "preservation": (".", ["python3", "scripts/check-orakl-p0-2-preservation.py"], {}),
     "frontend-test": (".", ["npm", "test"], {}),
     "frontend-typecheck": (".", ["npm", "run", "typecheck"], {}),
     "frontend-build": (".", ["npm", "run", "build"], {}),
@@ -50,10 +51,13 @@ STEPS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("step", choices=STEPS)
+    parser.add_argument("--record-file", default="commands.json", help="Separate JSON basename for independent concurrent steps")
     args = parser.parse_args()
     cwd, argv, overrides = STEPS[args.step]
     EVIDENCE.mkdir(parents=True, exist_ok=True)
-    records_path = EVIDENCE / "commands.json"
+    if Path(args.record_file).name != args.record_file or not args.record_file.endswith(".json"):
+        raise SystemExit("record-file must be a JSON basename inside the evidence directory")
+    records_path = EVIDENCE / args.record_file
     records = json.loads(records_path.read_text()) if records_path.exists() else []
     attempt = 1 + sum(r["step"] == args.step for r in records)
     # Never overwrite an earlier failure or analyzer JSON on repeated execution.

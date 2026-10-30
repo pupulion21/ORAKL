@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.37;
-import {OraklTestBase, T, ProtocolStorage, ProtocolConfig} from "../helpers/OraklTestBase.sol";
+import {
+    OraklTestBase,
+    T,
+    ProtocolStorage,
+    ProtocolConfig,
+    MarketFactory,
+    IProtocolConfig
+} from "../helpers/OraklTestBase.sol";
 import {AdversarialReceiver} from "../unit/BondsAndTransfers.t.sol";
 import {MutableMultisig} from "../doubles/MutableMultisig.sol";
 
@@ -241,6 +248,34 @@ contract P0_2EconomicsTest is OraklTestBase {
         _claimAllBonds(id);
         assertEq(factory.totalAccounted(), 0, "withdrawal exit never queries reverting role getters");
         assertEq(factory.totalFeesAccrued(), 0, "timeout fee zero");
+        _assertConservation();
+    }
+
+    function testRestoredRoleViewsDoNotProveUninterruptedChallengeAvailability_RESIDUAL() public {
+        MutableMultisig mutableGov = new MutableMultisig(100, 2);
+        governance = address(mutableGov);
+        T.Parameters memory terms = config.parameters();
+        config = new ProtocolConfig(governance, compliance, guardian, terms);
+        factory = new MarketFactory(IProtocolConfig(address(config)));
+        vm.prank(governance);
+        config.bindFactory(address(factory));
+        _activate();
+        uint256 id = _create();
+        _predict(id, carol, T.Side.YES, 10 ether);
+        _predict(id, bob, T.Side.NO, 1 ether);
+        _propose(id, T.Outcome.NO);
+        uint256 originalEpoch = config.activityEpoch();
+        mutableGov.setOwner(0, address(1099));
+        vm.prank(bob);
+        vm.expectRevert(ProtocolConfig.ControlChanged.selector);
+        factory.challengeResult{value: 3 ether}(id, HASH);
+        // No independently funded observer reports the drift before the old control views return.
+        // A reverted challenge cannot persist an interruption; real-world truth is not observable on-chain.
+        vm.warp(factory.getMarket(id).challengeDeadline);
+        mutableGov.setOwner(0, address(100));
+        factory.finalizeResult(id);
+        assertEq(config.activityEpoch(), originalEpoch, "unreported transient drift leaves no protocol history");
+        assertEq(uint256(factory.getMarket(id).finalOutcome), uint256(T.Outcome.NO), "restored current views pass");
         _assertConservation();
     }
 
