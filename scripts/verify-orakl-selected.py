@@ -15,4 +15,8 @@ r.STEPS['interface-export']=('.', ['node','scripts/export-orakl-selected-interfa
 r.STEPS['interface-check']=('.', ['node','scripts/export-orakl-selected-interface.mjs','--check'],{})
 r.STEPS['interface-tests']=('.', ['node','--test','scripts/test/orakl-selected-interface.test.mjs'],{})
 r.STEPS['slither-selected']=('contracts',['slither','src/SelectedMarketFactory.sol','--compile-force-framework','solc','--solc-remaps','@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/','--filter-paths','lib/','--solc-args',r.SOLC_ARGS+' --optimize --optimize-runs 50','--json','../docs/testing/selected-economics/slither-selected.json'],{})
+r.STEPS['preservation']=('.', ['python3','scripts/check-selected-preservation.py'],{})
+r.STEPS['skill-integrity']=('.', ['python3','docs/testing/orakl-v1-candidate/skill-integrity.py'],{})
+r.STEPS['exposure-before']=('.', ['python3','scripts/reproduce-selected-exposure-before.py'],{})
+r.STEPS['tool-identity']=('.', ['python3','scripts/selected-tool-identity.py'],{})
 if __name__=='__main__':r.main()

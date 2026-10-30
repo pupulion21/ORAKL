@@ -239,3 +239,15 @@ Before production freeze, the owner and independent reviewers must approve:
 - Final deployment-release authorization.
 
 Do not mislabel these operational requirements as implemented code.
+
+---
+
+# Implementation record — selected local candidate v2
+
+The user's subsequent explicit instruction to execute the root prompt is the authorization reference for LOCAL implementation. It supersedes earlier unapproved-alternative recommendations only within this local candidate's scope. It does not authorize any network operation or production numerical amount.
+
+Implemented root: [SelectedMarketFactory.sol](../../contracts/src/SelectedMarketFactory.sol). Preserved P0.3 root: MarketFactory. This is an explicitly versioned candidate using inherited custody/security, not an upgrade or a mutable mode. Tier is read from constructor configuration and fixed immutably. At construction and each market creation, selected terms must equal fee200bps, P=ceil(Tcap/10), K=Cmin=ceil(Tcap/100), minimum contribution=ceil(Tcap/10000), D duration48h and A duration96h. Creation reserves at least48h proposal opportunity. Global/per-snapshot-arbitrator unresolved caps are3×/2×tier. No fee F or sweep exists.
+
+One nonzero uint256 tranche/address, no global slot cap; every stake has an immutable prefix and final S. Terminal disposition is neutral for refunds/INVALID/empty winner/cancellation; upheld binary allocates P+S to proposer; reversed nonempty binary allocates each C_i plus its telescoping interval reward. Claim order does not change entitlements. Creator always claims its K. Config economics changes cannot rewrite snapshots, and invalid prospective terms cannot create selected markets; existing epoch interruption protections remain.
+
+Local tests scale synthetic integers by10^18 only for readability; native Mainnet decimals/purchasing power, actual Tcap, monitor funding, aggregate loss budget, fee F, genuine independently admitted3-of-5 wallets, evidence retention, network compatibility, external audit, legal eligibility and final release authorization remain unapproved. Protocol freeze is BLOCKED. Actual outcomes and source/artifact identity are recorded in [verification](../testing/ORAKL_V1_ECON_IMPLEMENTATION_VERIFICATION.md), with [risk review](../security/ORAKL_V1_MULTI_CHALLENGER_REVIEW.md) and [exposure model](../economics/ORAKL_V1_EXPOSURE_INVARIANTS.md).

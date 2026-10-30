@@ -2,3 +2,7 @@
 docs/testing/p0-2/*.txt -whitespace
 docs/testing/p0-3/*.txt -whitespace
 docs/testing/orakl-v1-candidate/*.txt -whitespace
+docs/testing/selected-economics/*.txt -whitespace
+# Preserve the exact user-provided Markdown prompt/specification bytes.
+ORAKL_V1_Codex_Strict_Prompt_All_In_One.md -whitespace
+ORAKL_V1_Economic_Spec_Selected.md -whitespace

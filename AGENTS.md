@@ -9,3 +9,5 @@
 - New protocol contracts initialize financially disabled. Local simulated activation in tests is not deployment approval. Do not activate or deploy Mainnet without explicit authorization, security review and applicable operational/legal approval.
 - Application UI copy remains English; user explanations may be Indonesian. Describe pool share as contribution distribution, never guaranteed probability or fixed payout.
 - On branch `refactor/orakl-protocol-v1`, use logical local commits. Do not push or open a PR without explicit authorization for this refactor.
+
+- Selected LOCAL economics: user instruction ORAKL-ECON-SELECTED-2026-10-30 in root prompt and docs/decisions/ORAKL_V1_SELECTED_ECONOMICS.md authorizes local M1, neutral-INVALID and immutable exposure budgets. New root SelectedMarketFactory uses versioned ABI; preserved MarketFactory remains P0.3. No production amount, fee F, deployment or activation approval is implied. Preserve original A-P and all legacy history.
