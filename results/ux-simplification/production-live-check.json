@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-30T02:47:34.647Z",
+  "environment": "Production build and real QIE Testnet RPC; no wallet injection or mocked requests",
+  "status": "PASS",
+  "expectedContract": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "oldLinkStillWorks": true,
+  "consumerHasDeveloperForms": false,
+  "connection": "Network\n\nConnected to QIE Testnet\n\nConnected\nPlatform\n\nThe platform contract has passed verification.\n\nVerified\nYour wallet\n\nConnect when you want to create a market or make a prediction.\n\nConnect wallet",
+  "pageErrors": [],
+  "transactionsSent": 0
+}

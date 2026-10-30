@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-10-29T13:46:02.324Z",
+  "environment": "Real public QIE Testnet RPC, deployed contract manifest, no injected wallet and no mocked requests",
+  "status": "PASS",
+  "address": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "transactionHash": "0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1",
+  "observation": {
+    "network": "Network connected",
+    "footerStats": "Loading stats…",
+    "starterIdeas": 9,
+    "emptyMarketMessage": [
+      "Open the first market."
+    ],
+    "documentOverflow": false,
+    "errors": []
+  },
+  "pageErrors": []
+}

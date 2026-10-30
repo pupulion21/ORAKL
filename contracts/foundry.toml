@@ -1,0 +1,23 @@
+# Adapted from the qie-smart-contracts build-test fixture (release 0.6.0-ecosystem.2,
+# release id 3aa11f7a34b9db51b1b9de243a4642af4eed6fe734c24e287ad0bd93888bd11b).
+# Toolchain pins: forge 1.8.1 (982849d3140c01fd3b72905759581a132df7aa98),
+# solc 0.8.37+commit.f401782d, evm_version paris. No external libraries.
+# Invariant profile (runs/depth) is a project-local addition, not a fixture value.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib"]
+remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
+solc_version = "0.8.37"
+evm_version = "paris"
+optimizer = false
+bytecode_hash = "none"
+
+[profile.default.fuzz]
+runs = 256
+
+[profile.default.invariant]
+runs = 64
+depth = 32
+fail_on_revert = false

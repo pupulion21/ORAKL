@@ -1,0 +1,12 @@
+secrets/
+node_modules/
+frontend/dist/
+contracts/out/
+contracts/cache/
+results/runtime/
+*.pid
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

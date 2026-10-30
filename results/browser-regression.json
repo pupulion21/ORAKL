@@ -1,0 +1,12 @@
+{
+  "environment": "Chromium with intercepted RPC and mock EIP-1193 wallet; no live QIE transactions",
+  "timestamp": "2026-10-29T10:21:37.217Z",
+  "passed": [
+    "uint64 timestamp outside Date range renders safely in the market list",
+    "delayed create receipt recovers via its hash and renders the new market route",
+    "stake confirmation closes after submission and delayed receipt refreshes state without a second write",
+    "delayed deploy receipt activates the verified deployment and exposes its manifest without redeploying"
+  ],
+  "pageErrors": [],
+  "walletWrites": 3
+}

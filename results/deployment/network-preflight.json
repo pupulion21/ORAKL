@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "network_id": "qie-testnet",
+  "expected_chain_id": 1983,
+  "endpoint": "https://rpc2testnet.qie.digital/",
+  "endpoint_source": "explicit-override",
+  "rpc_host": "rpc2testnet.qie.digital",
+  "observed": {
+    "chain_id": 1983,
+    "chain_id_hex": "0x7bf",
+    "latest_block": 9443176,
+    "latest_block_hex": "0x901768",
+    "latest_block_timestamp": "2026-10-29T12:16:04.000Z"
+  },
+  "effective_claims": [
+    {
+      "claim_id": "qie-testnet.chain_id",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    },
+    {
+      "claim_id": "qie-testnet.explorer_url",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    },
+    {
+      "claim_id": "qie-testnet.faucet_url",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    },
+    {
+      "claim_id": "qie-testnet.native_symbol",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    },
+    {
+      "claim_id": "qie-testnet.network_name",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    },
+    {
+      "claim_id": "qie-testnet.rpc_url",
+      "status": "DOCUMENTED",
+      "reason": "Stored evidence level; no live check or evidence promotion."
+    }
+  ],
+  "live_check": {
+    "outcome": "PASS",
+    "error_code": null,
+    "reason": "Observed chain ID matches the selected documented network and a nonzero latest block was read. Freshness beyond this observation and any capability promotion are not claimed."
+  },
+  "checked_at": "2026-10-29T12:16:02.386Z",
+  "warnings": [
+    "A live observation never promotes a packaged claim or capability status.",
+    "No reviewed freshness threshold exists for QIE block heights, so block freshness is reported but never claimed."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "address": "0x0C3020A1D6C8524145D0527630BE4F849401b291",
+  "purpose": "QIE Testnet prediction-market deployment only",
+  "chainId": 1983,
+  "storage": "Encrypted Foundry keystore under the Git-ignored secrets/qie-testnet directory",
+  "faucetRequestSubmitted": true,
+  "faucetRequestAt": "2026-10-29T13:06:43.573Z",
+  "observedBalanceQIE": "2",
+  "balanceObservedAt": "2026-10-29T13:27:04.936Z",
+  "hydratedFaucetRetryAt": "2026-10-29T13:26:49.495Z",
+  "transactionHash": "0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1",
+  "expectedContractAddress": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "submittedAt": "2026-10-29T13:32:59.844Z",
+  "contractAddress": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "status": "DEPLOYED_AND_RUNTIME_VERIFIED",
+  "verifiedAt": "2026-10-29T13:40:04.674Z"
+}

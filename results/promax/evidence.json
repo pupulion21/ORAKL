@@ -1,0 +1,87 @@
+{
+  "contract": "design-system/qie-predict/MASTER.md: English QIE prediction platform with real escrow semantics and explicitly labelled idea-only discovery before deployment.",
+  "targetViewports": [
+    "1440x1000",
+    "1024x900",
+    "768x1024",
+    "390x844",
+    "375x812"
+  ],
+  "accessibility": {
+    "status": "pass",
+    "evidence": "Labelled buttons and search; keyboard shortcut, dialog focus trapping, Escape and focus restoration tested. Focus rings and reduced motion CSS present. Dark navy surfaces, blue navigation, green/red outcome labels visually reviewed. An additional axe-core scan of seven routes at desktop/mobile and the wallet dialog found zero WCAG 2 A/AA or 2.1 AA violations after step-number contrast correction; see accessibility.json."
+  },
+  "responsive": {
+    "status": "pass",
+    "evidence": "Measured document scrollWidth against innerWidth on desktop/tablet/mobile for discovery, portfolio and creation; all passed."
+  },
+  "contentStates": {
+    "loading": {
+      "status": "pass",
+      "evidence": "Delayed mock RPC leaves labelled idea discovery usable."
+    },
+    "empty": {
+      "status": "pass",
+      "evidence": "Unmatched search and empty watchlist show useful empty states with recovery links."
+    },
+    "error": {
+      "status": "pass",
+      "evidence": "Invalid pasted platform manifest yields a visible error without an RPC write."
+    },
+    "partial": {
+      "status": "pass",
+      "evidence": "Failed public deployment manifest shows a configuration notice while nine labelled ideas remain usable."
+    },
+    "success": {
+      "status": "pass",
+      "evidence": "Bookmark saves, persists on reload, and removes correctly; idea becomes a draft. Separate receipt browser regression checks create/stake/deploy recovery."
+    },
+    "permission": {
+      "status": "pass",
+      "evidence": "Disconnected portfolio and create form explain wallet/setup prerequisites and never invent funded positions."
+    }
+  },
+  "renderedEvidence": [
+    {
+      "viewport": "1440x1000",
+      "artifact": "desktop.png",
+      "observation": "Desktop shows market discovery, labelled ideas, categories, search, and no fabricated odds or funded markets."
+    },
+    {
+      "viewport": "1024x900",
+      "artifact": "tablet-1024.png",
+      "observation": "tablet-1024 discovery has no document overflow; category strip scrolls inside its container and cards reflow without clipping."
+    },
+    {
+      "viewport": "768x1024",
+      "artifact": "tablet-768.png",
+      "observation": "tablet-768 discovery has no document overflow; category strip scrolls inside its container and cards reflow without clipping."
+    },
+    {
+      "viewport": "390x844",
+      "artifact": "mobile-390.png",
+      "observation": "mobile-390 discovery has no document overflow; category strip scrolls inside its container and cards reflow without clipping."
+    },
+    {
+      "viewport": "375x812",
+      "artifact": "mobile-375.png",
+      "observation": "mobile-375 discovery has no document overflow; category strip scrolls inside its container and cards reflow without clipping."
+    }
+  ],
+  "checks": [
+    "category, search, combined filters, empty results and reset operate on idea data",
+    "bookmarks persist across reload and removal updates the saved page",
+    "using an idea prepares a draft, requires actual rules and source, and keeps publishing gated",
+    "disconnected portfolio shows no invented balance; connection dialog traps focus, Escape closes, and focus restores",
+    "learning page and native accessible FAQ disclosure work",
+    "search keyboard shortcut focuses the labelled search control",
+    "skip-to-content preserves the current hash route and focuses main content",
+    "discovery, portfolio and creation are usable at desktop, tablet and mobile widths",
+    "reduced motion media preference is respected",
+    "manifest failure preserves discovery and malformed platform configuration is rejected visibly",
+    "discovery is immediately usable while network checks are still loading"
+  ],
+  "pageErrors": [],
+  "chainTransactionsSent": 0,
+  "designSpecification": "../../design-system/qie-predict/MASTER.md"
+}

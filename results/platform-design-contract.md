@@ -1,0 +1,9 @@
+# Platform design contract
+
+The product is an Indonesian QIE EVM Testnet prediction market, built on the existing Solidity escrow and wallet integration. Its primary job is discovering a question, reading the settlement rules, and deliberately staking YES or NO through the user's wallet. Secondary workflows are creating markets, saving questions, reviewing positions, claiming payouts/refunds, and resolver settlement.
+
+The existing local implementation is the product reference: it already supplies working transaction and accounting semantics but exposes implementation details ahead of discovery. The revised product keeps those semantics and uses a warm neutral canvas, burgundy actions, green/red outcomes, compact topic artwork, and an editorial market grid. No invented prices, odds, volume, balances, activity or funded markets are permitted. Undeployed and offline discovery uses explicitly labelled market ideas with a draft action and no staking.
+
+Target viewports: 1440x1000 desktop, 768x1024 tablet, and 390x844 mobile. All must avoid horizontal document overflow. Navigation, search, filters, saved state, and market actions must remain usable by keyboard and touch. Controls have visible focus, accessible labels and 40–44 px hit areas. Motion respects reduced-motion preferences. Long market titles wrap.
+
+Content states: loading shows stable skeletons/progress; empty explains the missing markets or positions with an action; connection and manifest errors offer a retry/setup path; partial data identifies what is unavailable while discovery remains usable; successful writes recover via their original transaction hash; disconnected/wrong-chain users can browse and prepare a draft while signing remains gated. Actual wallet compatibility, live chain finality, and a published deployment require separate runtime evidence.

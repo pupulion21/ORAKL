@@ -1,0 +1,8 @@
+{
+  "images": {
+    "crypto": "https://unsplash.com/photos/FYiqHeNwaH0",
+    "sports": "https://images.unsplash.com/photo-1522778119026-d647f0596c20",
+    "technology": "https://images.unsplash.com/photo-1518770660439-4636190af475"
+  },
+  "font": "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+}

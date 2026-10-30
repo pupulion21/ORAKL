@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-10-29T13:40:04.674Z",
+  "status": "DEPLOYED_AND_RUNTIME_VERIFIED",
+  "network": {
+    "chainId": 1983,
+    "name": "QIE Testnet"
+  },
+  "address": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "transactionHash": "0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1",
+  "blockNumber": "9444227",
+  "blockHash": "0xf27260c75acf47a6efe007582214cf33dfac1bb6ffb5e81a4ad7712ba05c6bac",
+  "checks": {
+    "selectedChain": true,
+    "transactionHash": true,
+    "directCreation": true,
+    "creationBytecodeMatches": true,
+    "zeroNativeValue": true,
+    "expectedSender": true,
+    "expectedNonce": true,
+    "expectedCreatedAddress": true,
+    "canonicalObservedBlock": true,
+    "runtimeAtDeploymentBlockMatches": true
+  },
+  "gasUsed": "3064584",
+  "effectiveGasPriceWei": "7",
+  "feePaidQIE": "0.000000000021452088",
+  "contractState": {
+    "marketCount": "0",
+    "totalStakeReceived": "0",
+    "totalPaidOut": "0",
+    "totalEscrow": "0",
+    "unaccountedBalance": "0",
+    "contractBalance": "0"
+  },
+  "contractStateObservedAtBlock": "9444324",
+  "frontendManifest": "frontend/public/deployments/qie-testnet.json",
+  "sourceVerification": "NOT_RUN",
+  "finality": "Not inferred from receipt or this observed canonical block",
+  "signerStorage": "Encrypted keystore in Git-ignored secrets/qie-testnet; never included in frontend output"
+}

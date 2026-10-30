@@ -1,0 +1,14 @@
+{
+  "source": "qie-frontend/scripts/verify-network.mjs",
+  "network_id": "qie-testnet",
+  "endpoint": "https://rpc2testnet.qie.digital/",
+  "expected_chain_id": 1983,
+  "observed": {
+    "chain_id": 1983,
+    "latest_block": 9441505,
+    "latest_block_timestamp": "2026-10-29T10:15:06.000Z"
+  },
+  "live_check": "PASS",
+  "checked_at": "2026-10-29T10:15:08.892Z",
+  "scope": "Read-only observation of chain identity and a nonzero block. This does not establish wallet compatibility, historical-read support, application effects or network finality. No transaction was signed or broadcast."
+}

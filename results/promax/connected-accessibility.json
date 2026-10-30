@@ -1,0 +1,5 @@
+{
+  "environment": "Controlled wallet and RPC fixture",
+  "route": "market detail with connected wallet and transaction dock",
+  "violations": []
+}

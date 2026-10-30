@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "status": "ACTIVE",
+  "network": {
+    "name": "QIE EVM Testnet",
+    "chainId": 1983
+  },
+  "address": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "deployment": {
+    "txHash": "0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1",
+    "blockNumber": "9444227",
+    "blockHash": "0xf27260c75acf47a6efe007582214cf33dfac1bb6ffb5e81a4ad7712ba05c6bac",
+    "deployer": "0x0C3020A1D6C8524145D0527630BE4F849401b291",
+    "deployedAt": "2026-10-29T13:32:52.000Z"
+  },
+  "artifact": {
+    "creationBytecodeKeccak256": "0x357f0e6d5e34d3012637e58de0f06bc1bfb7019d35fd110a95b016191f782299",
+    "runtimeBytecodeKeccak256": "0x0d478010629faa5104f39d3e3ede0343f47ac2996affb676c7a6be6e499b256b",
+    "sourceKeccak256": "0xc7578a46748f722cb8a33692a64ca99de5ea6e02bc135a58b29ac9458af4bc01",
+    "settingsKeccak256": "0x3009d03a4ac3cc59e34495cf747cdcc7cbabfb089f1e185dbd8ab4d036c79bc0",
+    "artifactSha256": "0xe07ace39d320f251bb50494badb9f738503fd025d04fc3e03f7c21344d8dd608",
+    "abiSha256": "0x4343e9020cca21b27a94c7f385baf1c3f2f81820bf71be8747df6d405691f503",
+    "compiler": "0.8.37+commit.f401782d",
+    "evmVersion": "paris",
+    "optimizer": false,
+    "bytecodeHash": "none"
+  },
+  "verification": {
+    "runtimeCodeMatches": true,
+    "marketCountReadable": true,
+    "marketCount": "0",
+    "verifiedAt": "2026-10-29T13:40:04.671Z",
+    "verifier": "qie-predict-live-deployment/0.1.0"
+  }
+}

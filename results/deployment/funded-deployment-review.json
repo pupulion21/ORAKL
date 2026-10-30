@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-29T13:32:47.566Z",
+  "readiness": "DEPLOYED_AND_RUNTIME_VERIFIED",
+  "authorization": "User explicitly requested that the assistant deploy this contract on QIE Testnet using testnet funds.",
+  "network": {
+    "chainId": 1983,
+    "rpc": "https://rpc2testnet.qie.digital/",
+    "observedBlock": "9444223"
+  },
+  "signerAccount": "0x0C3020A1D6C8524145D0527630BE4F849401b291",
+  "signer": "Local encrypted Foundry keystore; no signing material enters the frontend or tool output",
+  "nativeValueQIE": "0",
+  "constructorArguments": [],
+  "nonce": 0,
+  "expectedAddress": "0x43A666a9a305232E6a10fae8507d67EF64F02C98",
+  "creationBytecodeKeccak256": "0x357f0e6d5e34d3012637e58de0f06bc1bfb7019d35fd110a95b016191f782299",
+  "expectedRuntimeBytecodeKeccak256": "0x0d478010629faa5104f39d3e3ede0343f47ac2996affb676c7a6be6e499b256b",
+  "balanceQIE": "2",
+  "gasEstimate": "3064584",
+  "gasLimit": "3371043",
+  "transactionType": 2,
+  "maxFeePerGasWei": "8",
+  "maxPriorityFeePerGasWei": "0",
+  "maximumFeeWei": "26968344",
+  "maximumFeeQIE": "0.000000000026968344",
+  "localSpendingCeilingQIE": "0.01",
+  "transactionHash": "0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1",
+  "verificationReport": "live-deployment.json"
+}

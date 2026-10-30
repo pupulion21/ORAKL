@@ -1,0 +1,6 @@
+{
+  "exitCode": 0,
+  "stdout": "{\n  \"deployer\": \"0x0C3020A1D6C8524145D0527630BE4F849401b291\",\n  \"deployedTo\": \"0x43A666a9a305232E6a10fae8507d67EF64F02C98\",\n  \"transactionHash\": \"0x6b8d52be72cbb99137b047fd142f7cc83a3f5bf08daafdc4170caf307dbb71f1\"\n}\n",
+  "stderr": "",
+  "timestamp": "2026-10-29T13:32:59.844Z"
+}

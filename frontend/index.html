@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c111b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>html { color-scheme: dark; background: #0c111b; color: #edf2fa; }</style>
+    <meta
+      name="description"
+      content="Explore prediction markets on QIE. Find a question, choose a side, and follow the result."
+    />
+    <title>QIE Predict — What happens next?</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <div style="max-width: 720px; margin: 3rem auto; padding: 1rem; font-family: system-ui, sans-serif; color: #edf2fa">
+        QIE Predict needs JavaScript to read QIE Testnet contracts and connect to your wallet.
+      </div>
+    </noscript>
+    <script>
+      // Surface module errors in the DOM for local smoke tests. Production hosting
+      // should still collect real client-side errors through its own telemetry.
+      window.__errs = [];
+      window.addEventListener('error', (event) => {
+        window.__errs.push(String(event.message) + ' @ ' + event.filename + ':' + event.lineno);
+        document.title = 'ERR — QIE Predict';
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        window.__errs.push('rejection: ' + String((event.reason && event.reason.stack) || event.reason));
+        document.title = 'ERR — QIE Predict';
+      });
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

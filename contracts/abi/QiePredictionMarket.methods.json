@@ -1,0 +1,146 @@
+[
+  {
+    "name": "MAX_CRITERIA_BYTES",
+    "signature": "MAX_CRITERIA_BYTES()",
+    "selector": "0x5dafad29",
+    "stateMutability": "view"
+  },
+  {
+    "name": "MAX_QUESTION_BYTES",
+    "signature": "MAX_QUESTION_BYTES()",
+    "selector": "0x8b312c75",
+    "stateMutability": "view"
+  },
+  {
+    "name": "MAX_SOURCE_BYTES",
+    "signature": "MAX_SOURCE_BYTES()",
+    "selector": "0x683964d5",
+    "stateMutability": "view"
+  },
+  {
+    "name": "MAX_TOTAL_POOL",
+    "signature": "MAX_TOTAL_POOL()",
+    "selector": "0x0e8b19fa",
+    "stateMutability": "view"
+  },
+  {
+    "name": "cancelIfExpired",
+    "signature": "cancelIfExpired(uint256)",
+    "selector": "0x63041c20",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "claim",
+    "signature": "claim(uint256)",
+    "selector": "0x379607f5",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "claimTo",
+    "signature": "claimTo(uint256,address)",
+    "selector": "0x30e1198b",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "createMarket",
+    "signature": "createMarket(string,string,string,address,uint64,uint64)",
+    "selector": "0xb6ae7045",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "getMarket",
+    "signature": "getMarket(uint256)",
+    "selector": "0xeb44fdd3",
+    "stateMutability": "view"
+  },
+  {
+    "name": "getMarketMeta",
+    "signature": "getMarketMeta(uint256)",
+    "selector": "0x2882224f",
+    "stateMutability": "view"
+  },
+  {
+    "name": "getPosition",
+    "signature": "getPosition(uint256,address)",
+    "selector": "0xd29f541d",
+    "stateMutability": "view"
+  },
+  {
+    "name": "marketCount",
+    "signature": "marketCount()",
+    "selector": "0xec979082",
+    "stateMutability": "view"
+  },
+  {
+    "name": "projectedPayout",
+    "signature": "projectedPayout(uint256,address)",
+    "selector": "0x4bf1002d",
+    "stateMutability": "view"
+  },
+  {
+    "name": "projectedRefund",
+    "signature": "projectedRefund(uint256,address)",
+    "selector": "0x23f980cd",
+    "stateMutability": "view"
+  },
+  {
+    "name": "refund",
+    "signature": "refund(uint256)",
+    "selector": "0x278ecde1",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "refundEnabled",
+    "signature": "refundEnabled(uint256)",
+    "selector": "0xbdfe3180",
+    "stateMutability": "view"
+  },
+  {
+    "name": "refundTo",
+    "signature": "refundTo(uint256,address)",
+    "selector": "0x5f7b866c",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "remainingEscrow",
+    "signature": "remainingEscrow(uint256)",
+    "selector": "0xdccaf647",
+    "stateMutability": "view"
+  },
+  {
+    "name": "resolve",
+    "signature": "resolve(uint256,uint8)",
+    "selector": "0x9c0e1608",
+    "stateMutability": "nonpayable"
+  },
+  {
+    "name": "stake",
+    "signature": "stake(uint256,uint8)",
+    "selector": "0x10087fb1",
+    "stateMutability": "payable"
+  },
+  {
+    "name": "totalEscrow",
+    "signature": "totalEscrow()",
+    "selector": "0xa3d89844",
+    "stateMutability": "view"
+  },
+  {
+    "name": "totalPaidOut",
+    "signature": "totalPaidOut()",
+    "selector": "0x1357e1dc",
+    "stateMutability": "view"
+  },
+  {
+    "name": "totalStakeReceived",
+    "signature": "totalStakeReceived()",
+    "selector": "0x19a95d0a",
+    "stateMutability": "view"
+  },
+  {
+    "name": "unaccountedBalance",
+    "signature": "unaccountedBalance()",
+    "selector": "0x382e8547",
+    "stateMutability": "view"
+  }
+]

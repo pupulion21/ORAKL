@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-29T12:04:34.357Z",
+  "environment": "Built Vite production assets served locally; real public read-only RPC requests, no wallet and no signed transactions",
+  "observation": {
+    "lang": "en",
+    "title": "QIE Predict — What happens next?",
+    "network": "Network connected",
+    "ideas": 9,
+    "images": true,
+    "font": true,
+    "overflow": false,
+    "errors": []
+  },
+  "pageErrors": []
+}

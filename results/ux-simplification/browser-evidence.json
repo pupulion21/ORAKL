@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-10-30T02:48:24.277Z",
+  "environment": "Controlled RPC and wallet fixtures; no live transactions",
+  "checks": [
+    "old deployment URL opens a plain connection overview with no JSON, deployment action, or developer navigation",
+    "connection overview fits desktop, tablet, 375px phone, landscape, larger text, and reduced motion",
+    "native disclosures work with the keyboard and malformed imports preserve the verified connection",
+    "advanced deployment still requires a review dialog; navigation, imports, and modal cancellation send no transaction",
+    "result review retains the connected wallet and only shows that account’s assigned markets",
+    "missing deployment, manifest error, and wrong-network RPC show recovery actions without developer forms",
+    "loading has an honest progress state and becomes ready after verification"
+  ],
+  "audits": [
+    {
+      "label": "consumer status desktop",
+      "violations": []
+    },
+    {
+      "label": "consumer status mobile",
+      "violations": []
+    },
+    {
+      "label": "developer tools collapsed",
+      "violations": []
+    },
+    {
+      "label": "deployment review modal",
+      "violations": []
+    },
+    {
+      "label": "developer tools expanded mobile",
+      "violations": []
+    }
+  ],
+  "pageErrors": [],
+  "liveTransactionsSent": 0
+}
