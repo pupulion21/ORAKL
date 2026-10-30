@@ -1,0 +1,192 @@
+{
+  "label": "P0.1-final-candidate",
+  "solc": "solc, the solidity compiler commandline interface\nVersion: 0.8.37+commit.f401782d.Linux.g++",
+  "sourceSha256": {
+    "src/MarketFactory.sol": "f8e94b9b8403ffa64f29f3f1874377fbfb281d70962c67ba0fabb6c04806ae2c",
+    "src/MarketResolver.sol": "4d129e8ea8013046052960ed678e363a9dbf10b5bf19f7b20070af61bb498cc2",
+    "src/PredictionPool.sol": "e447b04c751182f6fdacb7429072bf27790fd6948d1ec22cba4997d49f07945c",
+    "src/ProtocolConfig.sol": "2f47975cc0aa94d5fa349afbf0f0377c91188fa795382622741edddc2c362fa6",
+    "src/ProtocolStorage.sol": "4531649bf6bc829b68373b1caeec11824dc1c2219dab3768c6cac81a599be793",
+    "src/QiePredictionMarket.sol": "d0356652e6384665361c164b3014c40c10eb8d514508381570e7cdb46a74c610",
+    "src/interfaces/IMultisig.sol": "ad114a3e5e25a572e08a846dd19eb32e5127ab9e23f4c044b831de4666c3291d",
+    "src/interfaces/IProtocolConfig.sol": "ba1e120379e2b3ecf1e5a1b6ab1d7ccb6814f553301f0e52778a73ecfc4876dd",
+    "src/libraries/ProtocolTypes.sol": "f1745dad662b6e14c2fa74ea24fa075a71a58791207bca5c3b3a4d4723305e0b",
+    "lib/openzeppelin-contracts/contracts/utils/Panic.sol": "270fc8401c1a13fae6a7a4a2dd6e381b95d658896701e51f0d3e2688acab3dec",
+    "lib/openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol": "32fbb1c908ec1b4de85cc1bb10091aebd5816ffe80dfdd5ca5e084fbea67a462",
+    "lib/openzeppelin-contracts/contracts/utils/math/Math.sol": "92fee281fd46a1b058b190cf21d6b1a528f0433a907850ae1c9bcf36c5c0cd98",
+    "lib/openzeppelin-contracts/contracts/utils/math/SafeCast.sol": "9769274bf53f26a7c7896c526ea1980dc9bea5bf5c2a5fd04870008c4afc1de9"
+  },
+  "results": [
+    {
+      "name": "off",
+      "optimizer": false,
+      "runs": 200,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 0.406,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 26887,
+          "initcodeBytes": 27373
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 15337,
+          "initcodeBytes": 20428
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 13906,
+          "initcodeBytes": 13945
+        }
+      }
+    },
+    {
+      "name": "runs-1",
+      "optimizer": true,
+      "runs": 1,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 1.102,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 15357,
+          "initcodeBytes": 15637
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 8497,
+          "initcodeBytes": 11526
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7964,
+          "initcodeBytes": 8000
+        }
+      }
+    },
+    {
+      "name": "runs-50",
+      "optimizer": true,
+      "runs": 50,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 1.169,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 15412,
+          "initcodeBytes": 15692
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 8530,
+          "initcodeBytes": 11559
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7974,
+          "initcodeBytes": 8010
+        }
+      }
+    },
+    {
+      "name": "runs-200",
+      "optimizer": true,
+      "runs": 200,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 1.144,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 15551,
+          "initcodeBytes": 15831
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 8546,
+          "initcodeBytes": 11575
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 7998,
+          "initcodeBytes": 8034
+        }
+      }
+    },
+    {
+      "name": "runs-1000",
+      "optimizer": true,
+      "runs": 1000,
+      "viaIR": false,
+      "evmVersion": "paris",
+      "durationSeconds": 1.126,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 16255,
+          "initcodeBytes": 16535
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 8930,
+          "initcodeBytes": 11959
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 8869,
+          "initcodeBytes": 8905
+        }
+      }
+    },
+    {
+      "name": "ir-200",
+      "optimizer": true,
+      "runs": 200,
+      "viaIR": true,
+      "evmVersion": "paris",
+      "durationSeconds": 3.975,
+      "errors": [],
+      "sizes": {
+        "MarketFactory": {
+          "runtimeBytes": 12855,
+          "initcodeBytes": 13103
+        },
+        "ProtocolConfig": {
+          "runtimeBytes": 7243,
+          "initcodeBytes": 9574
+        },
+        "QiePredictionMarket": {
+          "runtimeBytes": 6318,
+          "initcodeBytes": 6350
+        }
+      }
+    }
+  ],
+  "modularizationCandidate": {
+    "name": "external-pure-math-library",
+    "optimizerRuns": 50,
+    "viaIR": false,
+    "evmVersion": "paris",
+    "errors": [],
+    "sizes": {
+      "MarketFactory": {
+        "runtimeBytes": 15406,
+        "initcodeBytes": 15686,
+        "linkReferences": {
+          "src/libraries/ExternalPoolMath.sol": {
+            "ExternalPoolMath": [
+              {
+                "length": 20,
+                "start": 12415
+              },
+              {
+                "length": 20,
+                "start": 12781
+              }
+            ]
+          }
+        }
+      },
+      "ExternalPoolMath": {
+        "runtimeBytes": 426,
+        "initcodeBytes": 483,
+        "linkReferences": {}
+      }
+    },
+    "status": "COMPILATION-ONLY CANDIDATE; unlinked delegatecall library; not production source, not tested semantically, not deployed"
+  }
+}

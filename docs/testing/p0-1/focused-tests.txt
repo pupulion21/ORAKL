@@ -1,0 +1,55 @@
+Compiling 2 files with Solc 0.8.37
+Solc 0.8.37 finished in 667.70ms
+Compiler run successful with warnings:
+Warning (6335): "at" will be promoted to keyword in the future and will not be allowed as an identifier anymore.
+  --> test/remediation/EmergencyRecovery.t.sol:47:9:
+   |
+47 |         uint64 at = config.interruptedAt(0);
+   |         ^^^^^^^^^
+
+
+Ran 1 test for test/remediation/LegacyValueFlow.t.sol:LegacyValueFlowTest
+[PASS] testLegacyClaimAndRefundOnlyUseCallerEntitlementAcrossMarkets() (gas: 878028)
+Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1.37ms (1.02ms CPU time)
+
+Ran 4 tests for test/remediation/ValueFlow.t.sol:ValueFlowTest
+[PASS] testContractOwnersCanRedirectEachBondCategoryAfterRejectedTransfer() (gas: 4572939)
+[PASS] testNoExposedTransferHelperAndNoCrossOwnerClaims() (gas: 1528001)
+[PASS] testPartialFeeWithdrawalsCannotConsumeBondsPoolsOrForcedSurplus() (gas: 2498226)
+[PASS] testZeroBondClaimDoesNotInvokeRejectingRecipient() (gas: 1820165)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 15.94ms (13.69ms CPU time)
+
+Ran 11 tests for test/remediation/MultisigControls.t.sol:MultisigControlsTest
+[PASS] testArbitratorRotationBlocksDisputeDecisionButPreservesTimeout() (gas: 1795589)
+[PASS] testControlDriftBlocksUncontestedFinalizationAndFees() (gas: 2784034)
+[PASS] testFuzzReporterGasCannotCreateFalseDrift(uint32) (runs: 2048, μ: 38081, ~: 25200)
+[PASS] testGasStarvationCannotManufactureRoleDrift() (gas: 148129)
+[PASS] testHiddenModulesGuardsAndImplementationCanEvadeViewFingerprint_RESIDUAL() (gas: 1622576)
+[PASS] testInvalidObservableMultisigCannotReceiveFreshApproval() (gas: 169568)
+[PASS] testMaximumDeclaredOwnerSetsFitReporterBudgetWithoutFalsePositive() (gas: 10075232)
+[PASS] testOverlappingOwnersOrGuardianOwnerFailClosed() (gas: 167828)
+[PASS] testRevertingGasBurningOversizedMalformedViewsCanBeReportedSafely() (gas: 16131535)
+[PASS] testSignerDriftBeforeActivationInvalidatesApprovalAndDelay() (gas: 803983)
+[PASS] testThresholdDowngradeBlocksDepositsAndPermissionlessReportEnablesExit() (gas: 1127513)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 615.09ms (740.42ms CPU time)
+
+Ran 4 tests for test/remediation/P0_1Regression.t.sol:P0_1RegressionTest
+[PASS] testGuardianPauseNeedsFreshIndependentApproval() (gas: 81596)
+[PASS] testInterruptedProposalHasBoundedRefundBeforeDistantMax() (gas: 1387928)
+[PASS] testMutatedArbitratorCodeCannotSettleExistingDispute() (gas: 1221903)
+[PASS] testMutatedGovernanceCodeBlocksNewDeposits() (gas: 518732)
+Suite result: ok. 4 passed; 0 failed; 0 skipped; finished in 625.59ms (3.83ms CPU time)
+
+Ran 9 tests for test/remediation/EmergencyRecovery.t.sol:EmergencyRecoveryTest
+[PASS] testAllUnresolvedPhasesQuarantinedAndPrincipalRefundedDuringLongHalt() (gas: 5209605)
+[PASS] testAlreadyFinalizedOutcomeAndClaimsUnaffectedByAllInterventions() (gas: 1754441)
+[PASS] testCannotReplaceLiveReleaseApprovalWithoutInterruption() (gas: 45533)
+[PASS] testEmergencyDeadlineCappedAtOriginalMaxAndZeroBondCases() (gas: 1992524)
+[PASS] testFreshApprovalAndFullDelayRequiredToUnpauseAndActivate() (gas: 659103)
+[PASS] testFuzzFirstExitDoesNotMove(uint8,uint32) (runs: 2048, μ: 1464041, ~: 1403639)
+[PASS] testNoEmergencyCancellationWithoutInterruptionAndNoArbitraryDecision() (gas: 556413)
+[PASS] testRepeatInterventionRevokesPendingReviewWithoutDelayingOldExit() (gas: 1395188)
+[PASS] testResumeCannotRefuelReproposeChallengeOrFinalizeQuarantinedMarkets() (gas: 2496674)
+Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 625.66ms (642.09ms CPU time)
+
+Ran 5 test suites in 626.40ms (1.88s CPU time): 29 tests passed, 0 failed, 0 skipped (29 total tests)

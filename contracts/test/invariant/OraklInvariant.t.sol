@@ -3,6 +3,12 @@ pragma solidity 0.8.37;
 import {OraklTestBase, T, MarketFactory, ProtocolConfig} from "../helpers/OraklTestBase.sol";
 
 /// @dev Independent ghost ledger. All activation calls here are local simulation only.
+contract RejectingStatefulActor {
+    receive() external payable {
+        revert("reject stateful native payment");
+    }
+}
+
 contract OraklHandler is OraklTestBase {
     struct GMarket {
         uint256 yes;
@@ -17,6 +23,7 @@ contract OraklHandler is OraklTestBase {
         uint64 resolveAt;
         uint64 maxAt;
         uint64 proposalEpoch;
+        uint64 creationEpoch;
         uint64 challengeAt;
         uint64 arbitrationAt;
         T.Parameters terms;
@@ -33,7 +40,10 @@ contract OraklHandler is OraklTestBase {
         uint256 amount;
         bool claimed;
     }
-    address[4] public actors;
+    address[8] public actors;
+    uint64 public ghostEpoch;
+    mapping(uint64 => uint64) public epochBreak;
+    bool public quarantineBypass;
     mapping(uint256 => GMarket) private ghost;
     mapping(uint256 => mapping(address => GPosition)) private positions;
     mapping(uint256 => mapping(uint8 => GBond)) private bonds;
@@ -48,8 +58,19 @@ contract OraklHandler is OraklTestBase {
 
     constructor() {
         _deploy(true);
-        actors = [alice, bob, carol, address(0xdada)];
-        vm.deal(actors[3], 1e30);
+        actors = [
+            alice,
+            bob,
+            carol,
+            address(0xdada),
+            address(0xda01),
+            address(0xda02),
+            address(0xda03),
+            address(new RejectingStatefulActor())
+        ];
+        for (uint256 i = 3; i < 8; ++i) {
+            vm.deal(actors[i], 1e30);
+        }
         create(0);
         create(1);
         predict(0, 0, true, 10 ether);
@@ -72,6 +93,13 @@ contract OraklHandler is OraklTestBase {
         finalize(1);
         claim(1, 0);
         create(2);
+        predict(2, 7, true, 1 ether);
+        togglePause(true);
+        vm.warp(block.timestamp + 1 hours);
+        emergencyCancel(2);
+        claim(2, 7);
+        togglePause(false);
+        create(3);
     }
 
     function protocol() external view returns (MarketFactory) {
@@ -87,8 +115,8 @@ contract OraklHandler is OraklTestBase {
     }
 
     function create(uint256 seed) public {
-        if (factory.marketCount() >= 12 || !config.financialActive() || config.paused()) return;
-        address who = actors[seed % 4];
+        if (factory.marketCount() >= 24 || !config.financialActive() || config.paused()) return;
+        address who = actors[seed % 8];
         T.Parameters memory p = config.parameters();
         uint64 c = uint64(block.timestamp + bound(seed, 30, 500));
         uint64 r = c + 30;
@@ -96,6 +124,7 @@ contract OraklHandler is OraklTestBase {
         vm.prank(who);
         uint256 id = factory.createMarket{value: p.creationBond}(HASH, "ipfs://stateful", c, r, e);
         GMarket storage g = ghost[id];
+        g.creationEpoch = ghostEpoch;
         g.closeAt = c;
         g.resolveAt = r;
         g.maxAt = e;
@@ -108,10 +137,10 @@ contract OraklHandler is OraklTestBase {
         if (!config.financialActive() || config.paused()) return;
         uint256 id = seed % factory.marketCount();
         GMarket storage g = ghost[id];
-        if (g.state != T.State.OPEN || block.timestamp >= g.closeAt) return;
+        if (g.creationEpoch != ghostEpoch || g.state != T.State.OPEN || block.timestamp >= g.closeAt) return;
         uint256 amount = bound(amountSeed, g.terms.minContribution, 1e20);
         if (amount > uint256(g.terms.poolCap) - g.yes - g.no) return;
-        address who = actors[actorSeed % 4];
+        address who = actors[actorSeed % 8];
         vm.prank(who);
         factory.predict{value: amount}(id, yes ? T.Side.YES : T.Side.NO);
         if (yes) {
@@ -140,10 +169,10 @@ contract OraklHandler is OraklTestBase {
         uint256 id = seed % factory.marketCount();
         GMarket storage g = ghost[id];
         if (
-            g.state != T.State.OPEN || block.timestamp < g.resolveAt
+            g.creationEpoch != ghostEpoch || g.state != T.State.OPEN || block.timestamp < g.resolveAt
                 || block.timestamp >= uint256(g.maxAt) - g.terms.challengePeriod - g.terms.arbitrationPeriod
         ) return;
-        address who = actors[actorSeed % 4];
+        address who = actors[actorSeed % 8];
         T.Outcome outcome = T.Outcome(1 + outcomeSeed % 3);
         vm.prank(who);
         factory.proposeResult{value: g.terms.proposalBond}(id, outcome, HASH);
@@ -160,8 +189,11 @@ contract OraklHandler is OraklTestBase {
         if (!config.financialActive() || config.paused()) return;
         uint256 id = seed % factory.marketCount();
         GMarket storage g = ghost[id];
-        address who = actors[actorSeed % 4];
-        if (g.state != T.State.PROPOSED || block.timestamp >= g.challengeAt || who == bonds[id][1].owner) return;
+        address who = actors[actorSeed % 8];
+        if (
+            g.creationEpoch != ghostEpoch || g.state != T.State.PROPOSED || block.timestamp >= g.challengeAt
+                || who == bonds[id][1].owner
+        ) return;
         vm.prank(who);
         factory.challengeResult{value: g.terms.challengeBond}(id, HASH);
         g.state = T.State.DISPUTED;
@@ -209,7 +241,7 @@ contract OraklHandler is OraklTestBase {
     function claim(uint256 seed, uint256 actorSeed) public {
         uint256 id = seed % factory.marketCount();
         GMarket storage g = ghost[id];
-        address who = actors[actorSeed % 4];
+        address who = actors[actorSeed % 8];
         GPosition storage p = positions[id][who];
         if (!_terminal(g) || p.settled) return;
         uint256 winning = g.outcome == T.Outcome.YES ? g.yes : g.no;
@@ -218,8 +250,8 @@ contract OraklHandler is OraklTestBase {
         if (contribution == 0) return;
         uint256 owed = refund ? contribution : contribution * (g.yes + g.no - g.fee) / winning;
         vm.prank(who);
-        if (refund) factory.claimRefund(id);
-        else factory.claim(id);
+        if (refund) factory.claimRefundTo(id, actors[0]);
+        else factory.claimTo(id, actors[0]);
         p.settled = true;
         participantPaid += owed;
         if (refund) g.refunded += owed;
@@ -237,7 +269,7 @@ contract OraklHandler is OraklTestBase {
         GBond storage b = bonds[id][kind];
         if (b.owner == address(0) || b.claimed) return;
         vm.prank(b.owner);
-        factory.claimBond(id, T.BondType(kind), b.owner);
+        factory.claimBond(id, T.BondType(kind), actors[0]);
         b.claimed = true;
         bondPaid += b.amount;
         vm.prank(b.owner);
@@ -268,11 +300,12 @@ contract OraklHandler is OraklTestBase {
 
     function togglePause(bool pause_) public {
         if (pause_) {
+            epochBreak[ghostEpoch] = uint64(block.timestamp);
+            ++ghostEpoch;
             vm.prank(guardian);
             config.pause();
         } else {
-            vm.prank(governance);
-            config.unpause();
+            if (config.paused() || !config.financialActive()) _activate();
         }
     }
 
@@ -283,9 +316,82 @@ contract OraklHandler is OraklTestBase {
         p.proposalBond = p.creationBond / 2;
         p.challengeBond = p.creationBond / 3;
         p.minContribution = 1 + minimumSeed % 10;
+        epochBreak[ghostEpoch] = uint64(block.timestamp);
+        ++ghostEpoch;
         vm.prank(governance);
         config.setParameters(p);
         _activate();
+    }
+
+    function emergencyCancel(uint256 seed) public {
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        if (_terminal(g) || g.creationEpoch == ghostEpoch) return;
+        uint256 ready = _refundAt(g);
+        if (block.timestamp < ready) return;
+        factory.cancelInterruptedMarket(id);
+        g.state = T.State.CANCELLED;
+        g.outcome = T.Outcome.INVALID;
+    }
+
+    function tryEarlyCancellation(uint256 seed) public {
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        if (_terminal(g) || g.creationEpoch == ghostEpoch || block.timestamp >= _refundAt(g)) return;
+        (bool ok,) = address(factory).call(abi.encodeCall(factory.cancelInterruptedMarket, (id)));
+        quarantineBypass = quarantineBypass || ok;
+    }
+
+    function tryQuarantinedWrites(uint256 seed) public {
+        if (!config.financialActive() || config.paused()) return;
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        if (_terminal(g) || g.creationEpoch == ghostEpoch) return;
+        vm.prank(alice);
+        (bool p,) =
+            address(factory).call{value: g.terms.minContribution}(abi.encodeCall(factory.predict, (id, T.Side.YES)));
+        vm.prank(alice);
+        (bool r,) = address(factory).call{value: g.terms.proposalBond}(
+            abi.encodeCall(factory.proposeResult, (id, T.Outcome.YES, HASH))
+        );
+        vm.prank(bob);
+        (bool c,) =
+            address(factory).call{value: g.terms.challengeBond}(abi.encodeCall(factory.challengeResult, (id, HASH)));
+        quarantineBypass = quarantineBypass || p || r || c;
+    }
+
+    function unauthorizedResume() public {
+        if (!config.paused()) return;
+        vm.prank(governance);
+        (bool ok,) = address(config).call(abi.encodeCall(config.unpause, ()));
+        unauthorizedSucceeded = unauthorizedSucceeded || ok;
+    }
+
+    function rejectingReceiverClaim(uint256 seed) public {
+        uint256 id = seed % factory.marketCount();
+        GMarket storage g = ghost[id];
+        GPosition storage p = positions[id][actors[7]];
+        if (!_terminal(g) || p.settled) return;
+        uint256 winning = g.outcome == T.Outcome.YES ? g.yes : g.no;
+        bool refund = g.outcome == T.Outcome.INVALID || winning == 0;
+        uint256 userWinning = g.outcome == T.Outcome.YES ? p.yes : p.no;
+        uint256 owed = refund ? p.yes + p.no : (winning == 0 ? 0 : userWinning * (g.yes + g.no - g.fee) / winning);
+        if (owed == 0) return;
+        vm.prank(actors[7]);
+        (bool ok,) = address(factory)
+            .call(refund ? abi.encodeCall(factory.claimRefund, (id)) : abi.encodeCall(factory.claim, (id)));
+        quarantineBypass = quarantineBypass || ok;
+    }
+
+    function _refundAt(GMarket storage g) private view returns (uint256) {
+        if (g.state == T.State.DISPUTED) return g.arbitrationAt;
+        uint256 bound_ = uint256(epochBreak[g.creationEpoch]) + g.terms.challengePeriod;
+        return bound_ < g.maxAt ? bound_ : g.maxAt;
+    }
+
+    function expectedRefundAt(uint256 id) external view returns (uint256) {
+        GMarket storage g = ghost[id];
+        return _terminal(g) || g.creationEpoch == ghostEpoch ? 0 : _refundAt(g);
     }
 
     function _finish(uint256 id, T.Outcome outcome) private {
@@ -412,7 +518,7 @@ contract OraklInvariantTest is OraklTestBase {
         for (uint256 id; id < factory.marketCount(); ++id) {
             uint256 yes;
             uint256 no;
-            for (uint256 a; a < 4; ++a) {
+            for (uint256 a; a < 8; ++a) {
                 address who = handler.actorAt(a);
                 T.Position memory p = factory.getPosition(id, who);
                 OraklHandler.GPosition memory g = handler.ghostPosition(id, who);
@@ -434,5 +540,24 @@ contract OraklInvariantTest is OraklTestBase {
         assertEq(factory.totalContributions() + factory.totalBondsDeposited(), handler.deposits(), "received");
         assertEq(factory.totalParticipantPaid(), handler.participantPaid(), "participant withdrawals");
         assertEq(factory.totalFeesWithdrawn(), handler.feePaid(), "fee withdrawals");
+    }
+
+    function invariant_K_ReleaseAndEpochAuthorization() public view {
+        ProtocolConfig c = handler.settings();
+        assertEq(c.activityEpoch(), handler.ghostEpoch(), "independent interruption history");
+        if (c.financialActive()) {
+            assertFalse(c.paused(), "active release is unpaused");
+            assertGe(block.timestamp, c.activationAfter(), "full review delay elapsed");
+            assertTrue(c.approvedDigest() == c.releaseDigest(c.approvedRelease()), "epoch and control bound review");
+        }
+        assertFalse(handler.quarantineBypass(), "no early cancellation or revived funding");
+    }
+
+    function invariant_L_ImmutableEmergencyExit() public view {
+        for (uint256 id; id < factory.marketCount(); ++id) {
+            assertEq(
+                factory.interruptionRefundTime(id), handler.expectedRefundAt(id), "exit follows first interruption only"
+            );
+        }
     }
 }
