@@ -56,3 +56,22 @@ test('candidate identity check rejects stale compiler artifacts after a source e
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Stale artifact source/);
 }));
+
+test('selected M1 event carries market, contributor, commitment and immutable interval', () => {
+  const challenger='0x0000000000000000000000000000000000000123';
+  const evidenceHash='0x'+'ab'.repeat(32);
+  const topics=encodeEventTopics({abi,eventName:'ChallengeStakeAccepted',args:{marketId:7n,challenger,evidenceHash}});
+  assert.equal(topics.length,4);
+  const data=encodeAbiParameters([{type:'uint256'},{type:'uint256'},{type:'uint256'}],[3n,5n,8n]);
+  const decoded=decodeEventLog({abi,topics,data,strict:true});
+  assert.deepEqual(decoded.args,{marketId:7n,challenger,evidenceHash,amount:3n,prefixBefore:5n,totalStake:8n});
+  assert.throws(()=>decodeEventLog({abi,topics,data:'0x',strict:true}));
+});
+test('selected tranche tuple is ordered amount, prefixBefore, claimed and manifest remains inactive', () => {
+  const getter=abi.find(e=>e.type==='function'&&e.name==='getChallengeStake');
+  assert.deepEqual(getter.outputs[0].components.map(x=>[x.name,x.type]),[['amount','uint256'],['prefixBefore','uint256'],['claimed','bool']]);
+  const manifest=JSON.parse(readFileSync(join(root,candidate,'interface-manifest.json')));
+  assert.equal(manifest.economicPolicy,'M1_NEUTRAL_INVALID_TELESCOPING');
+  assert.equal(manifest.financialActivationAuthorized,false);
+  assert.equal(manifest.productionAddresses,null);
+});

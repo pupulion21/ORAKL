@@ -19,4 +19,7 @@ r.STEPS['preservation']=('.', ['python3','scripts/check-selected-preservation.py
 r.STEPS['skill-integrity']=('.', ['python3','docs/testing/orakl-v1-candidate/skill-integrity.py'],{})
 r.STEPS['exposure-before']=('.', ['python3','scripts/reproduce-selected-exposure-before.py'],{})
 r.STEPS['tool-identity']=('.', ['python3','scripts/selected-tool-identity.py'],{})
+r.STEPS['interface-tests-v2']=r.STEPS['interface-tests']
+r.STEPS['gas-selected']=('contracts',['forge','test','--gas-report','--match-path','test/selected/*'],{})
+r.STEPS['rounding-model']=('.', ['python3','scripts/model-selected-rounding.py'],{})
 if __name__=='__main__':r.main()
