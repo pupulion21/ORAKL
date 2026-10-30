@@ -26,3 +26,7 @@ All C1–C4 are initially **OPEN**, not fixed by documentation or a passing resi
 Compiler baseline: Foundry1.8.1, native solc0.8.37+f401782d, Paris, metadata hash none, v1 optimized roots runs50/non-IR; untouched legacy optimizer off/runs200. Fuzz2,048 fixed seed0x4f52414b4c503031; strict invariants128×64; intensive256×128 seed0x4f52414b4c503032. No dependency/compiler upgrade planned. Actual command executions will be preserved under `docs/testing/p0-3/` with failures, timestamps, durations, exit codes and output SHA256.
 
 Legacy Solidity/ABI/frontend/public manifest/deployment history, old reports/archive and protected branch refs must remain unchanged. No live network transaction, signing, broadcast, finance activation, deployment, push, merge or PR is authorized.
+
+## Executed baseline reproduction
+
+At `f23a4c5` (only audit/recorder additions; production/test source still exactly8d850ae), `forge build --force` exited0 and the existing artifact/profile checker passed. All three named original residual PoCs exited0 under `forge test ... -vvvv`, confirming second-challenge rejection, immediate authorized arbitration, and role-restoration/uncontested finalization. These passes reproduce vulnerabilities; they are **not fixes**. Exact traces: `docs/testing/p0-3/baseline-pocs-1.txt`; command/status/hash records: `docs/testing/p0-3/commands.json`. The [minimal candidate design](../protocol/P0_3_DISPUTE_STATE_MACHINE.md) was recorded before failing regressions and production edits.
