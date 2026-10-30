@@ -1,5 +1,7 @@
 # QIE Mainnet readiness — BLOCKED
 
+Latest P0.2 status: [protocol freeze checklist](../audit/P0_2_PROTOCOL_FREEZE_CHECKLIST.md), [economic decisions](../protocol/P0_2_ECONOMIC_DECISION.md), [verification](../testing/P0_2_VERIFICATION_REPORT.md). No production source/compiler/network configuration, deployment permission or activation status is changed.
+
 Checked: 2026-10-30. No Mainnet transaction, signature, deployment or activation occurred. Network reads do not authorize a launch. Existing Testnet deployment history remains at [results/deployment](../../results/deployment/README.md).
 
 ## Evidence and unresolved configuration
@@ -49,3 +51,9 @@ No new live network probe or transaction was performed during P0.1. The earlier 
 Local recovery/control code is implemented, but release still requires: (1) approved bond economics and positive-bond/exposure policy or an explicitly chosen alternative; (2) independently verified genuine wallet implementations, singleton/proxy behavior, modules, guards, fallback handlers and signer/control independence; (3) approval of emergency abort trust and the 24-hour release-review minimum; (4) independent security audit/remediation and applicable compliance/eligibility authorization; (5) metadata/indexer/monitoring and incident-recovery services. The adversarial hidden-module test intentionally demonstrates that plausible getters do not prove execution authorization. Observable drift checks do not remove this blocker.
 
 Pause/deactivation now revokes approvals and finance, quarantines old unresolved markets and enables bounded principal refunds. Every new review must occur while finance is disabled, commit the current epoch/controls/build, wait 24 hours and receive separate governance unpause/activation. Terminal user/bond claims remain available. No P0.1 broadcast or activation script was introduced; the local-only rehearsal remains unbound/unapproved/inactive on construction.
+
+## P0.2 economic and interface blockers
+
+The supplied candidate is not owner approval. All bond principals still return to their original depositors. Freeze additionally requires exact INVALID→binary/empty-market bond semantics, fee basis/rate, positive bond amounts, per-market and correlated shared-arbitrator exposure settings, creator-spam policy, evidence bytes/availability/ambiguity rules, dust lifetime and approved timing. Only per-market exposure is enforced today; permissionless creation can exceed an operational aggregate target. A colluding first challenger can occupy the single slot, and the current authorized arbiter may finalize immediately after challenge before independent evidence intake. Decide whether to accept that trusted process or add a minimum intake/appeal rule before final audit. Current fingerprints also cannot establish historical challenge availability if a role drifts and restores its views before any observer records the drift; independent persistent monitoring/verified wallet change controls or a separately approved redesign are required.
+
+P0.2's ABI export is explicitly CANDIDATE_NOT_FROZEN with null production addresses/network and deployment/activation authorization false. It does not migrate the legacy frontend. Increased local adversarial/invariant/gas testing supplies engineering evidence, not approval of parameters, live QIE execution compatibility, genuine multisig security, independent audit or legal launch. No new network probe or live write was performed in P0.2.

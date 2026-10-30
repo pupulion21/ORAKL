@@ -2,6 +2,8 @@
 
 Status: **PROPOSED, NOT APPROVED, NOT IMPLEMENTED**. P0.1 still returns every deposited creation/proposal/challenge principal to its owner in every terminal state. No slashing selector, dispute bounty, arbitrator payment, insurance levy or new production amount is introduced.
 
+P0.2 evaluates the owner's neutral-INVALID candidate in the [economic decision record](P0_2_ECONOMIC_DECISION.md), with [parameter ranges](P0_2_PARAMETER_RECOMMENDATIONS.md). It completes missing INVALID→binary/empty-pool semantics for consideration and adds first-slot/immediate-arbitration analysis. The recommendation below is the historical P0.1 alternative, not approval; no option is implemented as punitive policy.
+
 ## What full return achieves and what it cannot achieve
 
 Full return prevents arbitrary confiscation when intent, ambiguity or arbitrator availability cannot be proved. It cleanly separates bonds from participant liabilities and gives every depositor a timeout exit. Its anti-abuse cost is only gas and temporary opportunity cost. A wrong proposer can hope nobody monitors; a nuisance challenger can force trusted arbitration and delay users without forfeiting principal. Zero-value bonds remove even the capital lock. More TVL can make a fixed bond economically irrelevant. A creation bond that always returns is not a durable spam fee. These are **economic launch blockers**, not resolved by reentrancy guards or higher test counts.

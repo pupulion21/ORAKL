@@ -40,9 +40,17 @@ def main():
     versions = {tool: subprocess.check_output([tool, "--version"], cwd=ROOT, text=True,
                                               stderr=subprocess.STDOUT).strip()
                 for tool in ["forge", "solc", "slither", "node", "npm"]}
+    baseline_artifacts = json.loads((ROOT / "docs/testing/p0-1/artifact-check.json").read_text())
+    current_artifacts = json.loads((ROOT / "docs/testing/p0-2/artifact-check.json").read_text())
+    old = {c["name"]: c for c in baseline_artifacts["contracts"]}
+    for c in current_artifacts["contracts"]:
+        for field in ["compiler", "runtimeBytes", "constructorArgsBytes", "initcodeWithArgsBytes",
+                      "runtimeTemplateKeccak256"]:
+            assert c[field] == old[c["name"]][field], f"Baseline artifact drift: {c['name']} {field}"
     report = {"status": "PASS", "baseline": BASE, "branch": git("branch", "--show-current"),
               "protected_refs": actual_refs, "protected_file_count": len(preserved), "source_sha256": preserved,
               "compiler_and_default_test_configuration": config, "tool_versions": versions,
+              "p0_1_runtime_template_and_size_identity": "PASS: all three deployable contract artifacts",
               "scope": "Exact tracked baseline source/frontend/legacy/compiler references; no secret file reads or network writes"}
     output = ROOT / "docs/testing/p0-2/preservation.json"
     output.parent.mkdir(parents=True, exist_ok=True)

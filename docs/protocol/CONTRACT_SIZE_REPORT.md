@@ -1,5 +1,7 @@
 # P0.1 compiler and contract size report
 
+P0.2 preserves production Solidity/compiler settings byte-for-byte. The [P0.2 artifact identity check](../testing/p0-2/artifact-check.json) and [verification report](../testing/P0_2_VERIFICATION_REPORT.md) revalidate these sizes; no new optimizer choice or modularization is introduced.
+
 Code: `fc5b8be`. Offline compilation only; no deployment or activation.
 
 The [EIP-170](https://eips.ethereum.org/EIPS/eip-170) runtime reference is 24,576 bytes; [EIP-3860](https://eips.ethereum.org/EIPS/eip-3860) provides a 49,152-byte initcode reference. These are standard EVM engineering checks, **not evidence of the QIE Mainnet fork configuration or enforced limits**. QIE-specific verification remains blocked. The compiler still generates Paris-compatible bytecode.
