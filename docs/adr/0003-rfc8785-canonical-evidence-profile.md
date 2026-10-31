@@ -1,0 +1,3 @@
+# RFC 8785 Canonical JSON Profile and Keccak-256 for Off-Chain Evidence
+
+To guarantee byte-for-byte reproducibility across runtime environments, off-chain evidence manifests adhere to the `orakl-evidence-v1` schema encoded using RFC 8785 (JSON Canonicalization Scheme) with UTF-8, alphabetically sorted keys, no BOM, and numeric quantities normalized strictly as unsigned decimal strings. On-chain commitments verify integrity via `evidenceHash = keccak256(canonicalBytes)`. Ambiguous numbers and unregistered fields are rejected at the ingestion boundary, and cross-runtime golden-vector fixtures verify identical output between backend and frontend.

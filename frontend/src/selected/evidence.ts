@@ -223,3 +223,96 @@ export function evidenceCommitment(manifest: EvidenceManifest): Hex {
 export function evidenceContentHash(content: Uint8Array | string): Hex {
   return keccak256(typeof content === 'string' ? stringToBytes(content) : content);
 }
+
+export interface EvidenceVerificationResult {
+  valid: boolean;
+  computedCommitment: Hex | null;
+  expectedCommitment: string;
+  commitmentMatched: boolean;
+  contentHashMatched: boolean | null;
+  error: string | null;
+  manifest: EvidenceManifest | null;
+}
+
+/** Verify evidence integrity against an expected commitment hash (ADR-0003).
+ *
+ *  Note: Cryptographic commitment matching confirms content integrity relative
+ *  to the published hash; it does NOT attest to factual truthfulness or
+ *  authenticity of external claims (which remains subject to arbitration).
+ */
+export function verifyEvidenceIntegrity(
+  expectedCommitment: string,
+  manifestInput: string | unknown,
+  contentBytes?: Uint8Array | string | null,
+): EvidenceVerificationResult {
+  try {
+    let manifestObj: unknown;
+    if (typeof manifestInput === 'string') {
+      try {
+        manifestObj = JSON.parse(manifestInput);
+      } catch (parseErr: unknown) {
+        return {
+          valid: false,
+          computedCommitment: null,
+          expectedCommitment,
+          commitmentMatched: false,
+          contentHashMatched: null,
+          error: `Malformed manifest JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+          manifest: null,
+        };
+      }
+    } else {
+      manifestObj = manifestInput;
+    }
+
+    const validation = validateEvidenceManifest(manifestObj);
+    if (!validation.ok) {
+      return {
+        valid: false,
+        computedCommitment: null,
+        expectedCommitment,
+        commitmentMatched: false,
+        contentHashMatched: null,
+        error: `Invalid manifest: ${validation.errors.join('; ')}`,
+        manifest: null,
+      };
+    }
+
+    const manifest = manifestObj as EvidenceManifest;
+    const computedCommitment = evidenceCommitment(manifest);
+    const commitmentMatched = computedCommitment.toLowerCase() === expectedCommitment.toLowerCase();
+
+    let contentHashMatched: boolean | null = null;
+    if (contentBytes != null) {
+      const computedContentHash = evidenceContentHash(contentBytes);
+      contentHashMatched = computedContentHash.toLowerCase() === manifest.contentHash.toLowerCase();
+    }
+
+    const valid = commitmentMatched && (contentHashMatched !== false);
+    const error = !commitmentMatched
+      ? `Commitment mismatch: expected ${expectedCommitment} but computed ${computedCommitment}`
+      : contentHashMatched === false
+        ? 'Content hash mismatch: content bytes do not match manifest contentHash'
+        : null;
+
+    return {
+      valid,
+      computedCommitment,
+      expectedCommitment,
+      commitmentMatched,
+      contentHashMatched,
+      error,
+      manifest,
+    };
+  } catch (err: unknown) {
+    return {
+      valid: false,
+      computedCommitment: null,
+      expectedCommitment,
+      commitmentMatched: false,
+      contentHashMatched: null,
+      error: `Verification failed: ${err instanceof Error ? err.message : String(err)}`,
+      manifest: null,
+    };
+  }
+}

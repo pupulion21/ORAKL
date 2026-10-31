@@ -62,11 +62,22 @@ import {
   evidenceCommitment,
   evidenceContentHash,
   validateEvidenceManifest,
+  verifyEvidenceIntegrity,
   type EvidenceKind,
   type EvidenceManifest,
 } from '../selected/evidence.ts';
-import {MANIFEST_URL, NETWORK_LABEL, LOCAL_CHAIN_ID, LOCAL_RPC_URL, publicClient} from './config.ts';
+import {MANIFEST_URL, NETWORK_LABEL, LOCAL_CHAIN_ID, LOCAL_RPC_URL, LOCAL_API_URL, publicClient} from './config.ts';
 import {walletErrorTextLocal} from './wallet-text.ts';
+import {
+  createApiClient,
+  parsePoolAmount,
+  type ApiClient,
+  type MarketListItem,
+  type MarketDetail,
+  type MarketListParams,
+  type SyncStatus,
+  type MarketChallengesResult,
+} from '../selected/api-client.ts';
 
 // ---------------------------------------------------------------------- state
 
@@ -77,6 +88,30 @@ type Route =
   | {name: 'evidence'}
   | {name: 'status'};
 
+export interface MarketViewItem {
+  id: bigint;
+  title: string;
+  description: string | null;
+  category: string | null;
+  metadataURI: string;
+  statusText: string;
+  statusTone: string;
+  yesPool: bigint;
+  noPool: bigint;
+  closeTime: bigint;
+  fromApi: boolean;
+}
+
+interface FilterState {
+  q: string;
+  category: string;
+  status: string;
+  sort: 'id' | 'closeTime';
+  order: 'asc' | 'desc';
+  page: number;
+  pageSize: number;
+}
+
 interface AppState {
   route: Route;
   deployment: VerifiedDeployment | null;
@@ -85,14 +120,27 @@ interface AppState {
   wallets: WalletInfo[];
   session: WalletSession | null;
   snapshot: WalletSnapshot;
-  markets: MarketRecord[];
+  markets: MarketViewItem[];
   marketsLoading: boolean;
   marketsError: string | null;
+  totalMarkets: number;
+  filters: FilterState;
+  syncStatus: SyncStatus;
+  syncLag: string | null;
+  syncBlock: string | null;
   chainTime: bigint | null;
   flash: {kind: 'ok' | 'err'; text: string} | null;
   busy: boolean;
   multisigNotice: string | null;
+  mode: 'api' | 'rpc';
 }
+
+const apiClient: ApiClient = createApiClient({
+  baseUrl: LOCAL_API_URL,
+  chainId: LOCAL_CHAIN_ID,
+});
+
+let searchDebounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 const state: AppState = {
   route: {name: 'list'},
@@ -105,10 +153,24 @@ const state: AppState = {
   markets: [],
   marketsLoading: false,
   marketsError: null,
+  totalMarkets: 0,
+  filters: {
+    q: '',
+    category: 'all',
+    status: 'all',
+    sort: 'id',
+    order: 'desc',
+    page: 1,
+    pageSize: 12,
+  },
+  syncStatus: 'INITIALIZING',
+  syncLag: null,
+  syncBlock: null,
   chainTime: null,
   flash: null,
   busy: false,
   multisigNotice: null,
+  mode: 'api',
 };
 
 const appRoot = document.getElementById('app');
@@ -194,19 +256,99 @@ function chainNow(): number {
   return state.chainTime ? Number(state.chainTime) : nowSec();
 }
 
+function apiItemToView(item: MarketListItem): MarketViewItem {
+  const tone =
+    item.status === 'OPEN'
+      ? 'open'
+      : item.status === 'CLOSED'
+        ? 'wait'
+        : item.status === 'FINALIZED'
+          ? 'done'
+          : 'expired';
+  return {
+    id: BigInt(item.id),
+    title: item.question || item.metadataURI,
+    description: item.description,
+    category: item.category,
+    metadataURI: item.metadataURI,
+    statusText: item.status,
+    statusTone: tone,
+    yesPool: parsePoolAmount(item.yesPool),
+    noPool: parsePoolAmount(item.noPool),
+    closeTime: BigInt(item.closeTime || '0'),
+    fromApi: true,
+  };
+}
+
+function rpcRecordToView(m: MarketRecord): MarketViewItem {
+  const label = MARKET_STATE_LABELS[m.storedState] ?? 'UNKNOWN';
+  return {
+    id: m.id,
+    title: m.metadataURI,
+    description: null,
+    category: null,
+    metadataURI: m.metadataURI,
+    statusText: label,
+    statusTone: stateTone(m.storedState),
+    yesPool: m.yesPool,
+    noPool: m.noPool,
+    closeTime: m.closeTime,
+    fromApi: false,
+  };
+}
+
 async function loadMarkets(): Promise<void> {
   const deployment = state.deployment;
   if (!deployment) return;
   state.marketsLoading = true;
   state.marketsError = null;
   renderMarkets();
+
   try {
-    state.markets = await readMarkets(publicClient, deployment.factory, 0, 24);
-  } catch (error) {
-    state.marketsError = errorMessage(error);
+    const params: MarketListParams = {
+      page: state.filters.page,
+      pageSize: state.filters.pageSize,
+      sort: state.filters.sort,
+      order: state.filters.order,
+    };
+    if (state.filters.q.trim()) params.q = state.filters.q.trim();
+    if (state.filters.category && state.filters.category !== 'all') params.category = state.filters.category;
+    if (state.filters.status && state.filters.status !== 'all') params.status = state.filters.status;
+
+    const res = await apiClient.getMarkets(params);
+    state.markets = res.data.items.map(apiItemToView);
+    state.totalMarkets = res.data.total;
+    state.mode = 'api';
+    if (res.sync) {
+      state.syncStatus = res.sync.status;
+      state.syncLag = res.sync.lag;
+      state.syncBlock = res.sync.lastProcessedBlock;
+    }
+  } catch (apiErr: unknown) {
+    console.warn('[ORAKL] API request failed, falling back to direct RPC:', apiErr);
+    try {
+      const records = await readMarkets(publicClient, deployment.factory, 0, 24);
+      let views = records.map(rpcRecordToView);
+      if (state.filters.status && state.filters.status !== 'all') {
+        views = views.filter((v) => v.statusText.toUpperCase() === state.filters.status.toUpperCase());
+      }
+      if (state.filters.q.trim()) {
+        const query = state.filters.q.toLowerCase().trim();
+        views = views.filter((v) => v.title.toLowerCase().includes(query));
+      }
+      state.markets = views;
+      state.totalMarkets = views.length;
+      state.mode = 'rpc';
+      state.syncStatus = 'UNAVAILABLE';
+      state.syncLag = null;
+      state.syncBlock = null;
+    } catch (rpcErr: unknown) {
+      state.marketsError = errorMessage(rpcErr);
+    }
   } finally {
     state.marketsLoading = false;
     renderMarkets();
+    renderHeader();
   }
 }
 
@@ -602,7 +744,19 @@ function shellHtml(): string {
 function renderHeader(): void {
   const pill = document.querySelector('.network-pill');
   if (pill) {
-    pill.innerHTML = `<span class="status-dot ${state.deploymentPhase === 'ready' ? 'connected' : ''}"></span> ${NETWORK_LABEL} · ${LOCAL_CHAIN_ID}`;
+    let syncBadge = '';
+    if (state.mode === 'api') {
+      if (state.syncStatus === 'SYNCHRONIZED') {
+        syncBadge = `<span class="pill ok" style="margin-left:8px" title="Fastify API synchronized at block #${state.syncBlock}">● Synced ${state.syncBlock ? `#${state.syncBlock}` : ''}</span>`;
+      } else if (state.syncStatus === 'LAGGING') {
+        syncBadge = `<span class="pill wait" style="margin-left:8px" title="Indexer is lagging by ${state.syncLag ?? '>5'} blocks">▲ Indexer Syncing (+${state.syncLag ?? ''} blk)</span>`;
+      } else {
+        syncBadge = `<span class="pill wait" style="margin-left:8px" title="Indexer status: ${state.syncStatus}">● ${state.syncStatus}</span>`;
+      }
+    } else {
+      syncBadge = `<span class="pill" style="margin-left:8px" title="Direct Anvil RPC mode (Fastify API offline)">◈ Direct RPC</span>`;
+    }
+    pill.innerHTML = `<span class="status-dot ${state.deploymentPhase === 'ready' ? 'connected' : ''}"></span> ${NETWORK_LABEL} · ${LOCAL_CHAIN_ID}${syncBadge}`;
   }
 }
 
@@ -712,13 +866,26 @@ function stateTone(storedState: number): string {
   }
 }
 
-function marketCardHtml(market: MarketRecord): string {
+function marketCardHtml(market: MarketViewItem): string {
   const total = market.yesPool + market.noPool;
   const yesPct = total > 0n ? Number((market.yesPool * 10_000n) / total) / 100 : null;
-  const label = MARKET_STATE_LABELS[market.storedState] ?? 'UNKNOWN';
+  const categoryPill = market.category
+    ? `<span class="pill">${escapeHtml(market.category)}</span>`
+    : '';
+  const desc = market.description
+    ? `<p class="muted line-clamp" style="font-size:12px;margin:4px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escapeHtml(market.description)}</p>`
+    : '';
+
   return `<a class="card market-card" href="#/market/${market.id}">
-    <div class="row space"><span class="badge ${stateTone(market.storedState)}">${label}</span><span class="mono muted">#${market.id}</span></div>
-    <h3>${escapeHtml(market.metadataURI)}</h3>
+    <div class="row space">
+      <div class="row" style="gap:6px">
+        <span class="badge ${market.statusTone}">${escapeHtml(market.statusText)}</span>
+        ${categoryPill}
+      </div>
+      <span class="mono muted">#${market.id}</span>
+    </div>
+    <h3 style="margin-top:8px">${escapeHtml(market.title)}</h3>
+    ${desc}
     <div class="pool-bar" aria-hidden="true"><i style="width:${yesPct ?? 50}%"></i></div>
     <div class="row space muted"><span>YES ${formatQie(market.yesPool)}</span><span>NO ${formatQie(market.noPool)}</span></div>
     <div class="row space muted"><span>Closes ${formatDateTime(market.closeTime)}</span><span>${icon('chevron', 15)}</span></div>
@@ -734,24 +901,272 @@ function renderListView(view: HTMLElement): void {
   } else if (state.marketsError) {
     body = `<div class="card empty-state"><h2>Could not load markets</h2><p class="err">${escapeHtml(state.marketsError)}</p><button class="btn" type="button" data-action="refresh-markets">Try again</button></div>`;
   } else if (state.markets.length === 0) {
-    body = `<div class="card empty-state"><span class="empty-icon">${icon('sparkles', 30)}</span><h2>No markets yet.</h2><p>Create the first local market to exercise the full lifecycle.</p><a class="btn primary" href="#/create">Create market</a></div>`;
+    body = `<div class="card empty-state"><span class="empty-icon">${icon('sparkles', 30)}</span><h2>No markets match your criteria.</h2><p>${state.filters.q || state.filters.category !== 'all' || state.filters.status !== 'all' ? 'Try adjusting your search or filters.' : 'Create the first local market to exercise the full lifecycle.'}</p><a class="btn primary" href="#/create">Create market</a></div>`;
   } else {
     body = `<div class="market-grid">${state.markets.map(marketCardHtml).join('')}</div>`;
   }
-  view.innerHTML = `<section class="page-head"><div class="eyebrow">LOCAL SELECTED PROTOCOL</div><h1>Markets</h1><p>Every market below lives on the isolated Anvil chain (${LOCAL_CHAIN_ID}) behind the verified SelectedMarketFactory. Pool shares are contribution distributions, never guaranteed probabilities or fixed payouts.</p></section>
+
+  const totalPages = Math.max(1, Math.ceil(state.totalMarkets / state.filters.pageSize));
+  let paginationHtml = '';
+  if (totalPages > 1) {
+    paginationHtml = `
+      <div class="pagination">
+        <button class="btn" type="button" data-action="prev-page" ${state.filters.page <= 1 ? 'disabled' : ''}>Previous</button>
+        <span>Page ${state.filters.page} of ${totalPages} (${state.totalMarkets} total)</span>
+        <button class="btn" type="button" data-action="next-page" ${state.filters.page >= totalPages ? 'disabled' : ''}>Next</button>
+      </div>`;
+  }
+
+  const modeBadge =
+    state.mode === 'api'
+      ? state.syncStatus === 'LAGGING'
+        ? '<span class="pill wait" title="Indexer lag > 5 blocks">Indexer Lagging</span>'
+        : '<span class="pill ok">Fastify API Live</span>'
+      : '<span class="pill">Direct Anvil RPC</span>';
+
+  view.innerHTML = `<section class="page-head"><div class="eyebrow">LOCAL SELECTED PROTOCOL · ${modeBadge}</div><h1>Markets</h1><p>Every market below lives on the isolated Anvil chain (${LOCAL_CHAIN_ID}) behind the verified SelectedMarketFactory. Pool shares are contribution distributions, never guaranteed probabilities or fixed payouts.</p></section>
     <div class="summary-grid">
       <div><span>Protocol fee</span><b>${(params.feeBps / 100).toFixed(2)}%</b></div>
       <div><span>Pool cap / market</span><b>${formatQie(params.poolCap)} ETH</b></div>
       <div><span>Challenge window</span><b>${countdownText(0) === 'elapsed' ? '' : ''}${params.challengePeriod / 3600}h</b></div>
       <div><span>Arbitration window</span><b>${params.arbitrationPeriod / 3600}h</b></div>
     </div>
-    <div class="row space"><h2>All markets</h2><button class="text-btn" type="button" data-action="refresh-markets">${icon('refresh', 16)} Refresh</button></div>
-    ${body}`;
+    <div class="row space" style="flex-wrap:wrap;gap:12px;margin:24px 0 16px">
+      <div class="row" style="gap:8px;flex:1;min-width:240px">
+        <div class="search" style="height:38px;background:var(--bg-soft);border:1px solid var(--line);border-radius:6px;padding:0 10px;width:100%">
+          ${icon('search', 16)}
+          <input id="market-search" type="search" placeholder="Search markets by title..." value="${escapeHtml(state.filters.q)}" aria-label="Search markets" />
+        </div>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <select id="filter-category" aria-label="Filter by category" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
+          <option value="all" ${state.filters.category === 'all' ? 'selected' : ''}>All Categories</option>
+          <option value="crypto" ${state.filters.category === 'crypto' ? 'selected' : ''}>Crypto</option>
+          <option value="macro" ${state.filters.category === 'macro' ? 'selected' : ''}>Macro</option>
+          <option value="tech" ${state.filters.category === 'tech' ? 'selected' : ''}>Tech</option>
+          <option value="other" ${state.filters.category === 'other' ? 'selected' : ''}>Other</option>
+        </select>
+        <select id="filter-status" aria-label="Filter by status" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
+          <option value="all" ${state.filters.status === 'all' ? 'selected' : ''}>All Statuses</option>
+          <option value="OPEN" ${state.filters.status === 'OPEN' ? 'selected' : ''}>Open</option>
+          <option value="CLOSED" ${state.filters.status === 'CLOSED' ? 'selected' : ''}>Closed</option>
+          <option value="PROPOSED" ${state.filters.status === 'PROPOSED' ? 'selected' : ''}>Proposed</option>
+          <option value="DISPUTED" ${state.filters.status === 'DISPUTED' ? 'selected' : ''}>Disputed</option>
+          <option value="FINALIZED" ${state.filters.status === 'FINALIZED' ? 'selected' : ''}>Finalized</option>
+          <option value="CANCELLED" ${state.filters.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+        </select>
+        <select id="filter-sort" aria-label="Sort markets" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
+          <option value="id-desc" ${state.filters.sort === 'id' && state.filters.order === 'desc' ? 'selected' : ''}>Newest First</option>
+          <option value="id-asc" ${state.filters.sort === 'id' && state.filters.order === 'asc' ? 'selected' : ''}>Oldest First</option>
+          <option value="closeTime-asc" ${state.filters.sort === 'closeTime' && state.filters.order === 'asc' ? 'selected' : ''}>Closing Soonest</option>
+        </select>
+        <button class="text-btn" type="button" data-action="refresh-markets" title="Refresh market listings">${icon('refresh', 16)} Refresh</button>
+      </div>
+    </div>
+    ${body}
+    ${paginationHtml}`;
+}
+
+function isZeroHash(hash: string | null | undefined): boolean {
+  if (!hash) return true;
+  const h = hash.trim().toLowerCase();
+  return h === '' || /^0x0{64}$/.test(h) || h === '0';
+}
+
+let modalRoot: HTMLElement | null = null;
+let activeEvidenceCommitment: string | null = null;
+
+function ensureModalRoot(): HTMLElement {
+  if (modalRoot && modalRoot.isConnected) return modalRoot;
+  let root = document.getElementById('modal-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'modal-root';
+    root.className = 'modal-root';
+    document.body.appendChild(root);
+  }
+  modalRoot = root;
+  return root;
+}
+
+function closeEvidenceModal(): void {
+  activeEvidenceCommitment = null;
+  const root = ensureModalRoot();
+  root.hidden = true;
+  root.innerHTML = '';
+  window.removeEventListener('keydown', handleModalKeydown);
+}
+
+function handleModalKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    closeEvidenceModal();
+  }
+}
+
+async function openEvidenceModal(commitment: string): Promise<void> {
+  activeEvidenceCommitment = commitment;
+  const root = ensureModalRoot();
+  root.hidden = false;
+  window.addEventListener('keydown', handleModalKeydown);
+
+  root.innerHTML = `
+    <div class="modal-backdrop" data-modal-backdrop="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="evidence-modal-title">
+        <div class="modal-head">
+          <h2 id="evidence-modal-title">Evidence Inspection</h2>
+          <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:12px;word-break:break-all;">Commitment: ${escapeHtml(commitment)}</div>
+          <p><span class="spinner"></span> Loading evidence artifact from local discovery channel…</p>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" data-action="close-modal">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await apiClient.getEvidence(commitment);
+    if (activeEvidenceCommitment !== commitment) return; // Stale request
+
+    const artifact = res.data;
+    let manifest: EvidenceManifest | null = null;
+    try {
+      manifest = JSON.parse(artifact.manifestBytes) as EvidenceManifest;
+    } catch {
+      // Manifest parsing failed
+    }
+
+    let rawContent: string | null = null;
+    if (artifact.contentBytes) {
+      try {
+        rawContent = atob(artifact.contentBytes);
+      } catch {
+        rawContent = null;
+      }
+    }
+
+    const verification = verifyEvidenceIntegrity(commitment, manifest ?? artifact.manifestBytes, rawContent);
+
+    const sourcesHtml = manifest?.sources && manifest.sources.length > 0
+      ? `<ul style="margin:6px 0 0;padding-left:18px;">${manifest.sources.map((s) => `<li><a href="${escapeHtml(s)}" target="_blank" rel="noopener noreferrer" class="mono" style="word-break:break-all;">${escapeHtml(s)}</a></li>`).join('')}</ul>`
+      : '<span class="muted">None declared</span>';
+
+    root.innerHTML = `
+      <div class="modal-backdrop" data-modal-backdrop="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="evidence-modal-title" style="max-width:680px;width:100%;">
+          <div class="modal-head">
+            <h2 id="evidence-modal-title">Evidence Inspection</h2>
+            <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close modal">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:14px;word-break:break-all;">
+              Commitment: <strong>${escapeHtml(commitment)}</strong>
+            </div>
+
+            <div class="row" style="margin-bottom:16px;">
+              ${verification.commitmentMatched
+                ? '<span class="pill ok" style="padding:4px 10px;font-size:12px;">✔ Commitment Hash Matched (Keccak-256)</span>'
+                : '<span class="pill err" style="padding:4px 10px;font-size:12px;">✖ Commitment Hash Mismatch</span>'}
+              ${verification.contentHashMatched === true
+                ? '<span class="pill ok" style="padding:4px 10px;font-size:12px;">✔ Content Hash Matched</span>'
+                : verification.contentHashMatched === false
+                ? '<span class="pill err" style="padding:4px 10px;font-size:12px;">✖ Content Hash Mismatch</span>'
+                : ''}
+              <span class="pill" style="padding:4px 10px;font-size:12px;">Local Discovery Channel</span>
+            </div>
+
+            <div class="banner warn-text" style="background:var(--warn-soft);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:18px;font-size:12px;line-height:1.6;">
+              <strong>Authenticity Notice:</strong> Cryptographic verification validates that the manifest matches the on-chain commitment hash. Factual truthfulness and external source authenticity are subject to arbitrator review and local pinning status (<span class="mono">${escapeHtml(artifact.externalPinning)}</span>).
+            </div>
+
+            <div class="card" style="padding:16px;margin-bottom:16px;background:var(--bg-soft);">
+              <div class="grid-2" style="font-size:13px;gap:12px;">
+                <div><span class="muted">Market ID</span><div class="mono">${escapeHtml(manifest?.marketId ?? artifact.marketOnchainId ?? '—')}</div></div>
+                <div><span class="muted">Kind</span><div><span class="pill">${escapeHtml(manifest?.kind ?? '—')}</span></div></div>
+                <div><span class="muted">Claim</span><div><strong>${escapeHtml(manifest?.claim ?? '—')}</strong></div></div>
+                <div><span class="muted">Proposed Outcome</span><div>${escapeHtml(manifest?.proposedOutcome ?? '—')}</div></div>
+                <div><span class="muted">Publisher</span><div class="mono">${escapeHtml(manifest?.publisher ?? artifact.publishedBy ?? '—')}</div></div>
+                <div><span class="muted">Published At</span><div>${manifest?.publishedAt ? formatDateTime(BigInt(manifest.publishedAt)) : artifact.createdAt}</div></div>
+                <div><span class="muted">Media Type</span><div class="mono">${escapeHtml(manifest?.contentMediaType ?? 'text/plain')}</div></div>
+                <div><span class="muted">Content Size</span><div>${artifact.contentSize} bytes</div></div>
+              </div>
+              <div style="margin-top:14px;font-size:13px;">
+                <span class="muted">Sources:</span>
+                ${sourcesHtml}
+              </div>
+            </div>
+
+            ${rawContent !== null ? `
+              <div style="margin-bottom:16px;">
+                <div class="muted" style="font-size:12px;margin-bottom:6px;">Evidence Content:</div>
+                <pre class="mono prewrap" style="max-height:180px;overflow-y:auto;background:var(--bg);padding:12px;border-radius:8px;border:1px solid var(--line);font-size:12px;">${escapeHtml(rawContent)}</pre>
+              </div>
+            ` : ''}
+
+            <details style="margin-top:8px;">
+              <summary class="muted" style="cursor:pointer;font-size:12px;">View Raw Manifest (RFC 8785 Canonical JSON)</summary>
+              <pre class="mono prewrap" style="max-height:150px;overflow-y:auto;background:var(--bg);padding:10px;border-radius:6px;border:1px solid var(--line);font-size:11px;margin-top:6px;">${escapeHtml(artifact.manifestBytes)}</pre>
+            </details>
+          </div>
+          <div class="modal-actions">
+            <button class="btn ghost" type="button" data-action="close-modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (err: unknown) {
+    if (activeEvidenceCommitment !== commitment) return;
+    root.innerHTML = `
+      <div class="modal-backdrop" data-modal-backdrop="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="evidence-modal-title">
+          <div class="modal-head">
+            <h2 id="evidence-modal-title">Evidence Inspection</h2>
+            <button class="icon-btn" type="button" data-action="close-modal" aria-label="Close modal">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:12px;word-break:break-all;">Commitment: ${escapeHtml(commitment)}</div>
+            <div class="card" style="background:var(--bg-soft);padding:16px;border:1px solid var(--line);">
+              <p class="warn-text" style="font-weight:600;margin-bottom:8px;">Artifact Not Cached Locally</p>
+              <p class="muted" style="font-size:13px;line-height:1.6;">
+                The on-chain commitment is valid, but no matching manifest artifact was found in the local node's discovery channel (${escapeHtml(errorMessage(err))}).
+              </p>
+              <p class="muted" style="font-size:12px;margin-top:8px;line-height:1.5;">
+                On-chain contracts record only cryptographic Keccak-256 commitments. Off-chain discovery channels cache and share the underlying manifests.
+              </p>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn ghost" type="button" data-action="close-modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const deployment = state.deployment!;
   view.innerHTML = `<div class="card"><span class="spinner"></span> Loading market #${id}…</div>`;
+
+  let apiDetail: MarketDetail | null = null;
+  try {
+    const res = await apiClient.getMarket(id);
+    apiDetail = res.data;
+  } catch {
+    // API detail unavailable; read directly from contract
+  }
+
+  let challenges: MarketChallengesResult | null = null;
+  try {
+    const res = await apiClient.getMarketChallenges(id);
+    challenges = res.data;
+  } catch {
+    // API challenges unavailable; RPC mode will be indicated
+  }
+
   let market: MarketRecord;
   try {
     market = await readMarket(publicClient, deployment.factory, id);
@@ -767,6 +1182,22 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const total = market.yesPool + market.noPool;
   const yesPct = total > 0n ? Number((market.yesPool * 10_000n) / total) / 100 : null;
 
+  const title = apiDetail?.question || market.metadataURI;
+  const descriptionHtml = apiDetail?.description
+    ? `<p style="margin:8px 0 16px;color:var(--text);font-size:14px">${escapeHtml(apiDetail.description)}</p>`
+    : '';
+  const categoryPill = apiDetail?.category
+    ? `<span class="pill" style="margin-left:8px">${escapeHtml(apiDetail.category)}</span>`
+    : '';
+  const verifiedBadge = apiDetail?.verifiedMetadata
+    ? `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified">Verified Manifest</span>`
+    : '';
+
+  const formatEvidenceField = (hash: string | null | undefined): string => {
+    if (!hash || isZeroHash(hash)) return '<span class="muted">—</span>';
+    return `<button class="evidence-hash-btn mono" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(hash)}" title="Inspect canonical evidence manifest">${escapeHtml(hash)}</button>`;
+  };
+
   const actions: string[] = [];
   if (account && market.storedState === 0) {
     actions.push(`<div class="card"><h3>Predict</h3><p class="muted">Minimum ${formatQie(deployment.parameters.minContribution)} ETH. A pool share is a contribution distribution, not a guaranteed payout.</p>
@@ -781,7 +1212,8 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       <div class="row"><input id="propose-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Proposal evidence" />
       <button class="btn" type="button" data-action="propose-yes" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose YES</button>
       <button class="btn" type="button" data-action="propose-no" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose NO</button>
-      <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose INVALID</button></div></div>`);
+      <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose INVALID</button></div>
+      <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
   }
   if (account && (market.storedState === 2 || market.storedState === 3)) {
     const challengeOpen = now < Number(market.challengeDeadline);
@@ -789,7 +1221,8 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       <p class="muted">Bond ${formatQie(deployment.parameters.challengeBond)} ETH. ${challengeOpen ? `Window closes ${formatDateTime(market.challengeDeadline)}.` : 'The challenge window has closed.'}</p>
       <div class="row"><input id="challenge-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Challenge evidence" />
       <button class="btn danger" type="button" data-action="challenge" data-id="${market.id}" ${state.busy || !challengeOpen ? 'disabled' : ''}>Challenge result</button>
-      <button class="btn ghost" type="button" data-action="submit-evidence" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Submit evidence only</button></div></div>`);
+      <button class="btn ghost" type="button" data-action="submit-evidence" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Submit evidence only</button></div>
+      <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
   }
   if (account && market.storedState === 3) {
     const arbitrationOpen = now < Number(market.arbitrationDeadline);
@@ -823,8 +1256,66 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
     ? `<div class="card"><h3>Your position</h3><div class="row space"><span>YES ${formatQie(position.yes)} ETH</span><span>NO ${formatQie(position.no)} ETH</span><span class="muted">${position.settled ? 'settled' : 'open'}</span></div></div>`
     : '';
 
+  let trancheLadderHtml = '';
+  if (challenges && challenges.stakes && challenges.stakes.length > 0) {
+    const trancheRows = challenges.stakes.map((stake, idx) => `
+      <tr>
+        <td><span class="pill">#${idx + 1}</span></td>
+        <td><span class="mono" title="${escapeHtml(stake.walletAddress)}">${escapeHtml(shortAddress(stake.walletAddress))}</span></td>
+        <td><strong>${formatQie(parsePoolAmount(stake.amount))} ETH</strong></td>
+        <td><span class="mono">${formatQie(parsePoolAmount(stake.prefixBefore))} ETH</span></td>
+        <td>
+          ${!isZeroHash(stake.evidenceHash)
+            ? `<button class="evidence-hash-btn mono" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(stake.evidenceHash)}" title="Inspect canonical evidence manifest">${escapeHtml(shortAddress(stake.evidenceHash))}</button>`
+            : '<span class="muted">—</span>'}
+        </td>
+        <td><span class="pill ${stake.claimed ? 'ok' : ''}">${stake.claimed ? 'Claimed' : 'Active'}</span></td>
+      </tr>
+    `).join('');
+
+    trancheLadderHtml = `
+      <div class="card">
+        <div class="row space">
+          <h3>Multi-Challenger Tranche Ladder (M1)</h3>
+          <span class="pill">${challenges.stakes.length} tranche${challenges.stakes.length === 1 ? '' : 's'}</span>
+        </div>
+        <p class="muted">
+          Total dispute stake: <strong>${formatQie(parsePoolAmount(challenges.totalChallengeStake))} ETH</strong>
+          ${challenges.disposition ? ` · Disposition: <strong>${escapeHtml(challenges.disposition)}</strong>` : ''}
+          ${challenges.refundable !== null ? ` · Refundable: <strong>${challenges.refundable ? 'Yes' : 'No'}</strong>` : ''}
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="tranche-table" aria-label="Challenger Tranches">
+            <thead>
+              <tr>
+                <th>Tranche</th>
+                <th>Challenger</th>
+                <th>Stake</th>
+                <th>Prefix Before</th>
+                <th>Evidence Hash</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${trancheRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  } else if (market.storedState === 3 || !isZeroHash(market.challenger)) {
+    trancheLadderHtml = `
+      <div class="card">
+        <h3>Multi-Challenger Tranche Ladder (M1)</h3>
+        <p class="muted">${challenges ? 'No additional challenger tranches recorded.' : 'Detailed multi-challenger tranche history requires the API indexer service.'}</p>
+      </div>
+    `;
+  }
+
   view.innerHTML = `<div class="breadcrumbs"><a href="#/">Markets</a>${icon('chevron', 13)}<span>Market #${market.id}</span></div>
-    <section class="page-head"><div class="eyebrow">MARKET #${market.id} · ${stateLabel}</div><h1 class="mono">${escapeHtml(market.metadataURI)}</h1>
+    <section class="page-head"><div class="eyebrow">MARKET #${market.id} · ${stateLabel}${categoryPill}${verifiedBadge}</div>
+    <h1 class="mono">${escapeHtml(title)}</h1>
+    ${descriptionHtml}
     <p>Creator ${escapeHtml(shortAddress(market.creator))} · closes ${formatDateTime(market.closeTime)} · resolves by ${formatDateTime(market.resolutionTime)} · max ${formatDateTime(market.maxResolutionTime)}</p></section>
     <div class="summary-grid">
       <div><span>YES pool</span><b>${formatQie(market.yesPool)} ETH</b></div>
@@ -838,11 +1329,12 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       <div><span class="muted">Challenger</span><div class="mono">${escapeHtml(market.challenger)}</div></div>
       <div><span class="muted">Proposed outcome</span><div>${OUTCOME_LABELS[market.proposedOutcome]}</div></div>
       <div><span class="muted">Final outcome</span><div>${OUTCOME_LABELS[market.finalOutcome]}</div></div>
-      <div><span class="muted">Proposal evidence</span><div class="mono">${escapeHtml(market.proposalEvidence)}</div></div>
-      <div><span class="muted">Challenge evidence</span><div class="mono">${escapeHtml(market.challengeEvidence)}</div></div>
-      <div><span class="muted">Decision evidence</span><div class="mono">${escapeHtml(market.decisionEvidence)}</div></div>
+      <div><span class="muted">Proposal evidence</span><div>${formatEvidenceField(market.proposalEvidence)}</div></div>
+      <div><span class="muted">Challenge evidence</span><div>${formatEvidenceField(market.challengeEvidence)}</div></div>
+      <div><span class="muted">Decision evidence</span><div>${formatEvidenceField(market.decisionEvidence)}</div></div>
       <div><span class="muted">Paid out / refunded</span><div>${formatQie(market.paidOut)} / ${formatQie(market.refunded)} ETH</div></div>
     </div></div>
+    ${trancheLadderHtml}
     ${positionHtml}
     ${actions.join('')}`;
 }
@@ -891,7 +1383,11 @@ function renderEvidenceView(view: HTMLElement): void {
       </div>
       <label>Raw content (hashed to contentHash)<textarea name="content" rows="4" placeholder="Paste the exact evidence content bytes"></textarea></label>
       <label>Media type<input name="contentMediaType" type="text" value="text/plain" /></label>
-      <div class="row"><button class="btn primary" type="submit">Compute commitment</button></div>
+      <div class="row">
+        <button class="btn" type="submit">Compute commitment</button>
+        <button class="btn primary" type="button" data-action="publish-evidence-node">Publish to local node</button>
+      </div>
+      <div id="evidence-publish-result" style="margin-top:14px;"></div>
       <pre id="evidence-output" class="mono prewrap"></pre>
     </form>`;
 }
@@ -946,11 +1442,40 @@ function evidenceInputToHash(raw: string): Hex | null {
 }
 
 document.addEventListener('click', (event) => {
+  const backdrop = (event.target as HTMLElement).closest<HTMLElement>('[data-modal-backdrop="true"]');
+  if (backdrop && event.target === backdrop) {
+    closeEvidenceModal();
+    return;
+  }
   const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
   if (!target) return;
   const action = target.dataset.action;
   const id = target.dataset.id ? BigInt(target.dataset.id) : null;
   switch (action) {
+    case 'inspect-evidence': {
+      const commitment = target.dataset.commitment;
+      if (commitment && !isZeroHash(commitment)) {
+        void openEvidenceModal(commitment);
+      }
+      break;
+    }
+    case 'close-modal': {
+      closeEvidenceModal();
+      break;
+    }
+    case 'publish-evidence-node': {
+      const form = document.getElementById('evidence-form') as HTMLFormElement | null;
+      if (form) void actPublishEvidenceForm(form);
+      break;
+    }
+    case 'copy-commitment': {
+      const commitment = target.dataset.commitment;
+      if (commitment && navigator.clipboard) {
+        void navigator.clipboard.writeText(commitment);
+        flash('ok', 'Evidence commitment copied to clipboard.');
+      }
+      break;
+    }
     case 'connect':
       void connectWallet(target.dataset.uuid ?? '');
       break;
@@ -1050,6 +1575,53 @@ document.addEventListener('click', (event) => {
     case 'cancel-expired':
       if (id !== null) void actCancelExpired(id);
       break;
+    case 'prev-page': {
+      if (state.filters.page > 1) {
+        state.filters.page -= 1;
+        void loadMarkets();
+      }
+      break;
+    }
+    case 'next-page': {
+      const totalPages = Math.ceil(state.totalMarkets / state.filters.pageSize);
+      if (state.filters.page < totalPages) {
+        state.filters.page += 1;
+        void loadMarkets();
+      }
+      break;
+    }
+  }
+});
+
+document.addEventListener('input', (event) => {
+  const target = event.target as HTMLElement;
+  if (target.id === 'market-search') {
+    const input = target as HTMLInputElement;
+    state.filters.q = input.value;
+    state.filters.page = 1;
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      void loadMarkets();
+    }, 250);
+  }
+});
+
+document.addEventListener('change', (event) => {
+  const target = event.target as HTMLSelectElement;
+  if (target.id === 'filter-category') {
+    state.filters.category = target.value;
+    state.filters.page = 1;
+    void loadMarkets();
+  } else if (target.id === 'filter-status') {
+    state.filters.status = target.value;
+    state.filters.page = 1;
+    void loadMarkets();
+  } else if (target.id === 'filter-sort') {
+    const [sort, order] = target.value.split('-') as ['id' | 'closeTime', 'asc' | 'desc'];
+    state.filters.sort = sort;
+    state.filters.order = order;
+    state.filters.page = 1;
+    void loadMarkets();
   }
 });
 
@@ -1101,6 +1673,76 @@ function computeEvidence(form: HTMLFormElement): void {
   }
   const commitment = evidenceCommitment(manifest);
   output.textContent = `contentHash: ${contentHash}\nevidenceHash (commitment): ${commitment}\n\nmanifest:\n${JSON.stringify(manifest, null, 2)}`;
+}
+
+async function actPublishEvidenceForm(form: HTMLFormElement): Promise<void> {
+  const deployment = state.deployment;
+  if (!deployment) return;
+  const resultDiv = document.getElementById('evidence-publish-result');
+  const data = new FormData(form);
+  const content = String(data.get('content') ?? '');
+  const contentHash = evidenceContentHash(content);
+  const publisherRaw = String(data.get('publisher') ?? '').trim().toLowerCase();
+  const publisher = /^0x[0-9a-f]{40}$/.test(publisherRaw)
+    ? publisherRaw
+    : ((connectedAccount() ?? '').toLowerCase() as string);
+  const source = String(data.get('source') ?? '').trim();
+  const manifest: EvidenceManifest = {
+    schema: 'orakl-evidence-v1',
+    chainId: String(LOCAL_CHAIN_ID),
+    contract: deployment.factory.toLowerCase(),
+    marketId: String(data.get('marketId') ?? '0'),
+    kind: String(data.get('kind') ?? 'supplement') as EvidenceKind,
+    claim: String(data.get('claim') ?? 'YES') as EvidenceManifest['claim'],
+    proposedOutcome: String(data.get('proposedOutcome') ?? 'NONE') as EvidenceManifest['proposedOutcome'],
+    sources: source ? [source] : [],
+    publishedAt: String(chainNow()),
+    publisher,
+    contentHash,
+    contentMediaType: String(data.get('contentMediaType') ?? 'text/plain'),
+    media: [],
+  };
+
+  const validation = validateEvidenceManifest(manifest);
+  if (!validation.ok) {
+    if (resultDiv) {
+      resultDiv.innerHTML = `<div class="card err" style="padding:14px;"><strong>Invalid Manifest:</strong><ul style="margin:6px 0 0;padding-left:18px;">${validation.errors.map((e) => `<li>${escapeHtml(e)}</li>`).join('')}</ul></div>`;
+    }
+    return;
+  }
+
+  if (resultDiv) {
+    resultDiv.innerHTML = `<div class="card" style="padding:14px;"><span class="spinner"></span> Publishing artifact to local API node…</div>`;
+  }
+
+  try {
+    const res = await apiClient.publishEvidence({
+      manifest,
+      content: content || undefined,
+    });
+    if (resultDiv) {
+      resultDiv.innerHTML = `
+        <div class="card ok" style="padding:16px;">
+          <h3 style="margin-top:0;">Manifest Published to Node</h3>
+          <p style="margin:8px 0;">Commitment Hash: <code class="mono" style="word-break:break-all;">${escapeHtml(res.data.commitment)}</code></p>
+          <p class="muted" style="font-size:12px;margin:4px 0;">Deduped: ${res.data.deduped ? 'Yes' : 'No'} · External Pinning: ${escapeHtml(res.data.externalPinning)}</p>
+          <div class="row" style="margin-top:14px;">
+            <a class="btn primary tiny" href="#/market/${manifest.marketId}">Go to Market #${manifest.marketId}</a>
+            <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(res.data.commitment)}">Inspect in Modal</button>
+            <button class="btn tiny ghost" type="button" data-action="copy-commitment" data-commitment="${escapeHtml(res.data.commitment)}">Copy Commitment</button>
+          </div>
+        </div>
+      `;
+    }
+    const output = document.getElementById('evidence-output');
+    if (output) {
+      output.textContent = `contentHash: ${contentHash}\nevidenceHash (commitment): ${res.data.commitment}\n\nmanifest:\n${JSON.stringify(manifest, null, 2)}`;
+    }
+  } catch (err: unknown) {
+    if (resultDiv) {
+      resultDiv.innerHTML = `<div class="card err" style="padding:14px;"><strong>Publishing Failed:</strong> ${escapeHtml(errorMessage(err))}</div>`;
+    }
+  }
 }
 
 window.addEventListener('hashchange', () => {
