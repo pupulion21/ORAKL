@@ -1,0 +1,3 @@
+# Neutral Refund Policy, Bond Return, and Exact Integer Claim Accounting
+
+Under neutral outcomes (`INVALID`, ordinary cancellation, or emergency exit), no slashing or economic redistribution occurs. Proposer bonds `P` and challenger stakes `C_i` return to depositors neutrally, and eligible participant contributions are refunded without protocol fee deduction (`feeBps = 0`). All claim computations enforce exact integer arithmetic, deterministic remainder allocation, double-claim prevention, and double-counting protection. Refunds are never advertised as guaranteed until verified by contract tests, and any contract discrepancies must be reported for approval before modification.

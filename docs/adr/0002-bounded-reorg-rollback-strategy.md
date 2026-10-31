@@ -1,0 +1,3 @@
+# Configurable Bounded Reorg Rollback with Fail-Closed Ingestion
+
+To manage EVM chain reorganizations without unbounded database storage or premature finality assumptions, the indexer enforces a configurable maximum rollback window of 4,096 blocks. When a fork divergence is detected within this window, the indexer atomically deletes orphaned projections back to the common ancestor and deterministically replays canonical events. If fork divergence exceeds 4,096 blocks or the RPC connection is uncertain, the indexer fails closed, preserves diagnostic evidence, and halts until explicit operator recovery is authorized.

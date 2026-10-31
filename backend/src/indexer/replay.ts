@@ -6,7 +6,7 @@
 // correctness and live indexing cannot drift apart.
 import type { PrismaClient } from "@prisma/client";
 
-import { applyEvent, type RawEvent } from "./project.js";
+import { applyEvent, type RawEvent } from "./project.ts";
 
 /**
  * Rebuild every projection from canonical raw events for `chainId`.
