@@ -243,6 +243,19 @@ export async function multisigExecute({walletClient, publicClient, mock, owners,
   return {hash: null, executed: false, by: null};
 }
 
+export async function stepTime(request, seconds) {
+  await request('evm_increaseTime', [seconds]);
+  await request('evm_mine', []);
+}
+
+export async function fundDevAccounts(request, balanceHex = '0x21e19e0c9bab2400000') {
+  await request('anvil_autoImpersonateAccount', [true]);
+  const { getAddress } = await import('viem');
+  for (const account of DEV_ACCOUNTS) {
+    await request('anvil_setBalance', [getAddress(account), balanceHex]);
+  }
+}
+
 export function log(step, detail = '') {
   process.stdout.write(`[p1-local] ${step}${detail ? ` ${detail}` : ''}\n`);
 }

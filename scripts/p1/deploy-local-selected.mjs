@@ -356,10 +356,12 @@ async function main() {
     },
   };
 
-  const targets = [
-    resolve(REPO_ROOT, 'frontend/public/deployments/local-selected.json'),
-    resolve(REPO_ROOT, 'backend/deployments/local-selected.json'),
-  ];
+  const targets = process.env.ORAKL_MANIFEST_OUT
+    ? process.env.ORAKL_MANIFEST_OUT.split(',').map((s) => resolve(REPO_ROOT, s.trim()))
+    : [
+        resolve(REPO_ROOT, 'frontend/public/deployments/local-selected.json'),
+        resolve(REPO_ROOT, 'backend/deployments/local-selected.json'),
+      ];
   for (const target of targets) {
     mkdirSync(resolve(target, '..'), {recursive: true});
     writeFileSync(target, `${JSON.stringify(manifest, null, 2)}\n`);

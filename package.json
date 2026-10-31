@@ -6,7 +6,8 @@
     "dev": "npm --prefix frontend run dev -- --host 0.0.0.0",
     "build": "npm --prefix frontend run build",
     "typecheck": "npm --prefix frontend run typecheck",
-    "test": "npm --prefix frontend test"
+    "test": "npm --prefix frontend test",
+    "test:e2e": "node scripts/p1/run-e2e-scenarios.mjs --scenarios A,B"
   },
   "dependencies": {
     "viem": "2.57.13"
