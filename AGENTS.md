@@ -11,3 +11,17 @@
 - On branch `refactor/orakl-protocol-v1`, use logical local commits. Do not push or open a PR without explicit authorization for this refactor.
 
 - Selected LOCAL economics: user instruction ORAKL-ECON-SELECTED-2026-10-30 in root prompt and docs/decisions/ORAKL_V1_SELECTED_ECONOMICS.md authorizes local M1, neutral-INVALID and immutable exposure budgets. New root SelectedMarketFactory uses versioned ABI; preserved MarketFactory remains P0.3. No production amount, fee F, deployment or activation approval is implied. Preserve original A-P and all legacy history.
+
+## Agent skills
+
+### Issue tracker
+
+Local Markdown files under `.scratch/` (one directory per feature, one file per ticket). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical 5-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout (`GLOSSARY.md` + `docs/adr/` at repo root). See `docs/agents/domain.md`.

@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "verifiedAt": "2026-10-30T16:52:47.631Z",
+  "verifiedAt": "2026-10-31T16:07:49.503Z",
   "mode": "local-selected",
   "chainId": 31337,
   "rpcUrl": "http://127.0.0.1:8546",
   "manifest": "frontend/public/deployments/local-selected.json",
-  "factory": "0x9a676e781a523b5d0c0e43731313a708cb607508",
-  "config": "0x0dcd1bf9a1b36ce34237eeafef220932846bcd82",
+  "factory": "0x8f86403a4de0bb5791fa46b8e795c547942fe4cf",
+  "config": "0x0e801d84fa97b50751dbf25036d067dcf18858bf",
   "checks": [
     {
       "name": "manifest-safety",
@@ -16,7 +16,7 @@
     {
       "name": "factory-config-linkage",
       "ok": true,
-      "detail": "factory.protocolConfig()=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 config.factory()=0x9A676e781A523b5d0C0e43731313A708CB607508"
+      "detail": "factory.protocolConfig()=0x0E801D84Fa97b50751Dbf25036d067dCf18858bF config.factory()=0x8f86403A4DE0BB5791fa46B8e795C547942fE4Cf"
     },
     {
       "name": "financial-active",
@@ -26,7 +26,7 @@
     {
       "name": "release-digest",
       "ok": true,
-      "detail": "approvedDigest=0xd3b5f09028b332e2619c390ae33e3195a585ce24c3625a3b9e4cb7baf5c2e0ba"
+      "detail": "approvedDigest=0x50e9a8d59f3cb82ff90186e0e097146f0a10bf65070c27cbcc895f575fb1aecb"
     },
     {
       "name": "activity-epoch",
@@ -41,7 +41,7 @@
     {
       "name": "role-mocks",
       "ok": true,
-      "detail": "governance=0x610178dA211FEF7D417bC0e6FeD39F05609AD788 compliance=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e guardian=0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
+      "detail": "governance=0x70e0bA845a1A0F2DA3359C97E0285013525FFC49 compliance=0x4826533B4897376654Bb4d4AD88B7faFD0C98528 guardian=0x14dC79964da2C08b23698B3D3cc7Ca32193d9955"
     },
     {
       "name": "parameters",
@@ -61,7 +61,7 @@
     {
       "name": "runtime-code-hash",
       "ok": true,
-      "detail": "factory=0x8993e12b86883317be7c54f0ba9470d7d8fc8ef449e550be6a02187a656d2d39 config=0x181c958e864b5762c7c25c67d51344f56e73c508bac8801fe141bf805813f328"
+      "detail": "factory=0x450a35625be9262d0e0a891ee0471147fd6be59b07a42759b95ba4d02c5e60b2 config=0x739b805c7be0ca3b2b62d12caf8f51f57699fee8255260909e6ceae7102bc019"
     },
     {
       "name": "runtime-immutable-patch",
