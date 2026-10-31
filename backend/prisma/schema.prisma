@@ -21,9 +21,15 @@
 // store. Every projection above is derived by deterministic replay of those
 // events, so a chain reorganisation is handled by pruning non-canonical
 // blocks/events, resetting projections and replaying (see src/indexer/replay.ts).
+//
+// P1 selected additions: ChallengeStake (M1 tranches), MarketSettlement
+// (bond disposition), ExposureSnapshot, ProtocolFeeAccrual, TransactionRecord,
+// EvidenceVerification + EvidenceArtifact (local discovery channel).
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -79,6 +85,8 @@ enum DisputeStatus {
   RESOLVED
 }
 
+// ------------------------------------------------------------- new P1 models
+
 enum EvidenceKind {
   SOURCE
   ATTESTATION
@@ -103,35 +111,36 @@ enum ModerationStatus {
 
 /// 1. users — wallet address is the primary external identity (PRD 13.1).
 model User {
-  id           String    @id @default(cuid())
+  id            String   @id @default(cuid())
   walletAddress String   @unique
-  displayName  String?
-  avatarUrl    String?
-  createdAt    DateTime  @default(now())
-  lastSeenAt   DateTime  @default(now())
+  displayName   String?
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
 
-  positions     MarketPosition[]
-  predictions   Prediction[]
-  claims        Claim[]
-  contributions Contribution[]
-  bonds         Bond[]
-  reports       ModerationReport[]
-  authNonces    AuthNonce[]
-  authSessions  AuthSession[]
-  activities    MarketActivity[]
-  createdMarkets Market[]
+  positions       MarketPosition[]
+  predictions     Prediction[]
+  claims          Claim[]
+  contributions   Contribution[]
+  bonds           Bond[]
+  challengeStakes ChallengeStake[]
+  reports         ModerationReport[]
+  authNonces      AuthNonce[]
+  authSessions    AuthSession[]
+  activities      MarketActivity[]
+  createdMarkets  Market[]
 
   @@index([walletAddress])
 }
 
 /// 2. categories — market taxonomy (PRD 13.8).
 model Category {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   name        String
   description String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
 
   markets Market[]
 }
@@ -142,16 +151,15 @@ model Category {
 model IndexedBlock {
   id          String   @id @default(cuid())
   chainId     Int
-  blockNumber BigInt   @unique
+  blockNumber BigInt
   blockHash   String
   parentHash  String
   timestamp   BigInt
   indexedAt   DateTime @default(now())
 
-  events IndexedEvent[]
-
+  @@unique([chainId, blockNumber])
   @@unique([chainId, blockHash])
-  @@index([chainId, blockNumber])
+  @@index([chainId])
 }
 
 /// 12. indexed_events — raw decoded logs, unique by (chain, tx, log index).
@@ -168,8 +176,6 @@ model IndexedEvent {
   timestamp   BigInt
   indexedAt   DateTime @default(now())
 
-  block IndexedBlock? @relation(fields: [blockNumber], references: [blockNumber])
-
   @@unique([chainId, txHash, logIndex])
   @@index([chainId, eventName, blockNumber])
   @@index([chainId, blockNumber, logIndex])
@@ -177,28 +183,28 @@ model IndexedEvent {
 
 /// 13. indexer_rollbacks — audit trail of every detected reorganisation.
 model IndexerRollback {
-  id               String   @id @default(cuid())
-  chainId          Int
-  fromBlock        BigInt
-  toBlock          BigInt
-  reason           String
-  removedBlocks    Int
-  removedEvents    Int
-  replayedEvents   Int
-  detectedAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  chainId        Int
+  fromBlock      BigInt
+  toBlock        BigInt
+  reason         String
+  removedBlocks  Int
+  removedEvents  Int
+  replayedEvents Int
+  detectedAt     DateTime @default(now())
 
   @@index([chainId, detectedAt])
 }
 
 /// 10. indexer_checkpoints — restart-safe sync cursor (PRD 13.9).
 model IndexerCheckpoint {
-  id                    String   @id @default(cuid())
-  chainId               Int      @unique
-  contractAddress       String
-  lastProcessedBlock    BigInt
+  id                     String   @id @default(cuid())
+  chainId                Int      @unique
+  contractAddress        String
+  lastProcessedBlock     BigInt
   lastProcessedBlockHash String
-  eventsIndexed         BigInt   @default(0)
-  updatedAt             DateTime @updatedAt
+  eventsIndexed          BigInt   @default(0)
+  updatedAt              DateTime @updatedAt
 
   @@index([chainId])
 }
@@ -207,42 +213,49 @@ model IndexerCheckpoint {
 
 /// 3. markets — market projection (PRD 13.2).
 model Market {
-  id              String       @id @default(cuid())
-  chainId         Int
-  onchainMarketId BigInt       @unique
-  contractAddress String
-  creatorAddress  String
-  creator         User?        @relation(fields: [creatorAddress], references: [walletAddress])
-  metadataHash    String
-  metadataURI     String
-  question        String       @default("")
-  description     String?
-  categoryId      String?
-  category        Category?    @relation(fields: [categoryId], references: [id])
-  closeTime       BigInt
-  resolutionTime  BigInt
-  maxResolutionTime BigInt
-  status          MarketStatus @default(OPEN)
-  finalOutcome    Outcome      @default(UNRESOLVED)
-  proposerAddress String?
-  challengerAddress String?
-  proposalEvidenceHash String?
+  id                    String       @id @default(cuid())
+  chainId               Int
+  onchainMarketId       BigInt       @unique
+  contractAddress       String
+  creatorAddress        String
+  creator               User?        @relation(fields: [creatorAddress], references: [walletAddress])
+  metadataHash          String
+  metadataURI           String
+  question              String       @default("")
+  description           String?
+  categoryId            String?
+  category              Category?    @relation(fields: [categoryId], references: [id])
+  closeTime             BigInt
+  resolutionTime        BigInt
+  maxResolutionTime     BigInt
+  status                MarketStatus @default(OPEN)
+  finalOutcome          Outcome      @default(UNRESOLVED)
+  proposerAddress       String?
+  challengerAddress     String?
+  proposalEvidenceHash  String?
   challengeEvidenceHash String?
-  challengeDeadline BigInt?
-  createdAtBlock  BigInt
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  decisionEvidenceHash  String?
+  totalChallengeStake   Decimal      @default(0) @db.Decimal(78, 0)
+  refundable            Boolean?
+  challengeDeadline     BigInt?
+  createdAtBlock        BigInt
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
-  positions     MarketPosition[]
-  predictions   Prediction[]
-  contributions Contribution[]
-  bonds         Bond[]
-  claims        Claim[]
-  resolutions   Resolution[]
-  disputes      Dispute[]
-  evidences     EvidenceRecord[]
-  activities    MarketActivity[]
-  reports       ModerationReport[]
+  positions        MarketPosition[]
+  predictions      Prediction[]
+  contributions    Contribution[]
+  bonds            Bond[]
+  claims           Claim[]
+  resolutions      Resolution[]
+  disputes         Dispute[]
+  challengeStakes  ChallengeStake[]
+  settlement       MarketSettlement?
+  exposureReleases ExposureSnapshot[]
+  feeAccruals      ProtocolFeeAccrual[]
+  evidences        EvidenceRecord[]
+  activities       MarketActivity[]
+  reports          ModerationReport[]
 
   @@index([chainId, status])
   @@index([closeTime])
@@ -251,15 +264,15 @@ model Market {
 
 /// 4. market_positions — indexed projection, not the authoritative ledger.
 model MarketPosition {
-  id            String   @id @default(cuid())
-  marketId      String
-  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  walletAddress String
-  user          User     @relation(fields: [walletAddress], references: [walletAddress])
-  yesContribution BigInt @default(0)
-  noContribution  BigInt @default(0)
-  claimedAmount   BigInt @default(0)
-  refundedAmount  BigInt @default(0)
+  id              String   @id @default(cuid())
+  marketId        String
+  market          Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress   String
+  user            User     @relation(fields: [walletAddress], references: [walletAddress])
+  yesContribution Decimal  @default(0) @db.Decimal(78, 0)
+  noContribution  Decimal  @default(0) @db.Decimal(78, 0)
+  claimedAmount   Decimal  @default(0) @db.Decimal(78, 0)
+  refundedAmount  Decimal  @default(0) @db.Decimal(78, 0)
   updatedBlock    BigInt
   updatedAt       DateTime @updatedAt
 
@@ -275,7 +288,7 @@ model Contribution {
   walletAddress String
   user          User     @relation(fields: [walletAddress], references: [walletAddress])
   side          Side
-  amount        BigInt   @default(0)
+  amount        Decimal  @default(0) @db.Decimal(78, 0)
   predictCount  Int      @default(0)
   updatedBlock  BigInt
   updatedAt     DateTime @updatedAt
@@ -292,9 +305,9 @@ model Bond {
   walletAddress String
   user          User     @relation(fields: [walletAddress], references: [walletAddress])
   bondType      BondType
-  deposited     BigInt   @default(0)
-  returned      BigInt   @default(0)
-  slashed       BigInt   @default(0)
+  deposited     Decimal  @default(0) @db.Decimal(78, 0)
+  returned      Decimal  @default(0) @db.Decimal(78, 0)
+  slashed       Decimal  @default(0) @db.Decimal(78, 0)
   updatedBlock  BigInt
   updatedAt     DateTime @updatedAt
 
@@ -310,7 +323,7 @@ model Claim {
   walletAddress String
   user          User      @relation(fields: [walletAddress], references: [walletAddress])
   claimType     ClaimType
-  amount        BigInt
+  amount        Decimal   @db.Decimal(78, 0)
   txHash        String
   logIndex      Int
   blockNumber   BigInt
@@ -331,7 +344,7 @@ model MarketActivity {
   actorUser   User?    @relation(fields: [actor], references: [walletAddress])
   kind        String
   summary     String
-  amount      BigInt?
+  amount      Decimal? @db.Decimal(78, 0)
   side        Side?
   outcome     Outcome?
   txHash      String
@@ -354,7 +367,7 @@ model Prediction {
   walletAddress String
   user          User     @relation(fields: [walletAddress], references: [walletAddress])
   side          Side
-  amount        BigInt
+  amount        Decimal  @db.Decimal(78, 0)
   txHash        String
   logIndex      Int
   blockNumber   BigInt
@@ -369,38 +382,38 @@ model Prediction {
 
 /// 16. resolutions — proposal / challenge / finalization state (PRD 13.5).
 model Resolution {
-  id                String         @id @default(cuid())
-  marketId          String         @unique
-  market            Market         @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  status            ResolutionStatus @default(NONE)
-  proposerAddress   String?
-  proposedOutcome   Outcome        @default(UNRESOLVED)
-  proposalEvidenceHash String?
-  proposalBond      BigInt         @default(0)
-  challengeDeadline BigInt?
-  challengerAddress String?
+  id                    String           @id @default(cuid())
+  marketId              String           @unique
+  market                Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  status                ResolutionStatus @default(NONE)
+  proposerAddress       String?
+  proposedOutcome       Outcome          @default(UNRESOLVED)
+  proposalEvidenceHash  String?
+  proposalBond          Decimal          @default(0) @db.Decimal(78, 0)
+  challengeDeadline     BigInt?
+  challengerAddress     String?
   challengeEvidenceHash String?
-  challengeBond     BigInt         @default(0)
-  finalOutcome      Outcome        @default(UNRESOLVED)
-  finalizedTxHash   String?
-  finalizedAtBlock  BigInt?
-  updatedAt         DateTime       @updatedAt
+  challengeBond         Decimal          @default(0) @db.Decimal(78, 0)
+  finalOutcome          Outcome          @default(UNRESOLVED)
+  finalizedTxHash       String?
+  finalizedAtBlock      BigInt?
+  updatedAt             DateTime         @updatedAt
 }
 
 /// 17. disputes — arbitration record per challenge (PRD 13.6).
 model Dispute {
-  id                String       @id @default(cuid())
+  id                String        @id @default(cuid())
   marketId          String
-  market            Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  market            Market        @relation(fields: [marketId], references: [id], onDelete: Cascade)
   challengerAddress String
   evidenceHash      String?
-  bondAmount        BigInt       @default(0)
+  bondAmount        Decimal       @default(0) @db.Decimal(78, 0)
   status            DisputeStatus @default(OPEN)
   decision          Outcome?
   settledTxHash     String?
   settledAtBlock    BigInt?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@index([marketId, status])
   @@index([challengerAddress])
@@ -408,22 +421,23 @@ model Dispute {
 
 /// 18. evidence — deterministic evidence commitments (RFC 8785 JCS + Keccak).
 model EvidenceRecord {
-  id                String       @id @default(cuid())
-  marketId          String
-  market            Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  kind              EvidenceKind
-  publisher         String
-  contentHash       String
-  evidenceHash      String
-  manifestJson      String
-  source            String?
-  claim             Outcome?
-  proposedOutcome   Outcome?
-  contentMediaType  String       @default("text/plain")
-  txHash            String?
-  logIndex          Int?
-  blockNumber       BigInt?
-  createdAt         DateTime     @default(now())
+  id                    String                 @id @default(cuid())
+  marketId              String
+  market                Market                 @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  kind                  EvidenceKind
+  publisher             String
+  contentHash           String
+  evidenceHash          String
+  manifestJson          String
+  source                String?
+  claim                 Outcome?
+  proposedOutcome       Outcome?
+  contentMediaType      String                 @default("text/plain")
+  txHash                String?
+  logIndex              Int?
+  blockNumber           BigInt?
+  createdAt             DateTime               @default(now())
+  evidenceVerifications EvidenceVerification[]
 
   @@unique([marketId, evidenceHash])
   @@index([evidenceHash])
@@ -432,42 +446,42 @@ model EvidenceRecord {
 
 /// 8. accounting_snapshot — global accounting state at a block.
 model AccountingSnapshot {
-  id                     String   @id @default(cuid())
-  chainId                Int
-  blockNumber            BigInt   @unique
-  marketCount            BigInt
-  totalContributions     BigInt
-  totalParticipantPaid   BigInt
-  totalFeesAccrued       BigInt
-  totalFeesWithdrawn     BigInt
-  totalBondsDeposited    BigInt
-  totalBondsPaid         BigInt
-  bondLiability          BigInt
-  feeLiability           BigInt
-  participantLiability   BigInt
-  totalUnresolvedExposure BigInt
-  unaccountedBalance     BigInt
-  contractBalance        BigInt
-  createdAt              DateTime @default(now())
+  id                      String   @id @default(cuid())
+  chainId                 Int
+  blockNumber             BigInt   @unique
+  marketCount             BigInt
+  totalContributions      Decimal  @default(0) @db.Decimal(78, 0)
+  totalParticipantPaid    Decimal  @default(0) @db.Decimal(78, 0)
+  totalFeesAccrued        Decimal  @default(0) @db.Decimal(78, 0)
+  totalFeesWithdrawn      Decimal  @default(0) @db.Decimal(78, 0)
+  totalBondsDeposited     Decimal  @default(0) @db.Decimal(78, 0)
+  totalBondsPaid          Decimal  @default(0) @db.Decimal(78, 0)
+  bondLiability           Decimal  @default(0) @db.Decimal(78, 0)
+  feeLiability            Decimal  @default(0) @db.Decimal(78, 0)
+  participantLiability    Decimal  @default(0) @db.Decimal(78, 0)
+  totalUnresolvedExposure Decimal  @default(0) @db.Decimal(78, 0)
+  unaccountedBalance      Decimal  @default(0) @db.Decimal(78, 0)
+  contractBalance         Decimal  @default(0) @db.Decimal(78, 0)
+  createdAt               DateTime @default(now())
 
   @@index([chainId, blockNumber])
 }
 
 /// 9. contract_deployment — verified local deployment registry.
 model ContractDeployment {
-  id                 String   @id @default(cuid())
-  chainId            Int
-  mode               String
-  status             String
-  factoryAddress     String
+  id                    String   @id @default(cuid())
+  chainId               Int
+  mode                  String
+  status                String
+  factoryAddress        String
   protocolConfigAddress String
-  roleMockAddress    String?
-  startBlock         BigInt
-  manifestPath       String
-  manifestSha256     String
-  activated          Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  roleMockAddress       String?
+  startBlock            BigInt
+  manifestPath          String
+  manifestSha256        String
+  activated             Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@unique([chainId, factoryAddress, manifestSha256])
   @@index([chainId, status])
@@ -477,43 +491,199 @@ model ContractDeployment {
 
 /// 19. auth_nonces — SIWE-style login challenge (PRD auth API).
 model AuthNonce {
-  id          String   @id @default(cuid())
+  id            String    @id @default(cuid())
   walletAddress String
-  user        User?    @relation(fields: [walletAddress], references: [walletAddress])
-  nonce       String   @unique
-  issuedAt    DateTime @default(now())
-  expiresAt   DateTime
-  consumedAt  DateTime?
+  user          User?     @relation(fields: [walletAddress], references: [walletAddress])
+  nonce         String    @unique
+  issuedAt      DateTime  @default(now())
+  expiresAt     DateTime
+  consumedAt    DateTime?
 
   @@index([walletAddress])
 }
 
 /// 20. auth_sessions — issued API session (PRD auth API).
 model AuthSession {
-  id          String            @id @default(cuid())
-  tokenHash   String            @unique
+  id            String            @id @default(cuid())
+  tokenHash     String            @unique
   walletAddress String
-  user        User              @relation(fields: [walletAddress], references: [walletAddress])
-  status      AuthSessionStatus @default(ACTIVE)
-  issuedAt    DateTime          @default(now())
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  lastUsedAt  DateTime?
+  user          User              @relation(fields: [walletAddress], references: [walletAddress])
+  status        AuthSessionStatus @default(ACTIVE)
+  issuedAt      DateTime          @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  lastUsedAt    DateTime?
 
   @@index([walletAddress, status])
 }
 
 /// 21. moderation_reports — content reports (PRD 13.10).
 model ModerationReport {
-  id             String           @id @default(cuid())
-  marketId       String
-  market         Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  id              String           @id @default(cuid())
+  marketId        String
+  market          Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
   reporterAddress String
-  reporter       User?            @relation(fields: [reporterAddress], references: [walletAddress])
-  reason         String
-  status         ModerationStatus @default(OPEN)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  reporter        User?            @relation(fields: [reporterAddress], references: [walletAddress])
+  reason          String
+  status          ModerationStatus @default(OPEN)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@index([marketId, status])
+}
+
+// ------------------------------------------------------- P1 selected additions
+
+/// M1 multi-challenger bonded tranche (ChallengeStakeAccepted events).
+model ChallengeStake {
+  id            String   @id @default(cuid())
+  chainId       Int
+  marketId      String
+  market        Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  walletAddress String
+  user          User     @relation(fields: [walletAddress], references: [walletAddress])
+  amount        Decimal  @db.Decimal(78, 0)
+  prefixBefore  Decimal  @db.Decimal(78, 0)
+  evidenceHash  String
+  claimed       Boolean  @default(false)
+  txHash        String
+  logIndex      Int
+  blockNumber   BigInt
+  blockHash     String
+  timestamp     BigInt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([marketId, walletAddress])
+  @@unique([chainId, txHash, logIndex])
+  @@index([walletAddress])
+}
+
+/// Terminal bond disposition row (SelectedSettlement).
+model MarketSettlement {
+  id                  String   @id @default(cuid())
+  marketId            String   @unique
+  market              Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  disposition         String   @default("NONE") // NONE | NEUTRAL | PROPOSER | CHALLENGERS
+  totalChallengeStake Decimal  @default(0) @db.Decimal(78, 0)
+  proposalBond        Decimal  @default(0) @db.Decimal(78, 0)
+  refundable          Boolean  @default(false)
+  txHash              String
+  logIndex            Int
+  blockNumber         BigInt
+  blockHash           String
+  updatedAt           DateTime @updatedAt
+}
+
+/// One row per ExposureReleased (unresolved risk counters at terminal transition).
+model ExposureSnapshot {
+  id          String   @id @default(cuid())
+  chainId     Int
+  marketId    String
+  market      Market   @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  arbitrator  String
+  amount      Decimal  @db.Decimal(78, 0)
+  txHash      String
+  logIndex    Int
+  blockNumber BigInt
+  blockHash   String
+  createdAt   DateTime @default(now())
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([marketId])
+}
+
+/// Protocol fee accounting events (accrued per market, withdrawn globally).
+model ProtocolFeeAccrual {
+  id          String   @id @default(cuid())
+  chainId     Int
+  marketId    String?
+  market      Market?  @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  amount      Decimal  @db.Decimal(78, 0)
+  kind        String   @default("accrued") // accrued | withdrawn
+  txHash      String
+  logIndex    Int
+  blockNumber BigInt
+  blockHash   String
+  createdAt   DateTime @default(now())
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([marketId])
+}
+
+/// Receipt-level transaction record (transaction history + reconciliation).
+model TransactionRecord {
+  id              String   @id @default(cuid())
+  chainId         Int
+  txHash          String   @unique
+  blockNumber     BigInt
+  blockHash       String
+  txIndex         Int
+  fromAddress     String
+  toAddress       String?
+  value           Decimal  @db.Decimal(78, 0)
+  gasUsed         Decimal  @db.Decimal(78, 0)
+  status          Int
+  kind            String?
+  contractAddress String?
+  createdAt       DateTime @default(now())
+
+  @@index([chainId, blockNumber])
+  @@index([fromAddress])
+}
+
+/// Mutable observation states for evidence (availability/verification).
+model EvidenceVerification {
+  id                 String         @id @default(cuid())
+  evidenceRecordId   String
+  evidence           EvidenceRecord @relation(fields: [evidenceRecordId], references: [id], onDelete: Cascade)
+  availabilityStatus String         @default("UNKNOWN") // UNKNOWN | AVAILABLE | UNAVAILABLE
+  verificationStatus String         @default("UNVERIFIED") // UNVERIFIED | HASH_VERIFIED | HASH_MISMATCH | SOURCE_AUTHENTICATED | CLAIM_EVALUATED
+  observer           String         @default("backend-local")
+  observedAt         DateTime       @default(now())
+  reason             String?
+
+  @@index([evidenceRecordId])
+}
+
+/// Local content-addressed evidence discovery store (LOCAL SIMULATION ONLY).
+model EvidenceArtifact {
+  id             String   @id @default(cuid())
+  commitment     String   @unique
+  manifestKeccak String   @unique
+  contentKeccak  String
+  manifestBytes  Bytes
+  contentBytes   Bytes
+  contentSize    Int
+  publishedBy    String?
+  chainId        Int      @default(0)
+  marketOnchainId String?
+  linkedEventTx  String?
+  linkedEventLogIndex Int?
+  createdAt      DateTime @default(now())
+
+  @@index([contentKeccak])
+  @@index([chainId, marketOnchainId])
+}
+
+/// Local market-metadata discovery artifact. The contract stores only a hash
+/// and an ipfs:// URI; this store is the local integrity channel that ties a
+/// metadataHash to exact readable content (question/description/etc.) once the
+/// publisher has signed the canonical manifest.
+model MarketMetadata {
+  id                  String   @id @default(cuid())
+  chainId             Int
+  commitment          String   @unique
+  uriKeccak           String   @unique
+  uri                 String
+  question            String   @default("")
+  description         String?
+  categorySlug        String?
+  resolutionCriteria  String?
+  evidenceSources     Json?
+  formData            Json
+  publishedBy         String?
+  createdAt           DateTime @default(now())
+
+  @@index([chainId, commitment])
 }

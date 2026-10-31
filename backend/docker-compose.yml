@@ -1,16 +1,18 @@
-# ORAKL P1 — local-only Postgres. No published ports beyond 127.0.0.1.
-# Stop with `docker compose down -v`; the volume is disposable local state.
+# ORAKL P1 — local-only Postgres. host-network mode: the environment's
+# docker userland-proxy does not forward host->container TCP data reliably
+# (TCP connect succeeds, then the stream stalls), so the DB binds directly
+# on 127.0.0.1:5432 — no published-port proxy involved. Disposable local state;
+# stop with `docker compose down -v`.
 services:
   orakl-p1-db:
     image: postgres:16-alpine
     container_name: orakl-p1-db
     restart: "no"
+    network_mode: "host"
     environment:
       POSTGRES_USER: orakl
       POSTGRES_PASSWORD: orakl_local_p1
       POSTGRES_DB: orakl_p1
-    ports:
-      - "127.0.0.1:5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U orakl -d orakl_p1"]
       interval: 2s

@@ -1,0 +1,3 @@
+# PostgreSQL NUMERIC(78,0) and Decimal-String Serialization for EVM uint256
+
+EVM `uint256` values exceed JavaScript 53-bit safe integer limits and standard 64-bit SQL integer types. We store all EVM token balances, pool contributions, bond liabilities, and exposure counters in PostgreSQL as `NUMERIC(78,0)` via Prisma `Decimal`, perform in-memory arithmetic using native JavaScript `BigInt`, and serialize values across the Fastify API strictly as unsigned base-10 strings with explicit `[0, 2^256 - 1]` range validation. Unsafe conversions through JavaScript `Number` are strictly prohibited to prevent silent precision loss and overflow.

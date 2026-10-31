@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { PrismaClient } from "@prisma/client";
+import { makePrisma } from "../src/db.ts";
 
 type Manifest = {
   roles: Record<string, string>;
@@ -18,7 +18,7 @@ const CATEGORIES = [
   { slug: "economy", name: "Economy & Finance", sortOrder: 40 },
 ];
 
-const prisma = new PrismaClient();
+const prisma = makePrisma();
 const manifest: Manifest = JSON.parse(
   await readFile(path.resolve(process.cwd(), "deployments/local-selected.json"), "utf8"),
 );
