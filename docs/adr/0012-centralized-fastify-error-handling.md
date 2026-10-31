@@ -1,0 +1,3 @@
+# Centralized Fastify API Error Handling and Operational Security Envelope
+
+To comply with QIE-Forge D13 operational security standards, the Fastify API enforces centralized error handling with standardized JSON response envelopes containing `error`, `code`, and `requestId`. Internal stack traces, database credentials, RPC keys, and system secrets are strictly omitted from client responses and recorded only in secure internal diagnostics. The handler maps domain conditions to appropriate HTTP status codes, redacts sensitive request payloads from log sinks, enforces strict schema input validation and authorization boundaries, and mandates negative security tests in the test suite.

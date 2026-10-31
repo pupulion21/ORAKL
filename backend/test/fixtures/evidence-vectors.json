@@ -1,0 +1,99 @@
+{
+  "schema": "orakl-evidence-vectors-1",
+  "vectors": [
+    {
+      "manifest": {
+        "schema": "orakl-evidence-v1",
+        "chainId": "0",
+        "contract": "0x0000000000000000000000000000000000000001",
+        "marketId": "0",
+        "kind": "proposal",
+        "claim": "YES",
+        "proposedOutcome": "YES",
+        "sources": [],
+        "publishedAt": "0",
+        "publisher": "0x0000000000000000000000000000000000000002",
+        "contentHash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+        "contentMediaType": "text/plain",
+        "media": []
+      },
+      "valid": true,
+      "errors": [],
+      "canonicalUtf8": "{\"chainId\":\"0\",\"claim\":\"YES\",\"contentHash\":\"0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470\",\"contentMediaType\":\"text/plain\",\"contract\":\"0x0000000000000000000000000000000000000001\",\"kind\":\"proposal\",\"marketId\":\"0\",\"media\":[],\"proposedOutcome\":\"YES\",\"publishedAt\":\"0\",\"publisher\":\"0x0000000000000000000000000000000000000002\",\"schema\":\"orakl-evidence-v1\",\"sources\":[]}",
+      "commitment": "0x1ea60518fbe7d5fb7865c9918bf0cb8910fad88d9e5a984785ac148e0c4f6ec1"
+    },
+    {
+      "manifest": {
+        "schema": "orakl-evidence-v1",
+        "chainId": "31337",
+        "contract": "0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+        "marketId": "7",
+        "kind": "supplement",
+        "claim": "NO",
+        "proposedOutcome": "NONE",
+        "sources": [
+          "https://example.test/doc",
+          "ipfs://QmXyZ/manifest.json"
+        ],
+        "publishedAt": "1790000000",
+        "publisher": "0xef01ef01ef01ef01ef01ef01ef01ef01ef01ef01",
+        "contentHash": "0x25e6b620f9b58bbd4877655d0543cf8ef3c0e64b15df63239da099ac4967c74a",
+        "contentMediaType": "application/orakl-evidence+json",
+        "media": [
+          "ipfs://QmMedia/a.bin"
+        ]
+      },
+      "valid": true,
+      "errors": [],
+      "canonicalUtf8": "{\"chainId\":\"31337\",\"claim\":\"NO\",\"contentHash\":\"0x25e6b620f9b58bbd4877655d0543cf8ef3c0e64b15df63239da099ac4967c74a\",\"contentMediaType\":\"application/orakl-evidence+json\",\"contract\":\"0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd\",\"kind\":\"supplement\",\"marketId\":\"7\",\"media\":[\"ipfs://QmMedia/a.bin\"],\"proposedOutcome\":\"NONE\",\"publishedAt\":\"1790000000\",\"publisher\":\"0xef01ef01ef01ef01ef01ef01ef01ef01ef01ef01\",\"schema\":\"orakl-evidence-v1\",\"sources\":[\"https://example.test/doc\",\"ipfs://QmXyZ/manifest.json\"]}",
+      "commitment": "0x8675eda6fe058cbabf507c28edb36c1eaa7491b0e7b5e12a5053e36f17596da1"
+    },
+    {
+      "manifest": {
+        "schema": "orakl-evidence-v1",
+        "chainId": "1",
+        "contract": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "marketId": "120000000000000000000000000000000000000000000000000000000000000000",
+        "kind": "objection",
+        "claim": "INVALID",
+        "proposedOutcome": "INVALID",
+        "sources": [],
+        "publishedAt": "12345",
+        "publisher": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "contentHash": "0x5950ebe73a617667a66f67d525282c827c82ef4d89ae8dcd8336d013773b6b7f",
+        "contentMediaType": "text/plain",
+        "media": []
+      },
+      "valid": true,
+      "errors": [],
+      "canonicalUtf8": "{\"chainId\":\"1\",\"claim\":\"INVALID\",\"contentHash\":\"0x5950ebe73a617667a66f67d525282c827c82ef4d89ae8dcd8336d013773b6b7f\",\"contentMediaType\":\"text/plain\",\"contract\":\"0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"kind\":\"objection\",\"marketId\":\"120000000000000000000000000000000000000000000000000000000000000000\",\"media\":[],\"proposedOutcome\":\"INVALID\",\"publishedAt\":\"12345\",\"publisher\":\"0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"schema\":\"orakl-evidence-v1\",\"sources\":[]}",
+      "commitment": "0xee0f75a70e38a8b934d6e816f66caab05f2fe506f9d27c25a3cf960ae0f30c40"
+    },
+    {
+      "manifest": {
+        "schema": "orakl-evidence-v1",
+        "chainId": "3",
+        "contract": "0xcccccccccccccccccccccccccccccccccccccccc",
+        "marketId": "2",
+        "kind": "decision",
+        "claim": "YES",
+        "proposedOutcome": "YES",
+        "sources": [
+          "arweave://xyz/anchors"
+        ],
+        "publishedAt": "9",
+        "publisher": "0xdddddddddddddddddddddddddddddddddddddddd",
+        "contentHash": "0x6969696969696969696969696969696969696969696969696969696969696969",
+        "contentMediaType": "text/html",
+        "media": [
+          "data:INVALID-not-allowed"
+        ]
+      },
+      "valid": false,
+      "errors": [
+        "sources[0] must use an allowed scheme (ipfs://, https://, http://, ar://)",
+        "media[0] must use an allowed scheme (ipfs://, https://, http://, ar://)"
+      ]
+    }
+  ]
+}
