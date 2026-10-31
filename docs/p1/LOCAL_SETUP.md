@@ -86,6 +86,15 @@ node scripts/p1/deploy-local-selected.mjs
 [p1-local] manifest backend/deployments/local-selected.json
 ```
 
+> [!NOTE]
+> **Runtime Manifest Generation & Gitignore**:
+> `backend/deployments/local-selected.json` and `frontend/public/deployments/local-selected.json` are dynamic simulation fixtures generated during this step and are excluded from Git tracking via `.gitignore`. Fresh clones do not require pre-existing manifests; this deployment step creates both directories and files deterministically.
+>
+> **Strict Startup & Deployment Ordering**:
+> 1. Anvil (Step 3) and PostgreSQL (Steps 2 & 4) must be running before deploying contracts.
+> 2. Contract deployment (Step 5) must execute before starting backend API / indexer (Step 7) or frontend (Step 8). The indexer, API, and frontend fail-closed if `local-selected.json` is missing.
+> 3. Stale runtime manifests from terminated Anvil instances must never be trusted without on-chain verification. When restarting Anvil, always re-run Step 5 (`deploy-local-selected.mjs`) and Step 6 (`verify-local-deployment.mjs`).
+
 ### Step 6: Verify Deployment Independence
 Run the 15 independent deployment verification checks:
 ```bash

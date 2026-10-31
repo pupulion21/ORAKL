@@ -10,6 +10,13 @@ The canonical deployment manifest is recorded in:
 - [`frontend/public/deployments/local-selected.json`](file:///home/pupulion/orakl/frontend/public/deployments/local-selected.json)
 - [`backend/deployments/local-selected.json`](file:///home/pupulion/orakl/backend/deployments/local-selected.json)
 
+> [!NOTE]
+> **Runtime Manifest Lifecycle & Gitignore**:
+> Both manifest files are runtime-generated simulation fixtures created by [`scripts/p1/deploy-local-selected.mjs`](file:///home/pupulion/orakl/scripts/p1/deploy-local-selected.mjs). They are explicitly ignored in `.gitignore` to avoid Git working-tree drift across local Anvil runs. Fresh clones do not include pre-committed manifests and must run `node scripts/p1/deploy-local-selected.mjs` to generate them before starting backend or frontend services.
+>
+> **Stale Manifest Invalidation & Ordering**:
+> Terminating or resetting Anvil wipes in-memory contract state. Surviving manifest files on disk referencing previous contract addresses must not be trusted without live on-chain bytecode verification via [`scripts/p1/verify-local-deployment.mjs`](file:///home/pupulion/orakl/scripts/p1/verify-local-deployment.mjs). If Anvil is restarted, re-deploying contracts is mandatory before restarting indexers or APIs.
+
 ```json
 {
   "schemaVersion": 1,
