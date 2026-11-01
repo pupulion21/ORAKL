@@ -83,16 +83,15 @@ import {
   type MarketChallengesResult,
   type PortfolioDetail,
 } from '../selected/api-client.ts';
+import {
+  parseRoute,
+  stateTone,
+  calculatePoolShares,
+  isArbitratorOwner,
+  type Route,
+} from './navigation.ts';
 
 // ---------------------------------------------------------------------- state
-
-type Route =
-  | {name: 'list'}
-  | {name: 'market'; id: bigint}
-  | {name: 'create'}
-  | {name: 'evidence'}
-  | {name: 'status'}
-  | {name: 'portfolio'};
 
 export interface MarketViewItem {
   id: bigint;
@@ -210,17 +209,6 @@ function flash(kind: 'ok' | 'err', text: string): void {
   renderFlash();
 }
 
-function parseRoute(): Route {
-  const hash = location.hash.replace(/^#/, '');
-  const marketMatch = /^\/market\/(\d+)$/.exec(hash);
-  if (marketMatch?.[1]) return {name: 'market', id: BigInt(marketMatch[1])};
-  if (hash === '/create') return {name: 'create'};
-  if (hash === '/evidence') return {name: 'evidence'};
-  if (hash === '/status') return {name: 'status'};
-  if (hash === '/portfolio') return {name: 'portfolio'};
-  return {name: 'list'};
-}
-
 // ---------------------------------------------------------------- boot / load
 
 async function boot(): Promise<void> {
@@ -263,7 +251,7 @@ function chainNow(): number {
   return state.chainTime ? Number(state.chainTime) : nowSec();
 }
 
-function apiItemToView(item: MarketListItem): MarketViewItem {
+export function apiItemToView(item: MarketListItem): MarketViewItem {
   const tone =
     item.status === 'OPEN'
       ? 'open'
@@ -287,7 +275,7 @@ function apiItemToView(item: MarketListItem): MarketViewItem {
   };
 }
 
-function rpcRecordToView(m: MarketRecord): MarketViewItem {
+export function rpcRecordToView(m: MarketRecord): MarketViewItem {
   const now = chainNow();
   const effectiveState = (m.storedState === 0 && now >= Number(m.closeTime)) ? 1 : m.storedState;
   const label = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
@@ -712,6 +700,7 @@ function shellHtml(): string {
     `<a href="${href}" class="${active ? 'active' : ''}">${icon(glyph, 20)}<span>${label}</span></a>`;
   const route = state.route;
   const listActive = route.name === 'list' || route.name === 'market';
+  const arbActive = route.name === 'arbitration' || route.name === 'arbitration-case';
   return `
     <a href="#view" class="skip-link">Skip to content</a>
     <aside class="sidebar">
@@ -722,9 +711,10 @@ function shellHtml(): string {
       <div class="workspace-label">WORKSPACE <span>LOCAL</span></div>
       <nav class="sidebar-primary nav" aria-label="Main navigation">
         ${navItem('#/', 'Markets', 'grid', listActive)}
+        ${navItem('#/arbitration', 'Disputes', 'shield', arbActive)}
         ${navItem('#/create', 'Create market', 'plus', route.name === 'create')}
         ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
-        ${navItem('#/evidence', 'Evidence lab', 'shield', route.name === 'evidence')}
+        ${navItem('#/evidence', 'Evidence lab', 'search', route.name === 'evidence')}
         ${navItem('#/status', 'Protocol status', 'settings', route.name === 'status')}
       </nav>
       <div class="sidebar-bottom">
@@ -746,9 +736,10 @@ function shellHtml(): string {
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">
       ${navItem('#/', 'Markets', 'grid', listActive)}
+      ${navItem('#/arbitration', 'Disputes', 'shield', arbActive)}
       ${navItem('#/create', 'Create', 'plus', route.name === 'create')}
       ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
-      ${navItem('#/evidence', 'Evidence', 'shield', route.name === 'evidence')}
+      ${navItem('#/evidence', 'Evidence', 'search', route.name === 'evidence')}
       ${navItem('#/status', 'Status', 'settings', route.name === 'status')}
     </nav>`;
 }
@@ -845,6 +836,12 @@ function renderRoute(): void {
     case 'market':
       void renderMarketView(view, state.route.id);
       break;
+    case 'arbitration':
+      void renderArbitrationView(view, state.route.filter ?? 'all');
+      break;
+    case 'arbitration-case':
+      void renderArbitrationCaseView(view, state.route.id);
+      break;
     case 'create':
       renderCreateView(view);
       break;
@@ -864,20 +861,6 @@ function renderMarkets(): void {
   if (state.route.name === 'list') {
     const view = document.getElementById('view');
     if (view) renderListView(view);
-  }
-}
-
-function stateTone(storedState: number): string {
-  switch (storedState) {
-    case 0:
-      return 'open';
-    case 1:
-      return 'wait';
-    case 2:
-    case 3:
-      return 'expired';
-    default:
-      return 'done';
   }
 }
 
@@ -1162,6 +1145,22 @@ async function openEvidenceModal(commitment: string): Promise<void> {
   }
 }
 
+async function fetchMarketsForArbitration(): Promise<MarketViewItem[]> {
+  const deployment = state.deployment;
+  if (!deployment) return [];
+  try {
+    const res = await apiClient.getMarkets({ pageSize: 50, sort: 'id', order: 'desc' });
+    return res.data.items.map(apiItemToView);
+  } catch {
+    try {
+      const records = await readMarkets(publicClient, deployment.factory, 0, 50);
+      return records.map(rpcRecordToView);
+    } catch {
+      return state.markets;
+    }
+  }
+}
+
 async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const deployment = state.deployment!;
   view.innerHTML = `<div class="card"><span class="spinner"></span> Loading market #${id}…</div>`;
@@ -1210,15 +1209,16 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
         readBondEntitlement(publicClient, deployment.factory, id, 2, account).catch(() => 0n),
       ])
     : [null, 0n, null, 0n, null, 0n];
+
   const now = chainNow();
   const effectiveState = (market.storedState === 0 && now >= Number(market.closeTime)) ? 1 : market.storedState;
   const stateLabel = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
-  const total = market.yesPool + market.noPool;
-  const yesPct = total > 0n ? Number((market.yesPool * 10_000n) / total) / 100 : null;
+  const { total, yesPct, noPct } = calculatePoolShares(market.yesPool, market.noPool);
+  const isDisputed = market.storedState === 3 || !isZeroHash(market.challenger) || !isZeroHash(market.decisionEvidence);
 
   const title = apiDetail?.question || market.metadataURI;
   const descriptionHtml = apiDetail?.description
-    ? `<p style="margin:8px 0 16px;color:var(--text);font-size:14px">${escapeHtml(apiDetail.description)}</p>`
+    ? `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(apiDetail.description)}</p>`
     : '';
   const categoryPill = apiDetail?.category
     ? `<span class="pill" style="margin-left:8px">${escapeHtml(apiDetail.category)}</span>`
@@ -1229,102 +1229,295 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
 
   const formatEvidenceField = (hash: string | null | undefined): string => {
     if (!hash || isZeroHash(hash)) return '<span class="muted">—</span>';
-    return `<button class="evidence-hash-btn mono" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(hash)}" title="Inspect canonical evidence manifest">${escapeHtml(hash)}</button>`;
+    return `<button class="evidence-hash-btn mono" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(hash)}" title="Inspect canonical evidence manifest">${escapeHtml(shortAddress(hash))}</button>`;
   };
 
+  // Actions column assembly
   const actions: string[] = [];
   if (account && effectiveState === 0) {
-    actions.push(`<div class="card"><h3>Predict</h3><p class="muted">Minimum ${formatQie(deployment.parameters.minContribution)} ETH. A pool share is a contribution distribution, not a guaranteed payout.</p>
-      <div class="row"><button class="btn yes" type="button" data-action="predict-yes" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Predict YES · ${formatQie(deployment.parameters.minContribution)}</button>
-      <button class="btn no" type="button" data-action="predict-no" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Predict NO · ${formatQie(deployment.parameters.minContribution)}</button></div>
-      <div class="row" style="margin-top:12px">
-        <select id="predict-side" class="input-select" aria-label="Prediction side" style="max-width:110px">
-          <option value="0" selected>YES</option>
-          <option value="1">NO</option>
-        </select>
-        <input id="predict-amount" type="text" inputmode="decimal" placeholder="Custom amount (ETH)" aria-label="Custom prediction amount" />
-        <button class="btn" type="button" data-action="predict-custom" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Send custom stake</button>
-      </div></div>`);
+    actions.push(`
+      <div class="card">
+        <h3>Predict Outcome</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">
+          Min contribution: ${formatQie(deployment.parameters.minContribution)} ETH. Pool shares represent contribution distribution, never a guaranteed payout.
+        </p>
+        <div class="row" style="gap:8px;">
+          <button class="btn yes" type="button" data-action="predict-yes" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>
+            Predict YES · ${formatQie(deployment.parameters.minContribution)}
+          </button>
+          <button class="btn no" type="button" data-action="predict-no" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>
+            Predict NO · ${formatQie(deployment.parameters.minContribution)}
+          </button>
+        </div>
+        <div class="row" style="margin-top:12px;gap:8px;">
+          <select id="predict-side" class="input-select" aria-label="Prediction side" style="max-width:90px">
+            <option value="0" selected>YES</option>
+            <option value="1">NO</option>
+          </select>
+          <input id="predict-amount" type="text" inputmode="decimal" placeholder="Custom amount (ETH)" aria-label="Custom prediction amount" style="flex:1;" />
+          <button class="btn" type="button" data-action="predict-custom" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>
+            Stake
+          </button>
+        </div>
+      </div>
+    `);
+  } else if (!account && effectiveState === 0) {
+    actions.push(`
+      <div class="card">
+        <h3>Predict Outcome</h3>
+        <p class="muted" style="font-size:13px;line-height:1.5;">Connect a local wallet to participate in this prediction pool.</p>
+        <button class="btn primary wallet-button" type="button" data-action="connect-first">${icon('wallet', 16)} Connect Wallet</button>
+      </div>
+    `);
   }
+
+  const latestProposalTime = Number(market.maxResolutionTime) - deployment.parameters.challengePeriod - deployment.parameters.arbitrationPeriod;
+  const proposalClosed = now > latestProposalTime;
+
   if (account && effectiveState === 1) {
-    const latest = Number(market.maxResolutionTime) - deployment.parameters.challengePeriod - deployment.parameters.arbitrationPeriod;
-    const proposalClosed = now > latest;
-    actions.push(`<div class="card"><h3>Propose result</h3>
-      <p class="muted">Bond ${formatQie(deployment.parameters.proposalBond)} ETH. ${proposalClosed ? 'Proposal window has passed.' : `Proposals accepted until ${formatDateTime(BigInt(latest))}.`}</p>
-      <div class="row"><input id="propose-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Proposal evidence" />
-      <button class="btn" type="button" data-action="propose-yes" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose YES</button>
-      <button class="btn" type="button" data-action="propose-no" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose NO</button>
-      <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose INVALID</button></div>
-      <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
+    actions.push(`
+      <div class="card">
+        <h3>Propose Result</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">
+          Required Bond: ${formatQie(deployment.parameters.proposalBond)} ETH. ${proposalClosed ? 'Proposal window has passed.' : `Proposals accepted until ${formatDateTime(BigInt(latestProposalTime))}.`}
+        </p>
+        <input id="propose-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Proposal evidence" style="width:100%;margin-bottom:10px;" />
+        <div class="row" style="gap:8px;flex-wrap:wrap;">
+          <button class="btn yes" type="button" data-action="propose-yes" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose YES</button>
+          <button class="btn no" type="button" data-action="propose-no" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose NO</button>
+          <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''} style="background:var(--outcome-invalid-bg);color:var(--outcome-invalid);border-color:var(--outcome-invalid-border);">Propose INVALID</button>
+        </div>
+        <div style="margin-top:10px;"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div>
+      </div>
+    `);
   }
+
+  const challengeOpen = now < Number(market.challengeDeadline);
   if (account && (effectiveState === 2 || effectiveState === 3)) {
-    const challengeOpen = now < Number(market.challengeDeadline);
-    actions.push(`<div class="card"><h3>Challenge</h3>
-      <p class="muted">Bond ${formatQie(deployment.parameters.challengeBond)} ETH. ${challengeOpen ? `Window closes ${formatDateTime(market.challengeDeadline)}.` : 'The challenge window has closed.'}</p>
-      <div class="row"><input id="challenge-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Challenge evidence" />
-      <button class="btn danger" type="button" data-action="challenge" data-id="${market.id}" ${state.busy || !challengeOpen ? 'disabled' : ''}>Challenge result</button>
-      <button class="btn ghost" type="button" data-action="submit-evidence" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Submit evidence only</button></div>
-      <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
+    actions.push(`
+      <div class="card">
+        <h3>Challenge Proposed Result</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">
+          Challenge Bond: ${formatQie(deployment.parameters.challengeBond)} ETH. ${challengeOpen ? `Window closes ${formatDateTime(market.challengeDeadline)}.` : 'Challenge window has closed.'}
+        </p>
+        <input id="challenge-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Challenge evidence" style="width:100%;margin-bottom:10px;" />
+        <div class="row" style="gap:8px;">
+          <button class="btn danger" type="button" data-action="challenge" data-id="${market.id}" ${state.busy || !challengeOpen ? 'disabled' : ''}>Challenge Result</button>
+          <button class="btn ghost" type="button" data-action="submit-evidence" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Submit Evidence Only</button>
+        </div>
+        <div style="margin-top:10px;"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div>
+      </div>
+    `);
   }
-  if (account && effectiveState === 3) {
-    const arbitrationOpen = now < Number(market.arbitrationDeadline);
-    actions.push(`<div class="card"><h3>Arbitrator decision</h3>
-      <p class="muted">The arbitrator is an n-of-m local role mock (threshold 2). Each confirmation is a separate wallet; the call executes on the second distinct confirmation. ${arbitrationOpen ? `Arbitration window closes ${formatDateTime(market.arbitrationDeadline)}.` : 'The arbitration window has closed.'}</p>
-      ${state.multisigNotice ? `<p class="warn-text">${escapeHtml(state.multisigNotice)}</p>` : ''}
-      <div class="row"><input id="settle-evidence" type="text" placeholder="Decision evidence hash (0x…64) or manifest text" aria-label="Decision evidence" />
-      <button class="btn" type="button" data-action="settle-yes" data-id="${market.id}" ${state.busy || !arbitrationOpen ? 'disabled' : ''}>Decide YES</button>
-      <button class="btn" type="button" data-action="settle-no" data-id="${market.id}" ${state.busy || !arbitrationOpen ? 'disabled' : ''}>Decide NO</button>
-      <button class="btn" type="button" data-action="settle-invalid" data-id="${market.id}" ${state.busy || !arbitrationOpen ? 'disabled' : ''}>Decide INVALID</button></div></div>`);
+
+  if (effectiveState === 3) {
+    actions.push(`
+      <div class="card" style="border:1px solid var(--accent-brand);">
+        <div class="row space">
+          <h3>Arbitration In Progress</h3>
+          <span class="badge wait">Disputed</span>
+        </div>
+        <p class="muted" style="font-size:12px;margin:8px 0 14px;">
+          This market is disputed and is undergoing review by the Arbitrator Safe multisig authority.
+        </p>
+        <a class="btn primary" href="#/arbitration/${market.id}" style="display:inline-block;text-align:center;">
+          Review in Arbitration Workspace →
+        </a>
+      </div>
+    `);
   }
+
   if (account && effectiveState === 2) {
-    actions.push(`<div class="card"><h3>Finalize</h3><p class="muted">Available once the challenge window closes without a challenge.</p><button class="btn primary" type="button" data-action="finalize" data-id="${market.id}" ${state.busy || now < Number(market.challengeDeadline) ? 'disabled' : ''}>Finalize result</button></div>`);
+    const canFinalize = now >= Number(market.challengeDeadline);
+    actions.push(`
+      <div class="card">
+        <h3>Finalize Market</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">
+          Finalization is available once the challenge window closes without dispute.
+        </p>
+        <button class="btn primary" type="button" data-action="finalize" data-id="${market.id}" ${state.busy || !canFinalize ? 'disabled' : ''}>
+          ${canFinalize ? 'Finalize Result' : `Window Open (Wait ${countdownText(Number(market.challengeDeadline) - now)})`}
+        </button>
+      </div>
+    `);
   }
+
   if (account && (effectiveState === 4 || effectiveState === 5)) {
     const claimText = claimable
-      ? `Claimable now: reward ${formatQie(claimable.reward)} ETH · refund ${formatQie(claimable.refund)} ETH.`
-      : '';
-    actions.push(`<div class="card"><h3>Settlement</h3><p class="muted">${claimText}</p><div class="row">
-      <button class="btn primary" type="button" data-action="claim" data-id="${market.id}" ${state.busy || !claimable || claimable.reward === 0n ? 'disabled' : ''}>Claim reward</button>
-      <button class="btn" type="button" data-action="claim-refund" data-id="${market.id}" ${state.busy || !claimable || claimable.refund === 0n ? 'disabled' : ''}>Claim refund</button></div></div>`);
+      ? `Reward: ${formatQie(claimable.reward)} ETH · Refund: ${formatQie(claimable.refund)} ETH`
+      : 'No claimable funds recorded.';
+    actions.push(`
+      <div class="card">
+        <h3>Settlement Payouts</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">${claimText}</p>
+        <div class="row" style="gap:8px;">
+          <button class="btn primary" type="button" data-action="claim" data-id="${market.id}" ${state.busy || !claimable || claimable.reward === 0n ? 'disabled' : ''}>
+            Claim Reward
+          </button>
+          <button class="btn" type="button" data-action="claim-refund" data-id="${market.id}" ${state.busy || !claimable || claimable.refund === 0n ? 'disabled' : ''}>
+            Claim Refund
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  if (account && effectiveState !== 4 && effectiveState !== 5 && now >= Number(market.maxResolutionTime)) {
+    actions.push(`
+      <div class="card">
+        <h3>Cancel Expired Market</h3>
+        <p class="muted" style="font-size:12px;margin-bottom:12px;">
+          Market exceeded max resolution time unresolved. Cancellation refunds all participant stakes 1:1.
+        </p>
+        <button class="btn danger" type="button" data-action="cancel-expired" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>
+          Cancel Expired Market
+        </button>
+      </div>
+    `);
+  }
+
+  // Multi-Bond Claims Card
+  let bondClaimsHtml = '';
+  if (account && (effectiveState === 4 || effectiveState === 5)) {
+    const bondSections: string[] = [];
+
     if (addressEq(account, market.creator) || (creationBond && addressEq(account, creationBond.owner))) {
       const isClaimed = creationBond?.claimed ?? false;
       const canClaim = !isClaimed && creationEntitlement > 0n;
-      actions.push(`<div class="card"><h3>Creation bond</h3>
-        <p class="muted">Deposit: ${formatQie(creationBond ? creationBond.amount : deployment.parameters.creationBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (creationEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(creationEntitlement)} ETH</span>` : '<span class="pill err">No entitlement</span>')}</p>
-        <div class="row" style="margin-top:8px">
-          <input id="claim-bond-recipient-0" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Creation bond recipient" />
-          <button class="btn" type="button" data-action="claim-bond-creation" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim creation bond'}</button>
-        </div></div>`);
+      bondSections.push(`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border-subtle);">
+          <div class="row space">
+            <span style="font-size:13px;font-weight:600;">Creation Bond</span>
+            <span>${isClaimed ? '<span class="pill ok">Claimed</span>' : (creationEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(creationEntitlement)} ETH</span>` : '<span class="pill err">No entitlement</span>')}</span>
+          </div>
+          <div class="row" style="margin-top:8px;gap:6px;">
+            <input id="claim-bond-recipient-0" type="text" placeholder="Recipient address (optional redirection)" aria-label="Creation bond recipient" style="font-size:11px;flex:1;" />
+            <button class="btn small" type="button" data-action="claim-bond-creation" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>
+              Claim Bond
+            </button>
+          </div>
+        </div>
+      `);
     }
+
     if (addressEq(account, market.proposer) || (proposalBond && addressEq(account, proposalBond.owner))) {
       const isClaimed = proposalBond?.claimed ?? false;
       const canClaim = !isClaimed && proposalEntitlement > 0n;
-      actions.push(`<div class="card"><h3>Proposal bond</h3>
-        <p class="muted">Deposit: ${formatQie(proposalBond ? proposalBond.amount : deployment.parameters.proposalBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (proposalEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(proposalEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</p>
-        <div class="row" style="margin-top:8px">
-          <input id="claim-bond-recipient-1" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Proposal bond recipient" />
-          <button class="btn" type="button" data-action="claim-bond-proposal" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim proposal bond'}</button>
-        </div></div>`);
+      bondSections.push(`
+        <div style="padding:10px 0;border-bottom:1px solid var(--border-subtle);">
+          <div class="row space">
+            <span style="font-size:13px;font-weight:600;">Proposal Bond</span>
+            <span>${isClaimed ? '<span class="pill ok">Claimed</span>' : (proposalEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(proposalEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</span>
+          </div>
+          <div class="row" style="margin-top:8px;gap:6px;">
+            <input id="claim-bond-recipient-1" type="text" placeholder="Recipient address (optional redirection)" aria-label="Proposal bond recipient" style="font-size:11px;flex:1;" />
+            <button class="btn small" type="button" data-action="claim-bond-proposal" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>
+              Claim Bond
+            </button>
+          </div>
+        </div>
+      `);
     }
+
     if ((challengeStake && challengeStake.amount > 0n) || challengeEntitlement > 0n) {
       const isClaimed = challengeStake?.claimed ?? false;
       const canClaim = !isClaimed && challengeEntitlement > 0n;
-      actions.push(`<div class="card"><h3>Challenge bond</h3>
-        <p class="muted">Deposit: ${formatQie(challengeStake ? challengeStake.amount : deployment.parameters.challengeBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (challengeEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(challengeEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</p>
-        <div class="row" style="margin-top:8px">
-          <input id="claim-bond-recipient-2" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Challenge bond recipient" />
-          <button class="btn" type="button" data-action="claim-bond-challenge" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim challenge bond'}</button>
-        </div></div>`);
+      bondSections.push(`
+        <div style="padding:10px 0;">
+          <div class="row space">
+            <span style="font-size:13px;font-weight:600;">Challenge Bond</span>
+            <span>${isClaimed ? '<span class="pill ok">Claimed</span>' : (challengeEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(challengeEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</span>
+          </div>
+          <div class="row" style="margin-top:8px;gap:6px;">
+            <input id="claim-bond-recipient-2" type="text" placeholder="Recipient address (optional redirection)" aria-label="Challenge bond recipient" style="font-size:11px;flex:1;" />
+            <button class="btn small" type="button" data-action="claim-bond-challenge" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>
+              Claim Bond
+            </button>
+          </div>
+        </div>
+      `);
+    }
+
+    if (bondSections.length > 0) {
+      bondClaimsHtml = `
+        <div class="card">
+          <h3>Bond Reclamation</h3>
+          <p class="muted" style="font-size:12px;margin-bottom:8px;">
+            Claim returned bonds to your wallet or redirect to a designated address.
+          </p>
+          ${bondSections.join('')}
+        </div>
+      `;
     }
   }
-  if (account && effectiveState !== 4 && effectiveState !== 5 && now >= Number(market.maxResolutionTime)) {
-    actions.push(`<div class="card"><h3>Expired</h3><p class="muted">The market passed its max resolution time unresolved and can be cancelled; stakes become refundable.</p><button class="btn danger" type="button" data-action="cancel-expired" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Cancel expired market</button></div>`);
-  }
 
+  // User position card
   const positionHtml = position && (position.yes > 0n || position.no > 0n)
-    ? `<div class="card"><h3>Your position</h3><div class="row space"><span>YES ${formatQie(position.yes)} ETH</span><span>NO ${formatQie(position.no)} ETH</span><span class="muted">${position.settled ? 'settled' : 'open'}</span></div></div>`
+    ? `
+      <div class="card">
+        <h3>Your Position</h3>
+        <div class="row space" style="margin:8px 0;font-size:13px;">
+          <span>YES: <strong>${formatQie(position.yes)} ETH</strong></span>
+          <span>NO: <strong>${formatQie(position.no)} ETH</strong></span>
+        </div>
+        <div class="row space">
+          <span class="muted" style="font-size:12px;">Position Status:</span>
+          <span class="pill ${position.settled ? 'ok' : ''}">${position.settled ? 'Settled' : 'Open'}</span>
+        </div>
+      </div>
+    `
     : '';
 
+  // Evidence Dossier Entries
+  const evidenceEntries: string[] = [];
+  if (!isZeroHash(market.proposalEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-proposal">Proposal Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(market.proposer))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.proposalEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.proposalEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+  if (!isZeroHash(market.challengeEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-challenge">Challenge Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(market.challenger))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.challengeEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.challengeEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+  if (!isZeroHash(market.decisionEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-arbitration">Decision Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(deployment.manifest.roleMocks.arbitrator.address))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.decisionEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.decisionEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+
+  const dossierHtml = evidenceEntries.length > 0
+    ? `<div class="evidence-dossier-list">${evidenceEntries.join('')}</div>`
+    : `<p class="muted" style="margin-top:12px;font-size:13px;">No evidence artifacts committed yet for this market.</p>`;
+
+  // Tranche ladder
   let trancheLadderHtml = '';
   if (challenges && challenges.stakes && challenges.stakes.length > 0) {
     const trancheRows = challenges.stakes.map((stake, idx) => `
@@ -1343,12 +1536,12 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
     `).join('');
 
     trancheLadderHtml = `
-      <div class="card">
+      <div class="card" style="padding:22px 24px;">
         <div class="row space">
-          <h3>Multi-Challenger Tranche Ladder (M1)</h3>
+          <h2 style="font-size:16px;margin:0;">Multi-Challenger Tranche Ladder (M1)</h2>
           <span class="pill">${challenges.stakes.length} tranche${challenges.stakes.length === 1 ? '' : 's'}</span>
         </div>
-        <p class="muted">
+        <p class="muted" style="font-size:13px;margin:6px 0 12px;">
           Total dispute stake: <strong>${formatQie(parsePoolAmount(challenges.totalChallengeStake))} ETH</strong>
           ${challenges.disposition ? ` · Disposition: <strong>${escapeHtml(challenges.disposition)}</strong>` : ''}
           ${challenges.refundable !== null ? ` · Refundable: <strong>${challenges.refundable ? 'Yes' : 'No'}</strong>` : ''}
@@ -1374,38 +1567,631 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
     `;
   } else if (market.storedState === 3 || !isZeroHash(market.challenger)) {
     trancheLadderHtml = `
-      <div class="card">
-        <h3>Multi-Challenger Tranche Ladder (M1)</h3>
-        <p class="muted">${challenges ? 'No additional challenger tranches recorded.' : 'Detailed multi-challenger tranche history requires the API indexer service.'}</p>
+      <div class="card" style="padding:22px 24px;">
+        <h2 style="font-size:16px;margin:0;">Multi-Challenger Tranche Ladder (M1)</h2>
+        <p class="muted" style="font-size:13px;margin-top:6px;">${challenges ? 'No additional challenger tranches recorded.' : 'Detailed multi-challenger tranche history requires the API indexer service.'}</p>
       </div>
     `;
   }
 
-  view.innerHTML = `<div class="breadcrumbs"><a href="#/">Markets</a>${icon('chevron', 13)}<span>Market #${market.id}</span></div>
-    <section class="page-head"><div class="eyebrow">MARKET #${market.id} · ${stateLabel}${categoryPill}${verifiedBadge}</div>
-    <h1 class="mono">${escapeHtml(title)}</h1>
-    ${descriptionHtml}
-    <p>Creator ${escapeHtml(shortAddress(market.creator))} · closes ${formatDateTime(market.closeTime)} · resolves by ${formatDateTime(market.resolutionTime)} · max ${formatDateTime(market.maxResolutionTime)}</p></section>
-    <div class="summary-grid">
-      <div><span>YES pool</span><b>${formatQie(market.yesPool)} ETH</b></div>
-      <div><span>NO pool</span><b>${formatQie(market.noPool)} ETH</b></div>
-      <div><span>Pool share (YES)</span><b>${yesPct === null ? '—' : `${yesPct.toFixed(1)}%`}</b></div>
-      <div><span>Protocol fee</span><b>${formatQie(market.protocolFee)} ETH</b></div>
+  // Stepper state evaluation
+  const step1Class = 'completed';
+  const step2Class = effectiveState === 0 ? 'pending' : (effectiveState === 1 ? 'active' : 'completed');
+  const step3Class = effectiveState < 2 ? 'pending' : (effectiveState === 2 ? 'active' : 'completed');
+  const step4Class = effectiveState === 3 ? 'active' : (effectiveState >= 4 && isDisputed ? 'completed' : 'pending');
+  const step5Class = effectiveState >= 4 ? 'completed' : 'pending';
+
+  view.innerHTML = `
+    <div class="breadcrumbs">
+      <a href="#/">Explore Markets</a>
+      ${icon('chevron', 13)}
+      <span>Market #${market.id}</span>
     </div>
-    <div class="pool-bar" aria-hidden="true"><i style="width:${yesPct ?? 50}%"></i></div>
-    <div class="card"><h3>On-chain record</h3><div class="grid-2">
-      <div><span class="muted">Proposer</span><div class="mono">${escapeHtml(market.proposer)}</div></div>
-      <div><span class="muted">Challenger</span><div class="mono">${escapeHtml(market.challenger)}</div></div>
-      <div><span class="muted">Proposed outcome</span><div>${OUTCOME_LABELS[market.proposedOutcome]}</div></div>
-      <div><span class="muted">Final outcome</span><div>${OUTCOME_LABELS[market.finalOutcome]}</div></div>
-      <div><span class="muted">Proposal evidence</span><div>${formatEvidenceField(market.proposalEvidence)}</div></div>
-      <div><span class="muted">Challenge evidence</span><div>${formatEvidenceField(market.challengeEvidence)}</div></div>
-      <div><span class="muted">Decision evidence</span><div>${formatEvidenceField(market.decisionEvidence)}</div></div>
-      <div><span class="muted">Paid out / refunded</span><div>${formatQie(market.paidOut)} / ${formatQie(market.refunded)} ETH</div></div>
-    </div></div>
-    ${trancheLadderHtml}
-    ${positionHtml}
-    ${actions.join('')}`;
+
+    <section class="page-head">
+      <div class="eyebrow">
+        MARKET #${market.id} · <span class="badge ${stateTone(effectiveState)}">${stateLabel}</span>
+        ${categoryPill}
+        ${verifiedBadge}
+      </div>
+      <h1 class="market-title-h1">${escapeHtml(title)}</h1>
+      ${descriptionHtml}
+      <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:6px;">
+        <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
+        <span>Closes: <strong class="mono">${formatDateTime(market.closeTime)}</strong></span>
+        <span>Resolution: <strong class="mono">${formatDateTime(market.resolutionTime)}</strong></span>
+        <span>Max Resolution: <strong class="mono">${formatDateTime(market.maxResolutionTime)}</strong></span>
+      </div>
+    </section>
+
+    <div class="market-detail-layout">
+      <!-- Main Content Column -->
+      <div class="market-main-col">
+        <!-- Resolution Rules Callout -->
+        <div class="rules-callout">
+          <div class="rules-callout-head">
+            <span class="rules-callout-title">${icon('shield', 18)} Resolution Rules & Settlement Criteria</span>
+          </div>
+          <div class="rules-source-link">
+            <span>Primary Observation Source:</span>
+            <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
+          </div>
+          <div class="rules-condition">
+            <strong>Outcome Conditions:</strong>
+            <ul style="margin:6px 0 0;padding-left:18px;">
+              <li><strong>YES / NO:</strong> The criteria specified in the market question are verified to have occurred before market close according to the primary source.</li>
+              <li><strong>INVALID (Neutral Refund):</strong> If the underlying event is cancelled, postponed beyond the max resolution window, or facts remain indeterminate, the market resolves to INVALID. All participant stakes are refunded 1:1, creation and challenge bonds are returned.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pool Contribution Distribution Card -->
+        <div class="pool-distribution-card">
+          <div class="row space" style="margin-bottom:12px;">
+            <h2 style="font-size:16px;margin:0;">Pool Contribution Distribution</h2>
+            <span class="mono muted font-stat">Total: ${formatQie(total)} ETH</span>
+          </div>
+
+          <div class="pool-bar-track" aria-hidden="true">
+            <div class="pool-bar-yes" style="width: ${yesPct ?? 50}%;"></div>
+            <div class="pool-bar-no" style="width: ${noPct ?? 50}%;"></div>
+          </div>
+
+          <div class="pool-metric-row">
+            <div>
+              <span class="muted">YES Pool:</span>
+              <strong style="color:var(--outcome-yes);">${formatQie(market.yesPool)} ETH</strong>
+              <span class="mono">(${yesPct !== null ? yesPct.toFixed(1) + '%' : '—'})</span>
+            </div>
+            <div>
+              <span class="muted">NO Pool:</span>
+              <strong style="color:var(--outcome-no);">${formatQie(market.noPool)} ETH</strong>
+              <span class="mono">(${noPct !== null ? noPct.toFixed(1) + '%' : '—'})</span>
+            </div>
+            <div>
+              <span class="muted">Protocol Fee:</span>
+              <strong class="mono">${formatQie(market.protocolFee)} ETH</strong>
+            </div>
+          </div>
+
+          <div class="contribution-notice">
+            ${icon('help', 15)}
+            <span>Pool shares represent proportional contribution distributions across pari-mutuel outcome pools. Shares are never guaranteed probabilities or fixed payouts.</span>
+          </div>
+        </div>
+
+        <!-- Interactive Stepped Timeline -->
+        <div class="resolution-stepper-card">
+          <div class="row space" style="margin-bottom:16px;">
+            <h2 style="font-size:16px;margin:0;">Resolution Lifecycle</h2>
+            <span class="pill">${stateLabel}</span>
+          </div>
+
+          <div class="stepper-list">
+            <!-- Step 1: Market Creation -->
+            <div class="stepper-step ${step1Class}">
+              <div class="step-marker">✔</div>
+              <div class="step-content">
+                <div class="step-head">
+                  <h3 class="step-title">1. Market Creation & Funding</h3>
+                  <span class="step-time">${formatDateTime(market.closeTime)}</span>
+                </div>
+                <p class="step-desc">Market initialized on the local chain. Funding open until close time.</p>
+                <div class="step-details-box">
+                  <div class="step-details-row"><span>Creator:</span><strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></div>
+                  <div class="step-details-row"><span>Creation Bond:</span><strong>${formatQie(deployment.parameters.creationBond)} ETH</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Result Proposal -->
+            <div class="stepper-step ${step2Class}">
+              <div class="step-marker">${step2Class === 'completed' ? '✔' : '2'}</div>
+              <div class="step-content">
+                <div class="step-head">
+                  <h3 class="step-title">2. Outcome Proposal</h3>
+                  <span class="step-time">${step2Class === 'completed' ? 'Submitted' : (step2Class === 'active' ? 'Active Window' : 'Pending')}</span>
+                </div>
+                <p class="step-desc">
+                  ${step2Class === 'completed'
+                    ? `Result proposed as <strong>${OUTCOME_LABELS[market.proposedOutcome]}</strong> by proposer.`
+                    : (step2Class === 'active'
+                      ? `Market closed. Anyone can submit an outcome proposal with ${formatQie(deployment.parameters.proposalBond)} ETH bond.`
+                      : `Opens when market closes at ${formatDateTime(market.closeTime)}.`)}
+                </p>
+                ${step2Class === 'completed' ? `
+                  <div class="step-details-box">
+                    <div class="step-details-row"><span>Proposer:</span><strong class="mono">${escapeHtml(shortAddress(market.proposer))}</strong></div>
+                    <div class="step-details-row"><span>Proposed Outcome:</span><strong class="pill ${market.proposedOutcome === 1 ? 'yes' : market.proposedOutcome === 2 ? 'no' : 'invalid'}">${OUTCOME_LABELS[market.proposedOutcome]}</strong></div>
+                    <div class="step-details-row"><span>Evidence:</span><strong>${formatEvidenceField(market.proposalEvidence)}</strong></div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Step 3: Challenge Window -->
+            <div class="stepper-step ${step3Class}">
+              <div class="step-marker">${step3Class === 'completed' ? '✔' : '3'}</div>
+              <div class="step-content">
+                <div class="step-head">
+                  <h3 class="step-title">3. Challenge Period</h3>
+                  <span class="step-time">${step3Class === 'active' ? countdownText(Number(market.challengeDeadline) - now) : (step3Class === 'completed' ? (isDisputed ? 'Challenged' : 'Closed') : 'Pending')}</span>
+                </div>
+                <p class="step-desc">
+                  ${step3Class === 'completed'
+                    ? (isDisputed ? 'Proposal challenged. Dispute escalated to arbitration authority.' : 'Challenge window elapsed without objections.')
+                    : (step3Class === 'active'
+                      ? `Challenge window active until ${formatDateTime(market.challengeDeadline)}. Objections require ${formatQie(deployment.parameters.challengeBond)} ETH bond.`
+                      : 'Opens after an outcome is proposed.')}
+                </p>
+                ${isDisputed ? `
+                  <div class="step-details-box">
+                    <div class="step-details-row"><span>Challenger:</span><strong class="mono">${escapeHtml(shortAddress(market.challenger))}</strong></div>
+                    <div class="step-details-row"><span>Challenge Evidence:</span><strong>${formatEvidenceField(market.challengeEvidence)}</strong></div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Step 4: Arbitration Safe Deliberation -->
+            <div class="stepper-step ${step4Class}">
+              <div class="step-marker">${step4Class === 'completed' ? '✔' : '4'}</div>
+              <div class="step-content">
+                <div class="step-head">
+                  <h3 class="step-title">4. Arbitration Deliberation</h3>
+                  <span class="step-time">${step4Class === 'active' ? 'Under Review' : (step4Class === 'completed' ? 'Arbitrated' : 'Conditional')}</span>
+                </div>
+                <p class="step-desc">
+                  ${step4Class === 'active'
+                    ? `Contested outcome under deliberation by Arbitrator Safe multisig until ${formatDateTime(market.arbitrationDeadline)}.`
+                    : (step4Class === 'completed'
+                      ? `Settled by Arbitrator Safe authority with outcome ${OUTCOME_LABELS[market.finalOutcome]}.`
+                      : 'Deliberation is only invoked if the proposed outcome is challenged.')}
+                </p>
+                ${!isZeroHash(market.decisionEvidence) ? `
+                  <div class="step-details-box">
+                    <div class="step-details-row"><span>Decision Evidence:</span><strong>${formatEvidenceField(market.decisionEvidence)}</strong></div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Step 5: Final Settlement -->
+            <div class="stepper-step ${step5Class}">
+              <div class="step-marker">${step5Class === 'completed' ? '✔' : '5'}</div>
+              <div class="step-content">
+                <div class="step-head">
+                  <h3 class="step-title">5. Final Settlement & Claims</h3>
+                  <span class="step-time">${step5Class === 'completed' ? 'Terminal' : 'Pending'}</span>
+                </div>
+                <p class="step-desc">
+                  ${step5Class === 'completed'
+                    ? `Market finalized. Winning outcome: <strong>${OUTCOME_LABELS[market.finalOutcome]}</strong>. Stake rewards, refunds, and bonds are claimable.`
+                    : 'Activates upon outcome finalization.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evidence Dossier Panel -->
+        <div class="evidence-dossier-card">
+          <div class="row space">
+            <h2 style="font-size:16px;margin:0;">Evidence Dossier</h2>
+            <span class="pill ok">RFC 8785 Canonical JSON</span>
+          </div>
+          ${dossierHtml}
+        </div>
+
+        <!-- Tranche Ladder -->
+        ${trancheLadderHtml}
+      </div>
+
+      <!-- Right Column: User Position & Actions -->
+      <div class="market-aside-col">
+        ${positionHtml}
+        ${actions.join('')}
+        ${bondClaimsHtml}
+
+        <!-- Parameters Card -->
+        <div class="card" style="font-size:12px;">
+          <h3 style="font-size:14px;margin-bottom:10px;">Market Specifications</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="row space"><span class="muted">Protocol Fee:</span><strong class="mono font-stat">${(deployment.parameters.feeBps / 100).toFixed(2)}%</strong></div>
+            <div class="row space"><span class="muted">Pool Cap:</span><strong class="mono font-stat">${formatQie(deployment.parameters.poolCap)} ETH</strong></div>
+            <div class="row space"><span class="muted">Challenge Window:</span><strong class="mono font-stat">${deployment.parameters.challengePeriod / 3600} hours</strong></div>
+            <div class="row space"><span class="muted">Arbitration Window:</span><strong class="mono font-stat">${deployment.parameters.arbitrationPeriod / 3600} hours</strong></div>
+            <div class="row space"><span class="muted">Min Contribution:</span><strong class="mono font-stat">${formatQie(deployment.parameters.minContribution)} ETH</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'disputed' | 'proposed' | 'finalized'): Promise<void> {
+  view.innerHTML = `<div class="card"><span class="spinner"></span> Loading arbitration queue…</div>`;
+  const deployment = state.deployment!;
+  await refreshChainTime();
+  const cases = await fetchMarketsForArbitration();
+
+  const disputedCount = cases.filter(c => c.statusText === 'DISPUTED').length;
+  const proposedCount = cases.filter(c => c.statusText === 'PROPOSED').length;
+  const disputedVolume = cases
+    .filter(c => c.statusText === 'DISPUTED')
+    .reduce((sum, c) => sum + c.yesPool + c.noPool, 0n);
+
+  let filteredCases = cases;
+  if (filter === 'disputed') {
+    filteredCases = cases.filter(c => c.statusText === 'DISPUTED');
+  } else if (filter === 'proposed') {
+    filteredCases = cases.filter(c => c.statusText === 'PROPOSED');
+  } else if (filter === 'finalized') {
+    filteredCases = cases.filter(c => c.statusText === 'FINALIZED' || c.statusText === 'CANCELLED');
+  }
+
+  const tab = (id: string, label: string, count?: number) => {
+    const active = filter === id;
+    const badge = count !== undefined ? ` <span class="mono">(${count})</span>` : '';
+    return `<a href="#/arbitration?filter=${id}" class="arb-tab-btn ${active ? 'active' : ''}">${label}${badge}</a>`;
+  };
+
+  let tableContent = '';
+  if (filteredCases.length === 0) {
+    tableContent = `
+      <div class="card empty-state" style="border:none;margin:24px 0;">
+        <span class="empty-icon">${icon('shield', 30)}</span>
+        <h2>No cases found in this view</h2>
+        <p class="muted">There are currently no prediction markets matching the <strong>${escapeHtml(filter)}</strong> filter.</p>
+        <a class="btn primary" href="#/arbitration?filter=all">View all cases</a>
+      </div>
+    `;
+  } else {
+    const rows = filteredCases.map(c => {
+      const totalPool = c.yesPool + c.noPool;
+      return `
+        <tr>
+          <td><span class="mono" style="font-weight:600">#${c.id}</span></td>
+          <td>
+            <div style="font-weight:600;color:var(--text-primary);max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${escapeHtml(c.title)}
+            </div>
+            ${c.category ? `<span class="pill" style="font-size:11px;margin-top:4px;">${escapeHtml(c.category)}</span>` : ''}
+          </td>
+          <td><span class="badge ${c.statusTone}">${escapeHtml(c.statusText)}</span></td>
+          <td class="mono font-stat">${formatQie(totalPool)} ETH</td>
+          <td>
+            <span class="mono" style="font-size:12px;">${c.closeTime > 0n ? formatDateTime(c.closeTime) : '—'}</span>
+          </td>
+          <td>
+            <a class="btn small primary" href="#/arbitration/${c.id}" style="padding:4px 10px;font-size:12px;">Review Case →</a>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    tableContent = `
+      <div class="dispute-table-wrap">
+        <table class="dispute-table" aria-label="Dispute Queue Cases">
+          <thead>
+            <tr>
+              <th>Case ID</th>
+              <th>Market Title</th>
+              <th>Status</th>
+              <th>Total Stake</th>
+              <th>Closing / Deadline</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  view.innerHTML = `
+    <div class="arbitration-workspace">
+      <div class="arb-header-section">
+        <div>
+          <div class="eyebrow">DISPUTE RESOLUTION & ARBITRATION WORKSPACE</div>
+          <h1 style="margin:4px 0 8px;">Arbitration Queue</h1>
+          <p class="muted" style="max-width:760px;line-height:1.6;margin:0;">
+            Independent multi-sig dispute resolution workspace. Review contested outcomes, inspect RFC 8785 evidence dossiers, and deliberate with transparent on-chain multisig authority.
+          </p>
+        </div>
+      </div>
+
+      <div class="arb-stats-grid">
+        <div class="arb-stat-card">
+          <span class="arb-stat-card-label">Active Disputes</span>
+          <span class="arb-stat-card-val ${disputedCount > 0 ? 'err' : ''}">${disputedCount}</span>
+        </div>
+        <div class="arb-stat-card">
+          <span class="arb-stat-card-label">Pending Challenge Window</span>
+          <span class="arb-stat-card-val">${proposedCount}</span>
+        </div>
+        <div class="arb-stat-card">
+          <span class="arb-stat-card-label">Disputed Pool Volume</span>
+          <span class="arb-stat-card-val mono">${formatQie(disputedVolume)} ETH</span>
+        </div>
+        <div class="arb-stat-card">
+          <span class="arb-stat-card-label">Safe Authority</span>
+          <span class="arb-stat-card-val" style="font-size:16px;color:var(--accent-brand);">3-of-5 Safe <small style="display:block;font-size:11px;color:var(--text-muted);font-weight:normal;">Local Mock (${escapeHtml(shortAddress(deployment.manifest.roleMocks.arbitrator.address))} · Threshold ${deployment.manifest.roleMocks.arbitrator.threshold})</small></span>
+        </div>
+      </div>
+
+      <div class="arb-filter-bar" role="tablist" aria-label="Dispute Filters">
+        ${tab('all', 'All Cases', cases.length)}
+        ${tab('disputed', 'Active Disputes', disputedCount)}
+        ${tab('proposed', 'Challenge Window', proposedCount)}
+        ${tab('finalized', 'Finalized / Settled')}
+      </div>
+
+      ${tableContent}
+    </div>
+  `;
+}
+
+async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise<void> {
+  const deployment = state.deployment!;
+  view.innerHTML = `<div class="card"><span class="spinner"></span> Loading case #${id}…</div>`;
+  await refreshChainTime();
+
+  let apiDetail: MarketDetail | null = null;
+  try {
+    const res = await apiClient.getMarket(id);
+    apiDetail = res.data;
+  } catch {
+    // API detail unavailable
+  }
+
+  let market: MarketRecord;
+  try {
+    market = await readMarket(publicClient, deployment.factory, id);
+  } catch (error) {
+    view.innerHTML = `<div class="card empty-state"><h2>Case not found</h2><p class="err">${escapeHtml(errorMessage(error))}</p><a class="btn primary" href="#/arbitration">Back to Dispute Queue</a></div>`;
+    return;
+  }
+
+  const now = chainNow();
+  const effectiveState = (market.storedState === 0 && now >= Number(market.closeTime)) ? 1 : market.storedState;
+  const stateLabel = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
+  const title = apiDetail?.question || market.metadataURI;
+  const account = connectedAccount();
+
+  const arbitratorMock = deployment.manifest.roleMocks.arbitrator;
+  const arbitratorOwners: string[] = arbitratorMock.owners ?? [];
+  const isAuthorizedOwner = isArbitratorOwner(account, arbitratorOwners);
+
+  const formatEvidenceField = (hash: string | null | undefined): string => {
+    if (!hash || isZeroHash(hash)) return '<span class="muted">—</span>';
+    return `<button class="evidence-hash-btn mono" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(hash)}" title="Inspect canonical evidence manifest">${escapeHtml(shortAddress(hash))}</button>`;
+  };
+
+  const arbitrationOpen = effectiveState === 3 && now < Number(market.arbitrationDeadline);
+
+  // Evidence Dossier
+  const evidenceEntries: string[] = [];
+  if (!isZeroHash(market.proposalEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-proposal">Proposal Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(market.proposer))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.proposalEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.proposalEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+  if (!isZeroHash(market.challengeEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-challenge">Challenge Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(market.challenger))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.challengeEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.challengeEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+  if (!isZeroHash(market.decisionEvidence)) {
+    evidenceEntries.push(`
+      <div class="evidence-entry-card">
+        <div class="evidence-entry-head">
+          <span class="evidence-kind-badge evidence-kind-arbitration">Decision Evidence</span>
+          <span class="step-time">Submitter: <span class="mono">${escapeHtml(shortAddress(arbitratorMock.address))}</span></span>
+        </div>
+        <div class="evidence-commitment-box">
+          <span>Commitment: <strong class="mono">${escapeHtml(shortAddress(market.decisionEvidence))}</strong></span>
+          <button class="btn tiny" type="button" data-action="inspect-evidence" data-commitment="${escapeHtml(market.decisionEvidence)}">Inspect Manifest</button>
+        </div>
+      </div>
+    `);
+  }
+
+  const dossierHtml = evidenceEntries.length > 0
+    ? `<div class="evidence-dossier-list">${evidenceEntries.join('')}</div>`
+    : `<p class="muted" style="margin-top:12px;">No evidence artifacts committed yet for this market.</p>`;
+
+  // Owner status pill
+  const ownerStatusPill = isAuthorizedOwner
+    ? `<span class="pill ok" style="font-weight:600;">✔ Authorized Arbitrator Signer</span>`
+    : account
+      ? `<span class="pill" style="color:var(--text-muted);">Observer / Read-Only</span>`
+      : `<span class="pill" style="color:var(--text-muted);">Wallet Disconnected</span>`;
+
+  // Decision card body
+  let decisionBody = '';
+  if (effectiveState === 3) {
+    decisionBody = `
+      <div style="margin-top:16px;">
+        <label for="settle-evidence" style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-secondary);">
+          Arbitrator Decision Evidence (0x…64 or plain text):
+        </label>
+        <input id="settle-evidence" type="text" placeholder="Decision evidence hash (0x…64) or manifest text" aria-label="Decision evidence" style="width:100%;margin-bottom:12px;" />
+
+        <div class="row" style="gap:8px;flex-wrap:wrap;">
+          <button class="btn yes" type="button" data-action="settle-yes" data-id="${market.id}" ${state.busy || !arbitrationOpen || !isAuthorizedOwner ? 'disabled' : ''}>
+            Decide YES
+          </button>
+          <button class="btn no" type="button" data-action="settle-no" data-id="${market.id}" ${state.busy || !arbitrationOpen || !isAuthorizedOwner ? 'disabled' : ''}>
+            Decide NO
+          </button>
+          <button class="btn" type="button" data-action="settle-invalid" data-id="${market.id}" ${state.busy || !arbitrationOpen || !isAuthorizedOwner ? 'disabled' : ''} style="background:var(--outcome-invalid-bg);color:var(--outcome-invalid);border-color:var(--outcome-invalid-border);">
+            Decide INVALID (Refund)
+          </button>
+        </div>
+
+        ${!isAuthorizedOwner && account ? `
+          <p class="muted" style="font-size:12px;margin-top:10px;">
+            Your connected wallet (<span class="mono">${escapeHtml(shortAddress(account))}</span>) is not an authorized owner of the local arbitrator contract. Connect an owner wallet to sign decisions.
+          </p>
+        ` : ''}
+
+        ${!account ? `
+          <p class="muted" style="font-size:12px;margin-top:10px;">
+            Connect an authorized arbitrator wallet to submit multisig rulings.
+          </p>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    decisionBody = `
+      <div style="margin-top:14px;padding:12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-subtle);font-size:13px;line-height:1.5;">
+        <span class="muted">Market is currently in <strong>${stateLabel}</strong> state. Multi-sig arbitrator rulings are only permitted when a market is actively <strong>DISPUTED</strong>.</span>
+      </div>
+    `;
+  }
+
+  view.innerHTML = `
+    <div class="breadcrumbs">
+      <a href="#/arbitration">← Dispute Queue</a>
+      ${icon('chevron', 13)}
+      <span>Case #${market.id}</span>
+    </div>
+
+    <section class="page-head">
+      <div class="eyebrow">DISPUTE ARBITRATION CASE #${market.id} · <span class="badge ${stateTone(effectiveState)}">${stateLabel}</span></div>
+      <h1 class="market-title-h1">${escapeHtml(title)}</h1>
+      ${apiDetail?.description ? `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;">${escapeHtml(apiDetail.description)}</p>` : ''}
+      <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);">
+        <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
+        <span>Resolution Deadline: <strong class="mono">${formatDateTime(market.resolutionTime)}</strong></span>
+        <span>Arbitration Deadline: <strong class="mono">${formatDateTime(market.arbitrationDeadline)}</strong></span>
+      </div>
+    </section>
+
+    <div class="case-detail-layout">
+      <!-- Left Column: Dossier, Dispute Facts, Rules -->
+      <div class="market-main-col">
+        <!-- Contested Claims Comparison -->
+        <div class="card" style="padding:22px 24px;">
+          <h2 style="font-size:16px;margin:0 0 16px;">Contested Claims & Evidence Comparison</h2>
+          <div class="grid-2" style="gap:16px;">
+            <div style="padding:14px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;">
+              <div class="row space" style="margin-bottom:8px;">
+                <span class="pill wait" style="font-size:11px;">PROPOSED RESULT</span>
+                <span class="mono" style="font-size:12px;">Bond: ${formatQie(deployment.parameters.proposalBond)} ETH</span>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--text-primary);margin:6px 0;">
+                Outcome: ${OUTCOME_LABELS[market.proposedOutcome]}
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">
+                Proposer: <span class="mono">${isZeroHash(market.proposer) ? '—' : escapeHtml(shortAddress(market.proposer))}</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);">
+                Evidence: ${formatEvidenceField(market.proposalEvidence)}
+              </div>
+            </div>
+
+            <div style="padding:14px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;">
+              <div class="row space" style="margin-bottom:8px;">
+                <span class="pill err" style="font-size:11px;">CHALLENGER OBJECTION</span>
+                <span class="mono" style="font-size:12px;">Bond: ${formatQie(deployment.parameters.challengeBond)} ETH</span>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--status-err);margin:6px 0;">
+                Contested / Dispute
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">
+                Challenger: <span class="mono">${isZeroHash(market.challenger) ? '—' : escapeHtml(shortAddress(market.challenger))}</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);">
+                Evidence: ${formatEvidenceField(market.challengeEvidence)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rules Callout -->
+        <div class="rules-callout">
+          <div class="rules-callout-head">
+            <span class="rules-callout-title">${icon('shield', 18)} Official Resolution Criteria</span>
+          </div>
+          <div class="rules-source-link">
+            <span>Primary Reference:</span>
+            <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
+          </div>
+          <div class="rules-condition">
+            <strong>Arbitration Duty:</strong> Inspect the submitted evidence manifests against the market specification. A ruling of INVALID triggers 1:1 participant stake refunds and neutral bond returns.
+          </div>
+        </div>
+
+        <!-- Evidence Dossier -->
+        <div class="evidence-dossier-card">
+          <div class="row space">
+            <h2 style="font-size:16px;margin:0;">Evidence Dossier</h2>
+            <span class="pill ok">RFC 8785 Canonical JSON</span>
+          </div>
+          ${dossierHtml}
+        </div>
+      </div>
+
+      <!-- Right Column: Multisig Decision Console -->
+      <div class="market-aside-col">
+        <div class="multisig-decision-card">
+          <div class="multisig-authority-title">
+            <span>Arbitration Authority</span>
+            ${ownerStatusPill}
+          </div>
+
+          <div class="multisig-simulation-note">
+            <strong>LOCAL SIMULATION DISCLOSURE:</strong> Connected to <code>LocalRoleMock</code> at <code class="mono">${escapeHtml(shortAddress(arbitratorMock.address))}</code> (Threshold: ${arbitratorMock.threshold} of ${arbitratorOwners.length}). In local testnet mode, 2 distinct owner confirmations execute decisions. In production, this role is governed by a canonical 3-of-5 Safe multisig.
+          </div>
+
+          <div class="multisig-authority-banner">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Authorized Signer Addresses:</span>
+            <div class="multisig-owners-list">
+              ${arbitratorOwners.map((owner, idx) => {
+                const isMe = account ? addressEq(owner, account) : false;
+                return `
+                  <div class="multisig-owner-tag">
+                    <span class="mono">${escapeHtml(shortAddress(owner))} ${isMe ? '(Connected)' : ''}</span>
+                    <span class="pill ${isMe ? 'ok' : ''}" style="font-size:10px;">Owner #${idx + 1}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          ${state.multisigNotice ? `<div class="banner warn-text" style="margin-bottom:14px;font-size:12px;line-height:1.5;">${escapeHtml(state.multisigNotice)}</div>` : ''}
+
+          ${decisionBody}
+
+          <div style="margin-top:20px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+            <a class="text-btn" href="#/market/${market.id}" style="font-size:13px;">View Full Market Page →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function renderCreateView(view: HTMLElement): void {

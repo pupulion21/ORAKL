@@ -724,3 +724,673 @@ label { font-size: 13px; }
 .tranche-table tr:hover td { background: var(--bg-soft); }
 .evidence-hash-btn { background: none; border: 0; color: var(--accent); padding: 0; font-family: inherit; font-size: inherit; text-decoration: underline; cursor: pointer; text-align: left; display: inline; }
 .evidence-hash-btn:hover { color: #bdd0ff; }
+
+/* ==========================================================================
+   ORAKL PRODUCT DESIGN OVERHAUL — DESIGN SYSTEM & ARBITRATION UX (P4-DES)
+   ========================================================================== */
+
+/* Design Tokens & Refined Color Space */
+:root {
+  --bg-canvas: #080c14;
+  --bg-surface: #0e1524;
+  --bg-panel: #131c2e;
+  --bg-elevated: #19253d;
+  --bg-subtle: #1f2d48;
+  --border-subtle: #1b263b;
+  --border-default: #263550;
+  --border-strong: #384d72;
+  --border-focus: #3b82f6;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #7f91af;
+  --text-disabled: #495873;
+  --accent-brand: #3b82f6;
+  --accent-brand-hover: #2563eb;
+  --accent-brand-subtle: #1c2e4f;
+  --outcome-yes: #10b981;
+  --outcome-yes-bg: #092e22;
+  --outcome-yes-border: #135d44;
+  --outcome-no: #ef4444;
+  --outcome-no-bg: #351419;
+  --outcome-no-border: #73232c;
+  --status-warn: #f59e0b;
+  --status-warn-bg: #332009;
+  --status-warn-border: #6e4616;
+  --status-invalid: #a855f7;
+  --status-invalid-bg: #29123b;
+  --status-invalid-border: #56277d;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent-brand);
+  outline-offset: 2px;
+}
+
+.pill.yes { color: var(--outcome-yes); background: var(--outcome-yes-bg); border-color: var(--outcome-yes-border); }
+.pill.no { color: var(--outcome-no); background: var(--outcome-no-bg); border-color: var(--outcome-no-border); }
+.pill.invalid { color: var(--status-invalid); background: var(--status-invalid-bg); border-color: var(--status-invalid-border); }
+.font-stat { font-variant-numeric: tabular-nums; }
+
+/* Two-Column Market Detail Grid */
+.market-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(360px, 1.15fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.market-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.market-aside-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 24px;
+}
+
+/* Market Header & Navigation Breadcrumb */
+.market-nav-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.market-nav-breadcrumb a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color .15s;
+}
+
+.market-nav-breadcrumb a:hover {
+  color: var(--text-primary);
+}
+
+.market-header-box {
+  padding: 24px 28px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.market-title-h1 {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+  margin: 10px 0 14px;
+  letter-spacing: -0.4px;
+}
+
+.market-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+}
+
+/* Official Rules & Resolution Source Callout */
+.rules-callout {
+  padding: 18px 22px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--accent-brand);
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.rules-callout-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.rules-callout-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rules-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--accent-brand);
+  text-decoration: none;
+}
+
+.rules-source-link:hover {
+  text-decoration: underline;
+}
+
+.rules-body-text {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Pool Contribution Distribution Bar */
+.pool-distribution-card {
+  padding: 22px 26px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.pool-metric-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pool-total-num {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pool-bar-track {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--outcome-no-border);
+  overflow: hidden;
+  display: flex;
+  margin: 8px 0;
+}
+
+.pool-bar-fill-yes {
+  background: var(--outcome-yes);
+  height: 100%;
+  transition: width .3s ease-out;
+}
+
+.pool-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.pool-disclaimer-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* Resolution Lifecycle Stepper */
+.resolution-stepper-card {
+  padding: 24px 28px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stepper-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.stepper-step {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 16px;
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.stepper-step:last-child {
+  padding-bottom: 0;
+}
+
+.stepper-step::after {
+  content: '';
+  position: absolute;
+  top: 32px;
+  left: 15px;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-subtle);
+}
+
+.stepper-step:last-child::after {
+  display: none;
+}
+
+.stepper-step.completed::after {
+  background: var(--outcome-yes-border);
+}
+
+.stepper-step.active::after {
+  background: var(--border-default);
+}
+
+.step-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 2px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  z-index: 2;
+}
+
+.stepper-step.completed .step-marker {
+  background: var(--outcome-yes-bg);
+  border-color: var(--outcome-yes);
+  color: var(--outcome-yes);
+}
+
+.stepper-step.active .step-marker {
+  background: var(--accent-brand-subtle);
+  border-color: var(--accent-brand);
+  color: var(--accent-brand);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.step-time {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.step-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.step-details-box {
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.step-details-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.step-details-row span {
+  color: var(--text-muted);
+}
+
+.step-details-row strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Evidence Dossier Section */
+.evidence-dossier-card {
+  padding: 24px 28px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.evidence-dossier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.evidence-entry-card {
+  padding: 16px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.evidence-entry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.evidence-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.evidence-kind-proposal {
+  background: #2a2012;
+  color: #fbbf24;
+  border: 1px solid #5b472a;
+}
+
+.evidence-kind-challenge {
+  background: #351419;
+  color: #f87171;
+  border: 1px solid #73232c;
+}
+
+.evidence-kind-arbitration {
+  background: #1c2e4f;
+  color: #60a5fa;
+  border: 1px solid #2e4a80;
+}
+
+.evidence-commitment-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Dedicated Arbitration Workspace */
+.arbitration-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.arb-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.arb-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.arb-stat-card {
+  padding: 18px 20px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.arb-stat-card-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.arb-stat-card-val {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.arb-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: 14px;
+}
+
+.arb-tab-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.arb-tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.arb-tab-btn.active {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+/* Dispute Queue Table */
+.dispute-table-wrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dispute-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.dispute-table th {
+  padding: 12px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.dispute-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.dispute-table tr:last-child td {
+  border-bottom: none;
+}
+
+.dispute-table tr:hover td {
+  background: var(--bg-elevated);
+}
+
+/* Arbitration Case Detail View */
+.case-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(360px, 1.2fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.multisig-decision-card {
+  padding: 24px 26px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.multisig-authority-banner {
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.multisig-authority-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.multisig-simulation-note {
+  font-size: 12px;
+  color: var(--status-warn);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--status-warn-bg);
+  border: 1px solid var(--status-warn-border);
+  border-radius: 6px;
+  margin: 6px 0 12px;
+}
+
+.multisig-owners-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  margin: 10px 0;
+}
+
+.multisig-owner-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1280px) {
+  .market-detail-layout, .case-detail-layout {
+    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 1.2fr);
+    gap: 20px;
+  }
+  .arb-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .market-detail-layout, .case-detail-layout {
+    grid-template-columns: 1fr;
+  }
+  .market-aside-col {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .arb-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .dispute-table-wrap {
+    overflow-x: auto;
+  }
+  .dispute-table {
+    min-width: 680px;
+  }
+  .stepper-step {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .stepper-step::after {
+    left: 13px;
+  }
+  .step-marker {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-title-h1 {
+    font-size: 21px;
+  }
+  .pool-metric-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
