@@ -1,0 +1,7 @@
+{
+  "package": "@safe-global/safe-contracts",
+  "version": "1.4.1-2",
+  "gitHead": "aa14911666deb13cdbbe37c37253a55918525437",
+  "upstreamTag": "v1.4.1",
+  "solc": "0.7.6+commit.7338295f"
+}

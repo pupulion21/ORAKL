@@ -3,6 +3,8 @@ node_modules/
 frontend/dist/
 contracts/out/
 contracts/cache/
+contracts/p3-safe/out/
+contracts/p3-safe/cache/
 results/runtime/
 *.pid
 .env

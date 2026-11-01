@@ -1,0 +1,6 @@
+[profile.default]
+src = "src"
+out = "out"
+solc_version = "0.7.6"
+optimizer = false
+extra_output = ["metadata"]
