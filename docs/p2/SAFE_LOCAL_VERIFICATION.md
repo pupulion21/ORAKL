@@ -6,9 +6,16 @@
 
 ---
 
+> [!IMPORTANT]
+> **CUSTOM TEST FIXTURE DISCLOSURE**  
+> All tests in this report execute against a **custom test fixture** ([`Safe3Of5.sol`](file:///home/pupulion/orakl/contracts/test/governance/Safe3Of5.sol)) implementing simulated 3-of-5 threshold mechanics and EIP-712 domain separation.  
+> **Official Safe Global smart contracts are NOT integrated** (official integration is reported **BLOCKED** due to external dependency pinning constraints). No real Safe integration or deployment on QIE is claimed.
+
+---
+
 ## 1. Test Suite Summary
 
-The multi-signature governance architecture was verified locally using a complete Foundry integration test suite (`contracts/test/governance/SafeGovernance.t.sol`) executing against the canonical 3-of-5 multisig contract implementation (`contracts/test/governance/Safe3Of5.sol`).
+The multi-signature governance mechanics were verified locally using a Foundry integration test suite (`contracts/test/governance/SafeGovernance.t.sol`) executing against the custom 3-of-5 multisig test fixture (`contracts/test/governance/Safe3Of5.sol`).
 
 - **Test Framework**: Foundry Forge (Paris EVM target)
 - **Suite**: `test/governance/SafeGovernance.t.sol:SafeGovernanceTest`

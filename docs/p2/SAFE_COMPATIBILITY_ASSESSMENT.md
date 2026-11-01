@@ -6,9 +6,19 @@
 
 ---
 
+> [!NOTE]
+> **DISCLOSURE — THEORETICAL ASSESSMENT & LOCAL FIXTURE ISOLATION**  
+> This document assesses theoretical compatibility of official Safe Global contracts (Safe v1.3.0 and Safe v1.4.1) based on EVM opcode analysis.  
+> **Key Status Disclosures:**  
+> - **Local Tests**: All local multisig tests use a custom test double ([`Safe3Of5.sol`](file:///home/pupulion/orakl/contracts/test/governance/Safe3Of5.sol)).  
+> - **Official Safe Contracts**: Integration of official Safe Global source packages into local test suites is **BLOCKED** due to pinned Solc compiler constraints (0.8.37 vs 0.7.6/0.8.19) and prohibition of unverified external submodules.  
+> - **QIE Networks**: Safe singleton factory and mastercopy contracts are **NOT DEPLOYED** on QIE Mainnet (1990) or QIE Testnet (1983).
+
+---
+
 ## 1. Executive Summary
 
-This assessment evaluates the technical and operational viability of deploying and operating canonical Gnosis Safe multisig smart contracts on the QIE EVM blockchain (Chain ID 1990 for Mainnet, Chain ID 1983 for Testnet).
+This assessment evaluates the technical and operational viability of deploying and operating Gnosis Safe multisig smart contracts on the QIE EVM blockchain (Chain ID 1990 for Mainnet, Chain ID 1983 for Testnet).
 
 | Evaluation Dimension | Finding | Impact on ORAKL | Status |
 | :--- | :--- | :--- | :--- |

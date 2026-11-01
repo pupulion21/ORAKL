@@ -20,6 +20,10 @@
 - **Limitation**: Each market supports one active resolution proposal at a time. If challenged, it transitions directly to `DISPUTED` state for arbitration.
 - **Design Consequence**: There is no recursive or branching proposal tree. This deliberately simplifies market state machines and prevents unbounded gas exhaustion attacks.
 
+### 1.4 Local Multi-Sig Test Double (Safe3Of5.sol) & Blocked Official Safe Integration
+- **Limitation**: Official Safe Global contracts (`@safe-global/safe-contracts`) are NOT integrated into local dependencies. Official contract integration is **BLOCKED** due to external dependency pinning constraints and Solc compiler versioning (pinned to 0.8.37). Local tests execute against a custom test fixture (`Safe3Of5.sol`).
+- **Design Consequence**: Passing local governance tests verifies `ProtocolConfig` role mechanics with a 3-of-5 threshold test double, but does NOT constitute verification of official Safe Global smart contracts or real Safe deployment.
+
 ---
 
 ## 2. Off-Chain Service Limitations

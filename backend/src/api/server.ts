@@ -1239,8 +1239,15 @@ export async function resolveTrustedDeployment(
     }
   }
 
-  // 1. Explicit config override (trusted factory address from config / env)
+  // 1. Explicit config override (STRICTLY ISOLATED TO TESTS)
   if (config.trustedFactory) {
+    if (process.env.NODE_ENV !== "test" || !config.allowTestFactoryOverride) {
+      throw new HttpError(
+        503,
+        "DEPLOYMENT_UNAVAILABLE",
+        "trustedFactory override shortcut is strictly prohibited outside isolated unit testing",
+      );
+    }
     if (!/^0x[0-9a-fA-F]{40}$/.test(config.trustedFactory) || config.trustedFactory.toLowerCase() === "0x0000000000000000000000000000000000000000") {
       throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid trustedFactory address: ${config.trustedFactory}`);
     }
@@ -1346,23 +1353,32 @@ export async function resolveTrustedDeployment(
     }
   }
 
-  // Layer 9: Database Deployment Identity Consistency
+  // Layer 9: Database Deployment Identity Consistency (FAIL CLOSED)
   if (prisma) {
+    let dbDep;
     try {
-      const dbDep = await prisma.contractDeployment.findFirst({
+      dbDep = await prisma.contractDeployment.findFirst({
         where: { chainId: config.chainId },
         orderBy: { createdAt: "desc" },
       });
-      if (dbDep) {
-        if (
-          dbDep.factoryAddress.toLowerCase() !== factory.toLowerCase() ||
-          dbDep.protocolConfigAddress.toLowerCase() !== protocolConfig.toLowerCase()
-        ) {
-          throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "deployment manifest and database deployment record mismatch");
-        }
+    } catch (dbErr) {
+      if (dbErr instanceof HttpError) throw dbErr;
+      throw new HttpError(
+        503,
+        "DEPLOYMENT_UNAVAILABLE",
+        `database deployment verification failed due to database outage: ${dbErr instanceof Error ? dbErr.message : String(dbErr)}`,
+      );
+    }
+
+    if (dbDep) {
+      if (
+        dbDep.factoryAddress.toLowerCase() !== factory.toLowerCase() ||
+        dbDep.protocolConfigAddress.toLowerCase() !== protocolConfig.toLowerCase()
+      ) {
+        throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "deployment manifest and database deployment record mismatch");
       }
-    } catch (err) {
-      if (err instanceof HttpError) throw err;
+    } else if (config.requireDbDeploymentRecord) {
+      throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "missing required deployment record in database for configured chain");
     }
   }
 

@@ -27,6 +27,59 @@ async function rpcCall(endpoint, method, params = []) {
   }
 }
 
+async function probeOpcodes(activeEp) {
+  const push0Bytecode = '0x60425f5360015ff3'; // PUSH1 0x42, PUSH0, MSTORE8, PUSH1 0x01, PUSH0, RETURN
+  const tstoreBytecode = '0x604260005d60005c60005360016000f3'; // TSTORE & TLOAD sequence
+
+  const push0Req = { jsonrpc: '2.0', id: 101, method: 'eth_call', params: [{ data: push0Bytecode }, 'latest'] };
+  const tstoreReq = { jsonrpc: '2.0', id: 102, method: 'eth_call', params: [{ data: tstoreBytecode }, 'latest'] };
+
+  let push0Res = null;
+  let tstoreRes = null;
+
+  try {
+    const res = await fetch(activeEp, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(push0Req),
+    });
+    push0Res = await res.json();
+  } catch (err) {
+    push0Res = { error: { message: err.message } };
+  }
+
+  try {
+    const res = await fetch(activeEp, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tstoreReq),
+    });
+    tstoreRes = await res.json();
+  } catch (err) {
+    tstoreRes = { error: { message: err.message } };
+  }
+
+  const push0Supported = push0Res?.result === '0x42';
+  const tstoreSupported = tstoreRes?.result === '0x42';
+
+  return {
+    push0: {
+      status: push0Supported ? 'SUPPORTED' : 'UNSUPPORTED',
+      bytecode: push0Bytecode,
+      rawRequest: push0Req,
+      rawResponse: push0Res,
+    },
+    tstore: {
+      status: tstoreSupported ? 'SUPPORTED' : 'UNSUPPORTED',
+      bytecode: tstoreBytecode,
+      rawRequest: tstoreReq,
+      rawResponse: tstoreRes,
+      errorDetail: tstoreRes?.error?.message || null,
+    },
+    evmHardforkObservation: push0Supported && !tstoreSupported ? 'Shanghai' : push0Supported && tstoreSupported ? 'Cancun' : 'Paris or Earlier',
+  };
+}
+
 async function probeNetwork(name, expectedChainId, endpoints) {
   const result = {
     network: name,
@@ -117,6 +170,8 @@ async function probeNetwork(name, expectedChainId, endpoints) {
       avgBlockTimeSec = blockDiff > 0 ? (timeDiff / blockDiff).toFixed(2) : null;
     }
 
+    const opcodeProbe = await probeOpcodes(activeEp);
+
     result.profile = {
       clientVersion,
       latestBlockNumber: blockNum,
@@ -128,6 +183,7 @@ async function probeNetwork(name, expectedChainId, endpoints) {
       avgBlockTimeSec,
       sampleBlocks: blockSamples,
       feeHistorySample: feeHistory,
+      opcodes: opcodeProbe,
     };
   } catch (err) {
     result.profileError = err.message;

@@ -15,6 +15,7 @@
 | **Regulatory & Operational Compliance** | 2 | 2 Drafted | 2 (Counsel Opinion & Parameters) |
 | **QIE Blockchain Infrastructure & SRE** | 3 | 2 Verified | 1 (Public RPC Redundancy) |
 | **Backend & Deployment Trust** | 3 | 3 Passed (Local) | 0 (Technical Implementation Complete) |
+| **Official Safe Global Integration** | 1 | 0 (Blocked) | 1 (Official Safe Integration Blocked) |
 
 ---
 
@@ -56,3 +57,10 @@
 - **Remediation**:
   1. Coordinate with QIE node operators to restore `rpc1testnet`.
   2. Configure multi-region load-balanced RPC proxies with automated health checks in backend service.
+
+### Blocker 6: Official Safe Global Contracts Integration
+- **Status**: **BLOCKING (Safe Integration Blocked)**
+- **Impact**: Official Safe Global contracts (`@safe-global/safe-contracts`) are not present in local dependencies (dependency pinning and multi-compiler constraints). Local tests use the custom test fixture `Safe3Of5.sol`. Real Safe integration has not occurred.
+- **Remediation**:
+  1. Once Safe Global contracts or standalone Paris/Shanghai artifacts are published for QIE, integrate and verify on isolated testnet.
+  2. Perform official Safe singleton deployment and proxy factory deployment on QIE.

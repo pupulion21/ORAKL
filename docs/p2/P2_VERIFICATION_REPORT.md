@@ -29,7 +29,7 @@ All technical implementation, architecture, research, and verification objective
 - **Skipped**: 0
 - **Execution Time**: 97.77s (206.63s CPU time)
 - **Breakdown**:
-  - `SafeGovernanceTest`: 9/9 tests passed (3-of-5 threshold enforcement, address sorting, nonce replay defense, 24-hour timelock, pause interrupt).
+  - `SafeGovernanceTest`: 9/9 tests passed (verifying 3-of-5 threshold enforcement, address sorting, nonce replay defense, 24-hour timelock, and pause interrupt against custom test fixture `Safe3Of5.sol`. Official Safe Global contract integration is **BLOCKED**).
   - `OraklInvariantTest`: 16/16 formal invariants verified across 8,192 calls and 128 runs with 0 reverts (solvency conservation, no double claims, payout bounds, fee isolation, bond isolation, etc.).
   - `SelectedInvariantTest`: Continuous state invariant fuzzing passed in 41.44s.
   - `AccountingFuzzTest`: Fuzz tests passed with 2,048 runs each across payout rounding, ladder split, and variable participants.
@@ -38,12 +38,12 @@ All technical implementation, architecture, research, and verification objective
 ### 2.2 Backend Vitest Test Suite
 - **Command**: `npm --prefix backend test`
 - **Test Files**: 9 passed (9)
-- **Total Tests Executed**: 133
-- **Passed**: 133
+- **Total Tests Executed**: 139
+- **Passed**: 139
 - **Failed**: 0
-- **Duration**: 17.68s
+- **Duration**: ~17s
 - **Breakdown**:
-  - `deployment-trust.test.ts`: 10/10 tests passed (10-layer deployment validation pipeline, codehash verification, cached deployment with freshness TTL and invalidation).
+  - `deployment-trust.test.ts`: 16/16 tests passed (10-layer deployment validation pipeline, codehash verification, cached deployment with freshness TTL and invalidation, fail-closed database outage handling, forged manifest rejection, and strict isolation of `TRUSTED_FACTORY`).
   - `publication-auth.test.ts`: 16/16 tests passed (EIP-712 / EIP-191 replay protection, atomic nonce consumption).
   - `indexer.test.ts`: 15/15 tests passed (PostgreSQL event ingestion, canonical reorg fork rollback & replay).
   - `api.test.ts`: 35/35 tests passed (Fastify API endpoints, query filters, pagination).
@@ -85,8 +85,8 @@ All technical implementation, architecture, research, and verification objective
 ## 3. QIE Blockchain EVM & Infrastructure Findings
 
 1. **Opcode Profile (Shanghai Hardfork Level)**:
-   - `PUSH0` (`0x5f`): Supported on QIE Mainnet (1990) and QIE Testnet (1983).
-   - `TSTORE`/`TLOAD` (`0x5d`/`0x5c`): Unsupported on QIE (reverts with `invalid opcode`).
+   - `PUSH0` (`0x5f`): **SUPPORTED** on QIE Mainnet (1990) and QIE Testnet (1983). Verified via live reproducible `eth_call` probe using bytecode `0x60425f5360015ff3`, returning `0x42`. Raw request/response logged in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json).
+   - `TSTORE`/`TLOAD` (`0x5d`/`0x5c`): **UNSUPPORTED** on QIE Mainnet and Testnet. Verified via live reproducible `eth_call` probe using bytecode `0x604260005d60005c60005360016000f3`, returning error `invalid opcode: opcode 0x5d not defined`.
    - ORAKL contracts compiled targeting `paris` are **100% compatible** and avoid transient storage opcodes.
 2. **Bytecode Size Limits (EIP-170)**:
    - `SelectedMarketFactory`: 19,084 B runtime code (margin: 5,492 B < 24,576 B cap).
@@ -95,3 +95,8 @@ All technical implementation, architecture, research, and verification objective
    - `https://rpc1testnet.qie.digital/`: Port 443 refused connection (Documented in Risk Register).
    - `https://rpc2testnet.qie.digital/`: Active and responsive (Block ~9.5M, gasPrice 7 wei).
    - `https://rpc1mainnet.qie.digital/` & `rpc2mainnet.qie.digital`: Active and responsive (Block ~11.6M, gasPrice ~1.125 Gwei).
+4. **On-Chain & Local Artifact Verification**:
+   - Executed [`scripts/p2/verify-deployment.mjs`](file:///home/pupulion/orakl/scripts/p2/verify-deployment.mjs): verified local compiled Foundry artifact ABI sha256 hashes against deployment manifest, verified immutable linkage, and confirmed fail-closed execution.
+5. **Multi-Sig Governance Scope**:
+   - `Safe3Of5.sol` is a custom test fixture simulating 3-of-5 threshold mechanics.
+   - Official Safe Global contract integration into local test suite is **BLOCKED** due to external dependency pinning constraints. Real Safe integration is **NOT** claimed.

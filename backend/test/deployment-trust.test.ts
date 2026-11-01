@@ -207,4 +207,116 @@ describe("P2-04: Trusted Deployment 10-Layer Hardening & Caching", () => {
     // Now it must reload and fail because file is corrupted
     await expect(resolveTrustedDeployment(config)).rejects.toThrow("trusted deployment manifest contains invalid JSON");
   });
+
+  it("Layer 9: fails closed on database outage during deployment verification", async () => {
+    const manifestPath = path.join(TMP_DIR, "db-outage.json");
+    writeFileSync(manifestPath, JSON.stringify(createMockManifest()), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+    });
+
+    const mockPrismaOutage = {
+      contractDeployment: {
+        findFirst: async () => {
+          throw new Error("P1001: Can't reach database server at postgresql://localhost:5432");
+        },
+      },
+    } as any;
+
+    await expect(resolveTrustedDeployment(config, mockPrismaOutage)).rejects.toThrow(
+      "database deployment verification failed due to database outage",
+    );
+  });
+
+  it("Layer 9: fails closed on forged manifest when database record has different factory", async () => {
+    const manifestPath = path.join(TMP_DIR, "db-mismatch.json");
+    writeFileSync(manifestPath, JSON.stringify(createMockManifest()), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+    });
+
+    const mockPrismaMismatch = {
+      contractDeployment: {
+        findFirst: async () => ({
+          factoryAddress: "0x9999999999999999999999999999999999999999",
+          protocolConfigAddress: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+        }),
+      },
+    } as any;
+
+    await expect(resolveTrustedDeployment(config, mockPrismaMismatch)).rejects.toThrow(
+      "deployment manifest and database deployment record mismatch",
+    );
+  });
+
+  it("Layer 9: accepts when database record matches manifest factory and config", async () => {
+    const manifestPath = path.join(TMP_DIR, "db-match.json");
+    writeFileSync(manifestPath, JSON.stringify(createMockManifest()), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+    });
+
+    const mockPrismaMatch = {
+      contractDeployment: {
+        findFirst: async () => ({
+          factoryAddress: "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
+          protocolConfigAddress: "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+        }),
+      },
+    } as any;
+
+    const trusted = await resolveTrustedDeployment(config, mockPrismaMatch);
+    expect(trusted.factory).toBe("0xdc64a140aa3e981100a9beca4e685f962f0cf6c9");
+  });
+
+  it("Layer 9: fails closed when requireDbDeploymentRecord is true and record is missing", async () => {
+    const manifestPath = path.join(TMP_DIR, "db-missing.json");
+    writeFileSync(manifestPath, JSON.stringify(createMockManifest()), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+      REQUIRE_DB_DEPLOYMENT: "true",
+    });
+
+    const mockPrismaEmpty = {
+      contractDeployment: {
+        findFirst: async () => null,
+      },
+    } as any;
+
+    await expect(resolveTrustedDeployment(config, mockPrismaEmpty)).rejects.toThrow(
+      "missing required deployment record in database",
+    );
+  });
+
+  it("Strict isolation: rejects trustedFactory when allowTestFactoryOverride is false", async () => {
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      TRUSTED_FACTORY: "0x2222222222222222222222222222222222222222",
+    });
+    // Manually disable allowTestFactoryOverride
+    config.allowTestFactoryOverride = false;
+
+    await expect(resolveTrustedDeployment(config)).rejects.toThrow(
+      "trustedFactory override shortcut is strictly prohibited outside isolated unit testing",
+    );
+  });
+
+  it("Strict isolation: accepts trustedFactory when allowTestFactoryOverride is true in test environment", async () => {
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      TRUSTED_FACTORY: "0x2222222222222222222222222222222222222222",
+      ALLOW_TEST_FACTORY_OVERRIDE: "true",
+    });
+
+    const trusted = await resolveTrustedDeployment(config);
+    expect(trusted.factory).toBe("0x2222222222222222222222222222222222222222");
+  });
 });

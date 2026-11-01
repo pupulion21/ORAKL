@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-11-01T04:45:54.797Z",
+  "generatedAt": "2026-11-01T05:26:34.457Z",
   "purpose": "ORAKL P2-01 QIE Compatibility & EVM Profile Assessment",
   "safetyBoundary": "Strictly read-only; no accounts, no private keys, zero public transactions.",
   "networks": {
     "qie-testnet": {
       "network": "qie-testnet",
       "expectedChainId": 1983,
-      "probedAt": "2026-11-01T04:45:52.305Z",
+      "probedAt": "2026-11-01T05:26:31.506Z",
       "endpoints": {
         "https://rpc1testnet.qie.digital/": {
           "reachable": false,
@@ -15,15 +15,15 @@
         "https://rpc2testnet.qie.digital/": {
           "reachable": true,
           "chainId": 1983,
-          "latencyMs": 219,
+          "latencyMs": 231,
           "chainMatch": true
         }
       },
       "effectiveActiveEndpoint": "https://rpc2testnet.qie.digital/",
       "profile": {
         "clientVersion": "Version dev ()\nCompiled at  using Go go1.22.12 (amd64)",
-        "latestBlockNumber": 9496650,
-        "latestBlockHash": "0x7d23602f8b87c15e3c520dc5c8c8d88d4d4b7335607bbd58cde68dab269a4ee4",
+        "latestBlockNumber": 9497212,
+        "latestBlockHash": "0x44b2c9ce837abed8629b63c86fb7f266aa74e9b249d34c11d2e4c5c2435b6747",
         "blockGasLimit": 4294967295,
         "gasPriceWei": "7",
         "eip1559Supported": true,
@@ -31,40 +31,40 @@
         "avgBlockTimeSec": "4.50",
         "sampleBlocks": [
           {
-            "number": 9496650,
-            "timestamp": 1793508346,
+            "number": 9497212,
+            "timestamp": 1793510786,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "7",
             "extraData": "0x"
           },
           {
-            "number": 9496649,
-            "timestamp": 1793508341,
+            "number": 9497211,
+            "timestamp": 1793510781,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "7",
             "extraData": "0x"
           },
           {
-            "number": 9496648,
-            "timestamp": 1793508337,
+            "number": 9497210,
+            "timestamp": 1793510777,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "7",
             "extraData": "0x"
           },
           {
-            "number": 9496647,
-            "timestamp": 1793508333,
+            "number": 9497209,
+            "timestamp": 1793510773,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "7",
             "extraData": "0x"
           },
           {
-            "number": 9496646,
-            "timestamp": 1793508328,
+            "number": 9497208,
+            "timestamp": 1793510768,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "7",
@@ -72,7 +72,7 @@
           }
         ],
         "feeHistorySample": {
-          "oldestBlock": "0x90e847",
+          "oldestBlock": "0x90ea79",
           "reward": [
             [
               "0x0",
@@ -108,73 +108,120 @@
             0,
             0
           ]
+        },
+        "opcodes": {
+          "push0": {
+            "status": "SUPPORTED",
+            "bytecode": "0x60425f5360015ff3",
+            "rawRequest": {
+              "jsonrpc": "2.0",
+              "id": 101,
+              "method": "eth_call",
+              "params": [
+                {
+                  "data": "0x60425f5360015ff3"
+                },
+                "latest"
+              ]
+            },
+            "rawResponse": {
+              "jsonrpc": "2.0",
+              "id": 101,
+              "result": "0x42"
+            }
+          },
+          "tstore": {
+            "status": "UNSUPPORTED",
+            "bytecode": "0x604260005d60005c60005360016000f3",
+            "rawRequest": {
+              "jsonrpc": "2.0",
+              "id": 102,
+              "method": "eth_call",
+              "params": [
+                {
+                  "data": "0x604260005d60005c60005360016000f3"
+                },
+                "latest"
+              ]
+            },
+            "rawResponse": {
+              "jsonrpc": "2.0",
+              "id": 102,
+              "error": {
+                "code": -32000,
+                "message": "rpc error: code = Internal desc = invalid opcode: opcode 0x5d not defined"
+              }
+            },
+            "errorDetail": "rpc error: code = Internal desc = invalid opcode: opcode 0x5d not defined"
+          },
+          "evmHardforkObservation": "Shanghai"
         }
       }
     },
     "qie-mainnet": {
       "network": "qie-mainnet",
       "expectedChainId": 1990,
-      "probedAt": "2026-11-01T04:45:53.413Z",
+      "probedAt": "2026-11-01T05:26:32.836Z",
       "endpoints": {
         "https://rpc1mainnet.qie.digital/": {
           "reachable": true,
           "chainId": 1990,
-          "latencyMs": 204,
+          "latencyMs": 308,
           "chainMatch": true
         },
         "https://rpc2mainnet.qie.digital/": {
           "reachable": true,
           "chainId": 1990,
-          "latencyMs": 317,
+          "latencyMs": 325,
           "chainMatch": true
         }
       },
       "effectiveActiveEndpoint": "https://rpc1mainnet.qie.digital/",
       "profile": {
         "clientVersion": "Version dev ()\nCompiled at  using Go go1.22.2 (amd64)",
-        "latestBlockNumber": 11589191,
-        "latestBlockHash": "0xa49fffdaf08f0ca4390af457c0e08f990c210c633c2dc5afba973a77b80c761b",
+        "latestBlockNumber": 11589864,
+        "latestBlockHash": "0xfd20d3273b22a39ce185ed3a458001fec36789b0d18b4357eda9a5f3b43d8db9",
         "blockGasLimit": 4294967295,
         "gasPriceWei": "1125000000",
         "eip1559Supported": true,
         "baseFeePerGas": "1000000000",
-        "avgBlockTimeSec": "3.75",
+        "avgBlockTimeSec": "3.50",
         "sampleBlocks": [
           {
-            "number": 11589191,
-            "timestamp": 1793508349,
+            "number": 11589864,
+            "timestamp": 1793510789,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "1000000000",
             "extraData": "0x"
           },
           {
-            "number": 11589190,
-            "timestamp": 1793508345,
+            "number": 11589863,
+            "timestamp": 1793510785,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "1000000000",
             "extraData": "0x"
           },
           {
-            "number": 11589189,
-            "timestamp": 1793508341,
+            "number": 11589862,
+            "timestamp": 1793510782,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "1000000000",
             "extraData": "0x"
           },
           {
-            "number": 11589188,
-            "timestamp": 1793508338,
+            "number": 11589861,
+            "timestamp": 1793510778,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "1000000000",
             "extraData": "0x"
           },
           {
-            "number": 11589187,
-            "timestamp": 1793508334,
+            "number": 11589860,
+            "timestamp": 1793510775,
             "gasLimit": 4294967295,
             "gasUsed": 0,
             "baseFeePerGas": "1000000000",
@@ -182,7 +229,7 @@
           }
         ],
         "feeHistorySample": {
-          "oldestBlock": "0xb0d644",
+          "oldestBlock": "0xb0d8e5",
           "reward": [
             [
               "0x0",
@@ -218,6 +265,53 @@
             0,
             0
           ]
+        },
+        "opcodes": {
+          "push0": {
+            "status": "SUPPORTED",
+            "bytecode": "0x60425f5360015ff3",
+            "rawRequest": {
+              "jsonrpc": "2.0",
+              "id": 101,
+              "method": "eth_call",
+              "params": [
+                {
+                  "data": "0x60425f5360015ff3"
+                },
+                "latest"
+              ]
+            },
+            "rawResponse": {
+              "jsonrpc": "2.0",
+              "id": 101,
+              "result": "0x42"
+            }
+          },
+          "tstore": {
+            "status": "UNSUPPORTED",
+            "bytecode": "0x604260005d60005c60005360016000f3",
+            "rawRequest": {
+              "jsonrpc": "2.0",
+              "id": 102,
+              "method": "eth_call",
+              "params": [
+                {
+                  "data": "0x604260005d60005c60005360016000f3"
+                },
+                "latest"
+              ]
+            },
+            "rawResponse": {
+              "jsonrpc": "2.0",
+              "id": 102,
+              "error": {
+                "code": -32000,
+                "message": "rpc error: code = Internal desc = invalid opcode: opcode 0x5d not defined"
+              }
+            },
+            "errorDetail": "rpc error: code = Internal desc = invalid opcode: opcode 0x5d not defined"
+          },
+          "evmHardforkObservation": "Shanghai"
         }
       }
     }

@@ -53,17 +53,29 @@ flowchart TD
 | **Layer 6** | **Runtime Bytecode Codehash Verification** | Missing codehash or mismatch against expected codehash | Surrogate / proxy contract masquerading as factory |
 | **Layer 7** | **Approved ABI Identity** | `mode !== "local-selected"` or missing `abiSha256` | Incompatible or legacy ABI spoofing |
 | **Layer 8** | **Environment Segregation** | `status !== "LOCAL_SIMULATION"` or `safety.publicDeployment === true` | Public mainnet/testnet configurations loaded into dev environment |
-| **Layer 9** | **Database Identity Consistency** | Prisma DB `contractDeployment` record has differing address | Database-manifest desynchronization |
+| **Layer 9** | **Database Identity Consistency (FAIL CLOSED)** | DB query fails (outage/timeout) or Prisma DB `contractDeployment` record has differing address | Database outage, manifest desynchronization, rogue deployment insertion |
 | **Layer 10** | **Fail-Closed Enforcement** | Any layer fails or throws | Complete rejection (503 HTTP status) without fallback |
 
 ---
 
-## 3. Authenticated Deployment Caching Architecture
+## 3. Strict Isolation of the `TRUSTED_FACTORY` Test Shortcut
 
-### 3.1 Purpose & Risk Mitigation
+In earlier iterations, `config.trustedFactory` allowed bypassing manifest reads during unit tests. To eliminate any security vulnerability in staging or production:
+1. **Production & Non-Test Rejection**:
+   `loadConfig()` strictly throws `SECURITY_ERROR: TRUSTED_FACTORY shortcut is forbidden outside NODE_ENV=test` if `TRUSTED_FACTORY` is set when `NODE_ENV !== "test"`.
+2. **Explicit Test Opt-in Required**:
+   `resolveTrustedDeployment()` throws 503 `DEPLOYMENT_UNAVAILABLE` unless both `process.env.NODE_ENV === "test"` and `config.allowTestFactoryOverride === true`.
+3. **No Production Bypass**:
+   Under all staging, public, and production configurations, every request is strictly bound to the 10-layer validated deployment manifest.
+
+---
+
+## 4. Authenticated Deployment Caching Architecture
+
+### 4.1 Purpose & Risk Mitigation
 Under high read/write volume, resolving file manifests from disk and querying database tables on every single HTTP endpoint request introduces latency and file I/O contention.
 
-### 3.2 Cache Mechanics
+### 4.2 Cache Mechanics
 1. **Cache Keying**:
    The cache key uniquely compounds the environment variables:
    ```typescript
@@ -78,9 +90,9 @@ Under high read/write volume, resolving file manifests from disk and querying da
 
 ---
 
-## 4. Verification Evidence
+## 5. Verification Evidence
 
-The 10-layer pipeline and cache mechanics are validated by an automated test suite in `backend/test/deployment-trust.test.ts`:
+The 10-layer pipeline, fail-closed database handling, and cache mechanics are validated by an automated test suite in `backend/test/deployment-trust.test.ts`:
 - `passes all 10 layers for a valid local simulation manifest`: **PASS**
 - `Layer 1: rejects when manifest file is missing or unreadable`: **PASS**
 - `Layer 2: rejects when chainId does not match server config`: **PASS**
@@ -91,5 +103,11 @@ The 10-layer pipeline and cache mechanics are validated by an automated test sui
 - `Layer 7: rejects when abiSha256 is missing or invalid`: **PASS**
 - `Layer 8: rejects manifest with publicDeployment=true in local simulation mode`: **PASS**
 - `caches trusted deployment and honors freshness TTL and invalidation`: **PASS**
+- `Layer 9: fails closed on database outage during deployment verification`: **PASS**
+- `Layer 9: fails closed on forged manifest when database record has different factory`: **PASS**
+- `Layer 9: accepts when database record matches manifest factory and config`: **PASS**
+- `Layer 9: fails closed when requireDbDeploymentRecord is true and record is missing`: **PASS**
+- `Strict isolation: rejects trustedFactory when allowTestFactoryOverride is false`: **PASS**
+- `Strict isolation: accepts trustedFactory when allowTestFactoryOverride is true in test environment`: **PASS**
 
-All 10 test cases execute and pass deterministically.
+All 16 test cases execute and pass deterministically.

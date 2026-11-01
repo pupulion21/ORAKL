@@ -37,6 +37,7 @@ flowchart LR
 | **BLK-04** | **Economics** | Formal Calibration & Approval of Production Parameters | Formal approval of protocol parameters (protocol fee `feeBps`, creation bond `creationBond`, proposal bond `proposalBond`, challenge bond `challengeBond`, pool caps `poolCap`, global unresolved cap `globalUnresolvedCap`). Current values are provisional engineering test fixtures. | **BLOCKING (Pending Economic Approval)** |
 | **BLK-05** | **Infrastructure** | QIE Blockchain RPC & Node SRE Redundancy | Resolution of public testnet RPC connectivity (`rpc1testnet` port 443 refused), multi-region fallback RPC nodes, and automated node health monitoring. | **BLOCKING (Pending SRE Fix)** |
 | **BLK-06** | **Operational** | Emergency Incident Response Runbook Rehearsal | Full dry-run rehearsal of emergency circuit breaker (`pause()`), compliance release re-approval (`approveRelease()`), and 24-hour timelock delay on a private staging testnet. | **BLOCKING (Pending Staging Drill)** |
+| **BLK-07** | **Integration** | Official Safe Global Contracts Integration & QIE Deployment | Integration and on-chain verification of actual official Safe Global contracts rather than the local test fixture `Safe3Of5.sol`. Local integration is reported BLOCKED due to pinned dependency and compiler constraints. | **BLOCKING (Safe Integration Blocked)** |
 
 ---
 

@@ -3,10 +3,12 @@ pragma solidity 0.8.37;
 
 import {IMultisig} from "../../src/interfaces/IMultisig.sol";
 
-/// @title Safe3Of5 — Faithful Safe v1.3.0/v1.4.1 Execution Architecture for ORAKL P2
-/// @notice Implements canonical GnosisSafe EIP-712 domain separation, ascending signature sorting,
-///         threshold verification (3 of 5), and nonce replay protection.
-///         Used for local Anvil and Foundry integration testing of production governance.
+/// @title Safe3Of5 — Custom Multi-Sig 3-of-5 Test Fixture for ORAKL P2
+/// @notice Custom test fixture simulating 3-of-5 threshold signature verification,
+///         EIP-712 domain separation, ascending signer sorting, and nonce replay defense.
+///         DISCLOSURE: This is a custom test fixture, NOT canonical or official Safe Global contracts.
+///         No real Safe Global integration is claimed. Used solely as an isolated local test double
+///         to verify ORAKL ProtocolConfig role mechanics in Foundry and Anvil.
 contract Safe3Of5 is IMultisig {
     enum Operation {
         Call,

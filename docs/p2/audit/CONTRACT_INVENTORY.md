@@ -28,8 +28,8 @@ The following governance and testing contracts are used to verify multi-signatur
 
 | Contract Name | Source File | Compiler Target | Role in Verification | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **`Safe3Of5`** | `contracts/test/governance/Safe3Of5.sol` | Solidity `0.8.37` (Paris) | Canonical Safe EIP-712 multisig contract with threshold 3-of-5 | Implements threshold validation, ascending signature ordering, and nonce replay defense matching Safe v1.3.0/v1.4.1 mechanics |
-| **`SafeGovernanceTest`** | `contracts/test/governance/SafeGovernance.t.sol` | Solidity `0.8.37` (Paris) | 9 integration tests verifying Safe threshold enforcement and timelock delays | Simulates 5 independent disposable signers interacting with `ProtocolConfig` |
+| **`Safe3Of5`** | `contracts/test/governance/Safe3Of5.sol` | Solidity `0.8.37` (Paris) | Custom test fixture simulating 3-of-5 multisig mechanics | Custom test double; NOT official Safe Global contracts. Official Safe integration is reported BLOCKED. |
+| **`SafeGovernanceTest`** | `contracts/test/governance/SafeGovernance.t.sol` | Solidity `0.8.37` (Paris) | 9 integration tests verifying multi-signature threshold enforcement and timelock delays | Simulates 5 independent disposable signers interacting with `ProtocolConfig` using `Safe3Of5.sol` |
 
 ---
 

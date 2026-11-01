@@ -6,9 +6,19 @@
 
 ---
 
+> [!IMPORTANT]
+> **TARGET ARCHITECTURE SPECIFICATION — LOCAL TEST FIXTURE DISCLOSURE**  
+> This specification describes the proposed institutional governance architecture designed for future production deployment using Gnosis Safe 3-of-5 multi-signatures.  
+> **Crucial Disclosures:**  
+> 1. All local Anvil/Foundry tests execute against a custom test fixture ([`Safe3Of5.sol`](file:///home/pupulion/orakl/contracts/test/governance/Safe3Of5.sol)), **NOT** official or canonical Safe Global contracts.  
+> 2. Official Safe Global contract integration into local tests is **BLOCKED** due to external dependency pinning constraints and differing Solc versions.  
+> 3. No Safe contracts or hosted Safe infrastructure are currently deployed on QIE networks.
+
+---
+
 ## 1. Governance Architecture Overview
 
-The ORAKL protocol eliminates single-party administrative keys and local mock assumptions by structuring all privileged controls across three independent multi-signature domains built on canonical Safe contracts (Safe v1.3.0 / v1.4.1 architecture) alongside a dedicated rapid-response Guardian account.
+The ORAKL protocol targets an institutional governance model eliminating single-party administrative keys by structuring privileged controls across three independent multi-signature domains (targeted as Safe 3-of-5 multisigs for production) alongside a dedicated rapid-response Guardian account.
 
 ```mermaid
 flowchart TD

@@ -30,15 +30,17 @@ All six work packages (ORAKL-P2-01 through ORAKL-P2-06) have been completed, ver
 - Produced `SELECTED_CONTRACT_COMPATIBILITY.md`, `CONTRACT_BYTECODE_IDENTITY.md`, and `DEPLOYMENT_CONSTRAINTS.md`.
 
 ### P2-03: Safe Multisig 3-of-5 Governance Architecture & Local Fixture
-- Replaced mock role assumptions with canonical Safe 3-of-5 architecture across Governance Safe, Compliance Safe, and Arbitration Authority.
-- Implemented `contracts/test/governance/Safe3Of5.sol` enforcing genuine EIP-712 domain separation, ascending signer sorting, and nonce replay defense.
-- Implemented `contracts/test/governance/SafeGovernance.t.sol` with 9 passing integration tests verifying threshold enforcement, timelock delays, and pause circuit breaker interrupts.
+- Replaced mock role assumptions with an institutional 3-of-5 multisig governance architecture specification.
+- Implemented `contracts/test/governance/Safe3Of5.sol` as a custom test fixture enforcing simulated EIP-712 domain separation, ascending signer sorting, and nonce replay defense. Official Safe Global integration is reported BLOCKED due to dependency pinning and compiler constraints.
+- Implemented `contracts/test/governance/SafeGovernance.t.sol` with 9 passing integration tests verifying threshold enforcement, timelock delays, and pause circuit breaker interrupts using the custom test double.
 - Produced `SAFE_GOVERNANCE_ARCHITECTURE.md`, `GOVERNANCE_AUTHORITY_MATRIX.md`, `SAFE_COMPATIBILITY_ASSESSMENT.md`, `EMERGENCY_RECOVERY_RUNBOOK.md`, and `SAFE_LOCAL_VERIFICATION.md`.
 
 ### P2-04: Trusted Deployment 10-Layer Hardening & Authenticated Caching
 - Hardened `resolveTrustedDeployment()` in `backend/src/api/server.ts` with a 10-layer validation pipeline covering origin, chain ID, addresses, linkage, Keccak-256 runtime codehash, ABI hash, and environment segregation.
+- Implemented fail-closed database identity verification on DB outages or forged deployment records.
+- Strictly isolated `TRUSTED_FACTORY` override to isolated test execution (`allowTestFactoryOverride` + `NODE_ENV=test`); forbidden in all non-test environments.
 - Implemented authenticated deployment caching with freshness TTL and `invalidateDeploymentCache()`.
-- Added 10 passing Vitest tests in `backend/test/deployment-trust.test.ts`.
+- Added 16 passing Vitest regression tests in `backend/test/deployment-trust.test.ts`.
 - Produced `DEPLOYMENT_IDENTITY_TRUST_MODEL.md`.
 
 ### P2-05: Independent Security Audit Preparation Package

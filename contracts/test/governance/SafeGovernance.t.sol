@@ -8,6 +8,9 @@ import {IProtocolConfig} from "../../src/interfaces/IProtocolConfig.sol";
 import {SelectedMarketFactory} from "../../src/SelectedMarketFactory.sol";
 import {ProtocolTypes as T} from "../../src/libraries/ProtocolTypes.sol";
 
+/// @notice Integration tests verifying multi-signature 3-of-5 role governance in ProtocolConfig.
+///         Uses the custom local test fixture Safe3Of5.sol.
+///         DISCLOSURE: This is an isolated local test double, NOT official Safe Global contracts.
 contract SafeGovernanceTest is TestBase {
     Safe3Of5 public govSafe;
     Safe3Of5 public compSafe;
