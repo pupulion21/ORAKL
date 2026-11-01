@@ -7,8 +7,8 @@ This document records the execution results, arithmetic reconciliations, and emp
 
 - **Execution Script**: [`scripts/p1/run-e2e-scenarios.mjs`](file:///home/pupulion/orakl/scripts/p1/run-e2e-scenarios.mjs)
 - **Target Contracts**:
-  - `SelectedMarketFactory`: `0x998abeb3E57409262aE5b751f60747921B33613E`
-  - `ProtocolConfig`: `0x95401dc811bb5740090279Ba06cfA8fcF6113778`
+  - `SelectedMarketFactory`: `0x8f86403A4DE0BB5791fa46B8e795C547942fE4Cf`
+  - `ProtocolConfig`: `0x0E801D84Fa97b50751Dbf25036d067dCf18858bF`
 - **Execution Date**: 2026-10-31
 - **Overall Status**: `PASSED` (56/56 On-Chain Transactions Verified)
 
@@ -21,7 +21,7 @@ This document records the execution results, arithmetic reconciliations, and emp
 | **Scenario A** (Binary Reversal) | 0 | 14 | **PASSED** | 44.0 ETH | 43.4 ETH | 0.6 ETH (2%) | **0 WEI** |
 | **Scenario B** (Neutral INVALID) | 1 | 14 | **PASSED** | 34.0 ETH | 34.0 ETH | 0.0 ETH (0%) | **0 WEI** |
 | **Scenario C** (Emergency Pause) | 2 | 20 | **PASSED** | 42.0 ETH | 42.0 ETH | 0.0 ETH (0%) | **0 WEI** |
-| **Scenario D** (10-Block Reorg) | 3 | 8 | **PASSED** | 13.0 ETH | Replay Verified | Bounded Rollback | **0 WEI** |
+| **Scenario D** (12-Block Bounded Reorg) | 3 | 8 | **PASSED** | 13.0 ETH | Replay Verified | Bounded Rollback | **0 WEI** |
 
 ---
 
@@ -72,16 +72,16 @@ This document records the execution results, arithmetic reconciliations, and emp
 
 ---
 
-### Scenario D: 10-Block Reorganization Rollback, Pruning & Canonical Replay
+### Scenario D: 12-Block Bounded Reorganization Rollback, Pruning & Canonical Replay
 - **Objective**: Verify indexer reorg detection, transactional database rollback, and canonical replay without state corruption.
 - **Reorg Execution**:
   1. Anvil snapshot taken at block 607.
-  2. Orphan branch mined 12 blocks ahead with predictions and dispute tranches.
+  2. Orphan branch mined 12 blocks ahead (depth threshold $\ge 10$) with predictions and dispute tranches.
   3. Database ingests orphan branch.
   4. Anvil reverted to snapshot 607, mining canonical branch with different predictions.
   5. Indexer detects `parentHash` divergence and executes atomic rollback:
-     - Removed blocks: 12
-     - Removed events: 9
-     - Replayed canonical events: 68
+     - **Removed blocks**: `12` (the 12 blocks pruned from the orphan branch above snapshot block 607).
+     - **Removed events**: `9` (the 9 events emitted on the orphan branch).
+     - **Replayed canonical events**: `84` (the complete set of surviving canonical events across Scenarios A, B, C and deployment deterministically re-folded by `applyCanonical`).
   6. Fastify API sync metadata updates to canonical tip with zero duplicate records.
   7. Process restart verification proves checkpoint resumes idempotently.

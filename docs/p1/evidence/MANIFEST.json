@@ -5,13 +5,13 @@
   "artifacts": [
     {
       "file": "e2e-scenarios-a-b.json",
-      "sha256": "e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820",
-      "bytes": 24432
+      "sha256": "6d46e4fcabd67685225a617c59812f981b24048df473378a236838f9a2da6e30",
+      "bytes": 13355
     },
     {
       "file": "e2e-scenarios-c-d.json",
-      "sha256": "e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820",
-      "bytes": 24432
+      "sha256": "ca5f2e88376a02f45e55dce880eb48975e0556e71a551554461f1c7fa56c311e",
+      "bytes": 12302
     },
     {
       "file": "e2e-scenarios.json",

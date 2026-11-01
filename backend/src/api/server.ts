@@ -49,6 +49,7 @@ import {
   evidenceContentHash,
   type EvidenceManifest,
 } from "../evidence/evidence.js";
+import { verifyAndConsumePublicationAuth, type PublicationAuth } from "../evidence/auth.js";
 
 export type SyncStatus = "SYNCHRONIZED" | "LAGGING" | "UNAVAILABLE";
 
@@ -925,7 +926,18 @@ export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
       throw new HttpError(400, "PAYLOAD_TOO_LARGE", "manifest exceeds the local size cap");
     }
     const commitment = evidenceCommitment(em);
-    await verifyArtifactSignature(artifactMessage("orakl-evidence-v1", commitment, publisher), body.signature, publisher);
+    await verifyAndConsumePublicationAuth(
+      deps.prisma,
+      (body as any).auth,
+      (body as any).signature,
+      {
+        action: "evidence",
+        chainId: config.chainId,
+        factory: em.contract,
+        publisher,
+        commitment,
+      },
+    );
 
     // Optional exact content storage (local discovery channel only).
     let contentBytes = Buffer.alloc(0);
@@ -1000,7 +1012,18 @@ export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
     }
     const commitmentBytes = { keccak256, stringToBytes };
     const commitment = keccak256(canonical as never);
-    await verifyArtifactSignature(artifactMessage(METADATA_SCHEMA, commitment, manifest.creator), body.signature, manifest.creator);
+    await verifyAndConsumePublicationAuth(
+      deps.prisma,
+      (body as any).auth,
+      (body as any).signature,
+      {
+        action: "metadata",
+        chainId: config.chainId,
+        factory: manifest.factory,
+        publisher: manifest.creator,
+        commitment,
+      },
+    );
 
     const uri = `ipfs://orakl-local-remote/${commitment.slice(2)}`.replace("orakl-local-remote", "orakl-local-artifact");
     const existing = await deps.prisma.marketMetadata.findUnique({ where: { commitment } });

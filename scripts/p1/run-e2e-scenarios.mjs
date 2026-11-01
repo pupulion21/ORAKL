@@ -54,6 +54,7 @@ import {
   requireLocalChain,
   stepTime,
 } from './lib.mjs';
+import { publishEvidenceBundle } from './evidence-partition.mjs';
 
 // Dynamic backend imports (via ts-resolver hook)
 const { buildServer } = await import('../../backend/src/api/server.ts');
@@ -2255,19 +2256,22 @@ async function main() {
     };
 
     const outDir = resolve(REPO_ROOT, 'docs/p1/evidence');
-    mkdirSync(outDir, { recursive: true });
+    const isFullRun = Boolean(runA && runB && runC && runD);
 
-    const allOutPath = resolve(outDir, 'e2e-scenarios.json');
-    writeFileSync(allOutPath, `${JSON.stringify(evidenceRecords, null, 2)}\n`);
-    log('\nevidence', `Saved comprehensive E2E evidence artifact to: ${allOutPath.replace(`${REPO_ROOT}/`, '')}`);
+    const pubResult = publishEvidenceBundle({
+      outDir,
+      records: evidenceRecords,
+      isFullRun,
+    });
 
-    if (runA && runB) {
-      const abOutPath = resolve(outDir, 'e2e-scenarios-a-b.json');
-      writeFileSync(abOutPath, `${JSON.stringify(evidenceRecords, null, 2)}\n`);
-    }
-    if (runC && runD) {
-      const cdOutPath = resolve(outDir, 'e2e-scenarios-c-d.json');
-      writeFileSync(cdOutPath, `${JSON.stringify(evidenceRecords, null, 2)}\n`);
+    if (pubResult.publishedCanonical) {
+      log('\nevidence', `Published canonical 3-artifact bundle to: ${outDir.replace(`${REPO_ROOT}/`, '')}`);
+      for (const a of pubResult.canonicalArtifacts) {
+        log('artifact', `${a.file}: ${a.bytes} bytes, sha256=${a.sha256}`);
+      }
+    } else {
+      log('\nevidence', `Partial scenario run: evidence saved to ${pubResult.partialPath.replace(`${REPO_ROOT}/`, '')}`);
+      log('warning', 'Canonical bundle (e2e-scenarios.json, etc.) NOT overwritten to preserve unified execution provenance.');
     }
 
     // =========================================================================

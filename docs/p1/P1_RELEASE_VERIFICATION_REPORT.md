@@ -123,13 +123,13 @@ All verification artifacts under [`docs/p1/evidence/`](file:///home/pupulion/ora
 | File Path | SHA-256 Checksum | Size | Verified Content |
 | :--- | :--- | :--- | :--- |
 | `docs/p1/evidence/e2e-scenarios.json` | `e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820` | 24,432 B | Full 56-tx E2E receipts (Scenarios A-D) |
-| `docs/p1/evidence/e2e-scenarios-a-b.json` | `e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820` | 24,432 B | Scenarios A & B receipts |
-| `docs/p1/evidence/e2e-scenarios-c-d.json` | `e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820` | 24,432 B | Scenarios C & D receipts |
+| `docs/p1/evidence/e2e-scenarios-a-b.json` | `6d46e4fcabd67685225a617c59812f981b24048df473378a236838f9a2da6e30` | 13,355 B | Scoped Scenarios A & B receipts (28 txs, derived with provenance) |
+| `docs/p1/evidence/e2e-scenarios-c-d.json` | `ca5f2e88376a02f45e55dce880eb48975e0556e71a551554461f1c7fa56c311e` | 12,302 B | Scoped Scenarios C & D receipts (28 txs, derived with provenance) |
 | `docs/p1/evidence/local-deployment-verification.json` | `ac8f19f0020ab6e93b2dda4a6b9ef427235ab52d8ca43aa78fe1095eae387ab8` | 2,667 B | 15/15 deployment checks PASS |
-| `docs/p1/evidence/screenshots/01-market-browsing.png` | `4864fea10d2310db22b272387ee4240276f611ed2285179dea243ff9e638e549` | 139,889 B | Browser render of market list view |
-| `docs/p1/evidence/screenshots/02-market-detail.png` | `d0e0556c9ebf03f4a8e0b179ed2081c06fd07a5907e99c0e48a6117d8409f610` | 150,134 B | Browser render of dispute tranche ladder |
-| `docs/p1/evidence/screenshots/03-evidence-lab.png` | `62c0890c59abd108700971edb4b85ccdf9339e963d53cd1ceb921bf0c14d8042` | 85,158 B | Browser render of RFC 8785 evidence lab |
-| `docs/p1/evidence/screenshots/04-protocol-status.png` | `eb80b8491b1edec038b44a1b72d6d16bab861a93368ce181d6468e0215d58704` | 129,834 B | Browser render of protocol health status |
+| `docs/p1/evidence/screenshots/01-market-browsing.png` | `4864fea10d2310db22b272387ee4240276f611ed2285179dea243ff9e638e549` | 141,251 B | Browser render of market list view |
+| `docs/p1/evidence/screenshots/02-market-detail.png` | `d0e0556c9ebf03f4a8e0b179ed2081c06fd07a5907e99c0e48a6117d8409f610` | 149,450 B | Browser render of dispute tranche ladder |
+| `docs/p1/evidence/screenshots/03-evidence-lab.png` | `62c0890c59abd108700971edb4b85ccdf9339e963d53cd1ceb921bf0c14d8042` | 85,106 B | Browser render of RFC 8785 evidence lab |
+| `docs/p1/evidence/screenshots/04-protocol-status.png` | `eb80b8491b1edec038b44a1b72d6d16bab861a93368ce181d6468e0215d58704` | 129,652 B | Browser render of protocol health status |
 
 ---
 
