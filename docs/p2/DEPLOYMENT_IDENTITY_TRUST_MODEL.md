@@ -63,10 +63,10 @@ Manifest content must **not** self-establish the trusted runtime codehash or ABI
 
 ## 2.1 Deployment Verification Gate (`scripts/p2/verify-deployment.mjs`)
 
-To prevent false-positive verifications when RPC endpoints are offline, the deployment verification tool supports explicit operational modes:
+To prevent false-positive verifications when RPC endpoints are offline or code is altered, the deployment verification tool enforces independent trust anchors, dynamic selector derivation, and explicit operational modes:
 
 1. **`artifact-only` Mode**:
-   - Validates local JSON manifest structure, safety boundaries, immutable linkages, and compiled Foundry artifact ABI sha256 hashes (`contracts/out/SelectedMarketFactory.sol/SelectedMarketFactory.json`).
+   - Validates local JSON manifest structure, safety boundaries, immutable linkages, compiled Foundry artifact ABI sha256 hashes, and independent trust anchor hashes (`CANONICAL_TRUST_ANCHORS`).
    - Does **not** perform network requests.
    - Outputs: `STATUS: ONCHAIN_UNVERIFIED`.
    - Explicitly does **not** claim full deployment verification pass.
@@ -74,9 +74,29 @@ To prevent false-positive verifications when RPC endpoints are offline, the depl
    - Mandatory RPC connectivity check. If RPC is offline, unreachable, or errors, exits **non-zero** immediately.
    - Enforces live `eth_chainId` matching manifest chain ID.
    - Enforces nonempty on-chain bytecode (`eth_getCode !== "0x"`).
-   - Enforces on-chain runtime codehash (`keccak256(bytecode)` matching approved artifact).
-   - Enforces live mutual contract linkage calls (`factory.protocolConfig()` and `config.factory()`).
+   - Enforces on-chain runtime codehashes for **both** `SelectedMarketFactory` (`0xb8a5bfea...`) and `ProtocolConfig` (`0x418d1b9e...`) against independent trust anchors (`CANONICAL_TRUST_ANCHORS[chainId]`), rejecting manifests even if internal manifest fields match forged live code.
+   - Dynamically derives contract function selectors from compiled ABIs using `toFunctionSelector` (`protocolConfig()` -> `0xf5efbb4f`, `factory()` -> `0xc45a0155`), eliminating unchecked hardcoded selectors.
+   - Enforces live mutual contract linkage calls via derived selectors.
    - Any failure exits non-zero (`process.exit(1)`). Full verification success is never reported if on-chain checks are skipped.
+
+### 2.2 Live Anvil Execution Evidence & Negative Gates
+
+Executed on isolated local Anvil instance (Chain ID 31337, port 8546) deploying approved `SelectedMarketFactory` and `ProtocolConfig`:
+- **Live Positive Run**:
+  `node scripts/p2/verify-deployment.mjs --mode onchain-required --manifest backend/deployments/local-selected.json --rpc http://127.0.0.1:8546`
+  Result: **PASS** (`VERIFICATION PASSED: All 19 deployment and on-chain identity checks passed`, exit code `0`).
+- **Offline RPC Gate**:
+  `node scripts/p2/verify-deployment.mjs --mode onchain-required --rpc http://127.0.0.1:1`
+  Result: **FAIL CLOSED** (exit code `1`).
+- **Wrong Chain ID Gate**:
+  Mismatched manifest `chainId=1983` against live Anvil `31337`
+  Result: **FAIL CLOSED** (exit code `1`).
+- **Altered Bytecode / Codehash Gate**:
+  Target pointing to mismatched bytecode / role mock address
+  Result: **FAIL CLOSED** (exit code `1`).
+- **Linkage Mismatch Gate**:
+  Unlinked configuration contract
+  Result: **FAIL CLOSED** (exit code `1`).
 
 ---
 

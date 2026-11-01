@@ -1,10 +1,32 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createServer, type Server } from "node:http";
 import path from "node:path";
-import { writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { verifyDeployment } from "../../scripts/p2/verify-deployment.mjs";
 
-const TMP_DIR = path.resolve(process.cwd(), "test", "fixtures", "tmp-verify-deployment");
+const REPO_ROOT = existsSync(path.resolve(process.cwd(), "contracts"))
+  ? process.cwd()
+  : path.resolve(process.cwd(), "..");
+const TMP_DIR = path.resolve(REPO_ROOT, "backend", "test", "fixtures", "tmp-verify-deployment");
+
+function patchArtifactBytecode(artifactPath: string, immutableValues: bigint[]): `0x${string}` {
+  const art = JSON.parse(readFileSync(artifactPath, "utf8"));
+  const templateHex: string = art.deployedBytecode.object.replace(/^0x/, "");
+  const template = Buffer.from(templateHex, "hex");
+  const ids = Object.keys(art.deployedBytecode.immutableReferences ?? {});
+  const slots = ids.map((id) => art.deployedBytecode.immutableReferences[id]);
+  const patched = Buffer.from(template);
+  for (let i = 0; i < ids.length; i += 1) {
+    const word = immutableValues[i] ?? 0n;
+    for (const range of slots[i]) {
+      for (let b = 0; b < range.length; b += 1) {
+        const byte = Number((word >> BigInt(8 * (range.length - 1 - b))) & 0xffn);
+        patched[range.start + b] = byte;
+      }
+    }
+  }
+  return `0x${patched.toString("hex")}`;
+}
 
 function createTestManifest(overrides: Record<string, any> = {}): Record<string, any> {
   const base = {
@@ -226,5 +248,102 @@ describe("P2 Deployment Verification Gate (scripts/p2/verify-deployment.mjs)", (
 
     expect(result.success).toBe(false);
     expect(result.checks.some((c: any) => c.name === "factory-abi-hash" && !c.passed)).toBe(true);
+  });
+
+  it("onchain-required: succeeds on valid live contracts matching trust anchor, dynamically derived selectors, and mutual linkage", async () => {
+    const manifestPath = path.join(TMP_DIR, "positive-path.json");
+    const manifest = createTestManifest();
+    writeFileSync(manifestPath, JSON.stringify(manifest), "utf8");
+
+    const factoryArtPath = path.resolve(REPO_ROOT, "contracts/out/SelectedMarketFactory.sol/SelectedMarketFactory.json");
+    const configArtPath = path.resolve(REPO_ROOT, "contracts/out/ProtocolConfig.sol/ProtocolConfig.json");
+
+    const factoryCode = patchArtifactBytecode(factoryArtPath, [
+      0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9n,
+      0x56bc75e2d63100000n,
+      0x1043561a8829300000n,
+      0xad78ebc5ac6200000n,
+    ]);
+
+    const configCode = patchArtifactBytecode(configArtPath, [
+      0x5fbdb2315678afecb367f032d93f642f64180aa3n,
+      0xe7f1725e7734ce288f8367e1bb143e90bb3f0512n,
+      0x14dc79964da2c08b23698b3d3cc7ca32193d9955n,
+      0x7a69n,
+    ]);
+
+    rpcHandler = (method, params) => {
+      if (method === "eth_chainId") return "0x7a69";
+      if (method === "eth_getCode") {
+        const target = (params[0] || "").toLowerCase();
+        if (target === manifest.contracts.selectedMarketFactory.address.toLowerCase()) {
+          return factoryCode;
+        }
+        if (target === manifest.contracts.protocolConfig.address.toLowerCase()) {
+          return configCode;
+        }
+        return "0x";
+      }
+      if (method === "eth_call") {
+        const callObj = params[0] || {};
+        const target = (callObj.to || "").toLowerCase();
+        const data = (callObj.data || "").toLowerCase();
+        // factory.protocolConfig() selector derived from ABI: 0xf5efbb4f
+        if (target === manifest.contracts.selectedMarketFactory.address.toLowerCase() && data === "0xf5efbb4f") {
+          return "0x000000000000000000000000cf7ed3acca5a467e9e704c703e8d87f634fb0fc9";
+        }
+        // config.factory() selector derived from ABI: 0xc45a0155
+        if (target === manifest.contracts.protocolConfig.address.toLowerCase() && data === "0xc45a0155") {
+          return "0x000000000000000000000000dc64a140aa3e981100a9beca4e685f962f0cf6c9";
+        }
+        return "0x0000000000000000000000000000000000000000000000000000000000000000";
+      }
+      return "0x";
+    };
+
+    const result = await verifyDeployment({
+      manifestPath,
+      rpcUrl: `http://127.0.0.1:${mockRpcPort}`,
+      mode: "onchain-required",
+      silent: true,
+    });
+
+    const checkNames = result.checks.map((c: any) => c.name);
+    expect(checkNames).toContain("factory-protocolConfig-selector-derived");
+    expect(checkNames).toContain("config-factory-selector-derived");
+    expect(checkNames).toContain("onchain-factory-codehash");
+    expect(checkNames).toContain("onchain-config-codehash");
+    expect(checkNames).toContain("onchain-factory-linkage");
+    expect(checkNames).toContain("onchain-config-linkage");
+  });
+
+  it("onchain-required: fails closed when independent trust anchor rejects forged codehash even if manifest matches", async () => {
+    const manifestPath = path.join(TMP_DIR, "spoofed-manifest.json");
+    const manifest = createTestManifest();
+    // Spoofed manifest claims custom codehash
+    manifest.contracts.selectedMarketFactory.runtimeCodeKeccak256 =
+      "0x1111111111111111111111111111111111111111111111111111111111111111";
+    writeFileSync(manifestPath, JSON.stringify(manifest), "utf8");
+
+    rpcHandler = (method, params) => {
+      if (method === "eth_chainId") return "0x7a69";
+      if (method === "eth_getCode") {
+        // Return dummy bytes that match the spoofed manifest hash
+        // but not canonical anchor
+        return "0x6001";
+      }
+      return "0x";
+    };
+
+    const result = await verifyDeployment({
+      manifestPath,
+      rpcUrl: `http://127.0.0.1:${mockRpcPort}`,
+      mode: "onchain-required",
+      silent: true,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.onchainStatus).toBe("FAILED");
+    expect(result.checks.some((c: any) => c.name === "onchain-factory-codehash" && !c.passed)).toBe(true);
   });
 });

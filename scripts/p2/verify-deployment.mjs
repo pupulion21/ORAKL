@@ -4,10 +4,11 @@
  *
  * Explicit Modes:
  * 1. 'artifact-only': Validates local artifacts against compiled Foundry outputs,
- *    manifest self-consistency, safety boundaries, and immutable linkages.
+ *    manifest self-consistency, safety boundaries, immutable linkages, and independent trust anchors.
  *    Clearly reports status as ONCHAIN_UNVERIFIED. Does NOT claim full deployment success.
  * 2. 'onchain-required': Enforces RPC access, chain ID match, nonempty runtime bytecode,
- *    runtime codehashes, and mutual factory-ProtocolConfig linkage.
+ *    runtime codehashes against independent trust anchors, approved ABI identity,
+ *    dynamically derived function selectors, and mutual factory-ProtocolConfig linkage.
  *    Any failure or offline RPC exits with a non-zero exit code.
  *
  * Usage:
@@ -18,6 +19,17 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const REPO_ROOT = resolve(import.meta.dirname, '../..');
+
+export const CANONICAL_TRUST_ANCHORS = Object.freeze({
+  31337: Object.freeze({
+    chainId: 31337,
+    approvedFactoryAbiSha256: "0x6c2afa5a7277da5962e6e9364aa6bd66fd289ada21fcc229d336023ffe3c7fdc",
+    approvedConfigAbiSha256: "0xc9cfb7dbff2c16fe6f1b8aa5b0be64e355f164e052f7af3aaf4fa04a6e176b8d",
+    expectedFactoryCodehash: "0xb8a5bfea3c87dd1a6ff557e0c389166d8fe799efeba166edad200f1669f4a21a",
+    expectedConfigCodehash: "0x418d1b9ebdf9fcdf2ce444d4bd898042aad86651aebb21d3f56b98c8c9950b5e",
+    description: "Local Anvil Chain 31337 Pinned SelectedMarketFactory & ProtocolConfig Trust Anchor",
+  }),
+});
 
 export function sha256Hex(bufferOrStr) {
   return '0x' + createHash('sha256').update(bufferOrStr).digest('hex');
@@ -43,7 +55,7 @@ export async function rpcCall(endpoint, method, params = []) {
 }
 
 export async function verifyDeployment(options = {}) {
-  const { keccak256 } = await import('viem');
+  const { keccak256, toFunctionSelector } = await import('viem');
   const mode = options.mode || 'onchain-required';
   const manifestPath = options.manifestPath || resolve(REPO_ROOT, 'backend/deployments/local-selected.json');
   const rpcUrl = options.rpcUrl || 'http://127.0.0.1:8546';
@@ -102,12 +114,22 @@ export async function verifyDeployment(options = {}) {
   record('manifest-mode', manifest.mode === 'local-selected', `mode=${manifest.mode}`);
   record('manifest-safety-public', manifest.safety?.publicDeployment === false, `publicDeployment=${manifest.safety?.publicDeployment}`);
 
+  // Resolve Independent Trust Anchor
+  const canonicalAnchor = CANONICAL_TRUST_ANCHORS[chainId];
+  const trustAnchor = {
+    ...canonicalAnchor,
+    ...(options.trustAnchor || {}),
+  };
+
   // 2. Compiled Foundry Artifacts vs Manifest ABI Hashes
   const factoryArtifactPath = resolve(REPO_ROOT, 'contracts/out/SelectedMarketFactory.sol/SelectedMarketFactory.json');
   const configArtifactPath = resolve(REPO_ROOT, 'contracts/out/ProtocolConfig.sol/ProtocolConfig.json');
 
+  let factoryArt = null;
+  let configArt = null;
+
   if (existsSync(factoryArtifactPath)) {
-    const factoryArt = JSON.parse(readFileSync(factoryArtifactPath, 'utf8'));
+    factoryArt = JSON.parse(readFileSync(factoryArtifactPath, 'utf8'));
     const factoryAbiSha = sha256Hex(JSON.stringify(factoryArt.abi));
     const manifestFactoryAbiSha = manifest.contracts?.selectedMarketFactory?.abiSha256;
     record(
@@ -115,12 +137,21 @@ export async function verifyDeployment(options = {}) {
       factoryAbiSha.toLowerCase() === manifestFactoryAbiSha?.toLowerCase(),
       `compiled=${factoryAbiSha.slice(0, 18)}... manifest=${manifestFactoryAbiSha?.slice(0, 18)}...`,
     );
+
+    // Verify against independent trust anchor if present
+    if (trustAnchor.approvedFactoryAbiSha256) {
+      record(
+        'trust-anchor-factory-abi',
+        manifestFactoryAbiSha?.toLowerCase() === trustAnchor.approvedFactoryAbiSha256.toLowerCase(),
+        `manifest=${manifestFactoryAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedFactoryAbiSha256.slice(0, 18)}...`,
+      );
+    }
   } else {
     record('factory-artifact', false, `artifact missing at ${factoryArtifactPath}`);
   }
 
   if (existsSync(configArtifactPath)) {
-    const configArt = JSON.parse(readFileSync(configArtifactPath, 'utf8'));
+    configArt = JSON.parse(readFileSync(configArtifactPath, 'utf8'));
     const configAbiSha = sha256Hex(JSON.stringify(configArt.abi));
     const manifestConfigAbiSha = manifest.contracts?.protocolConfig?.abiSha256;
     record(
@@ -128,6 +159,15 @@ export async function verifyDeployment(options = {}) {
       configAbiSha.toLowerCase() === manifestConfigAbiSha?.toLowerCase(),
       `compiled=${configAbiSha.slice(0, 18)}... manifest=${manifestConfigAbiSha?.slice(0, 18)}...`,
     );
+
+    // Verify against independent trust anchor if present
+    if (trustAnchor.approvedConfigAbiSha256) {
+      record(
+        'trust-anchor-config-abi',
+        manifestConfigAbiSha?.toLowerCase() === trustAnchor.approvedConfigAbiSha256.toLowerCase(),
+        `manifest=${manifestConfigAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedConfigAbiSha256.slice(0, 18)}...`,
+      );
+    }
   } else {
     record('config-artifact', false, `artifact missing at ${configArtifactPath}`);
   }
@@ -184,41 +224,76 @@ export async function verifyDeployment(options = {}) {
     record('chain-id-match', liveChainId === chainId, `live=${liveChainId} manifest=${chainId}`);
     if (liveChainId !== chainId) onchainSuccess = false;
 
-    // Factory Code & Codehash
+    // Factory Code & Codehash (verified against independent trust anchor)
     const factoryBytecode = await rpcCall(rpcUrl, 'eth_getCode', [factoryAddr, 'latest']);
     const factoryHasCode = factoryBytecode && factoryBytecode !== '0x';
     record('onchain-factory-code', factoryHasCode, factoryHasCode ? `bytecode length=${factoryBytecode.length}` : 'bytecode is empty (0x)');
     if (!factoryHasCode) onchainSuccess = false;
 
     const factoryCodehash = factoryHasCode ? keccak256(factoryBytecode) : null;
-    const expectedFactoryCodehash = manifest.contracts?.selectedMarketFactory?.runtimeCodeKeccak256?.toLowerCase();
-    const factoryHashMatch = factoryCodehash?.toLowerCase() === expectedFactoryCodehash;
+    const manifestFactoryCodehash = manifest.contracts?.selectedMarketFactory?.runtimeCodeKeccak256?.toLowerCase();
+    const expectedFactoryCodehash = (trustAnchor.expectedFactoryCodehash || manifestFactoryCodehash)?.toLowerCase();
+    
+    const factoryHashMatchesManifest = factoryCodehash?.toLowerCase() === manifestFactoryCodehash;
+    const factoryHashMatchesAnchor = !trustAnchor.expectedFactoryCodehash || (factoryCodehash?.toLowerCase() === trustAnchor.expectedFactoryCodehash.toLowerCase());
+    const factoryHashMatch = factoryHashMatchesManifest && factoryHashMatchesAnchor;
+    
     record(
       'onchain-factory-codehash',
       factoryHashMatch,
-      `live=${factoryCodehash?.slice(0, 18)}... expected=${expectedFactoryCodehash?.slice(0, 18)}...`,
+      `live=${factoryCodehash?.slice(0, 18)}... expectedAnchor=${expectedFactoryCodehash?.slice(0, 18)}...`,
     );
     if (!factoryHashMatch) onchainSuccess = false;
 
-    // Config Code & Codehash
+    // Config Code & Codehash (verified against independent trust anchor)
     const configBytecode = await rpcCall(rpcUrl, 'eth_getCode', [configAddr, 'latest']);
     const configHasCode = configBytecode && configBytecode !== '0x';
     record('onchain-config-code', configHasCode, configHasCode ? `bytecode length=${configBytecode.length}` : 'bytecode is empty (0x)');
     if (!configHasCode) onchainSuccess = false;
 
     const configCodehash = configHasCode ? keccak256(configBytecode) : null;
-    const expectedConfigCodehash = manifest.contracts?.protocolConfig?.runtimeCodeKeccak256?.toLowerCase();
-    const configHashMatch = configCodehash?.toLowerCase() === expectedConfigCodehash;
+    const manifestConfigCodehash = manifest.contracts?.protocolConfig?.runtimeCodeKeccak256?.toLowerCase();
+    const expectedConfigCodehash = (trustAnchor.expectedConfigCodehash || manifestConfigCodehash)?.toLowerCase();
+
+    const configHashMatchesManifest = configCodehash?.toLowerCase() === manifestConfigCodehash;
+    const configHashMatchesAnchor = !trustAnchor.expectedConfigCodehash || (configCodehash?.toLowerCase() === trustAnchor.expectedConfigCodehash.toLowerCase());
+    const configHashMatch = configHashMatchesManifest && configHashMatchesAnchor;
+
     record(
       'onchain-config-codehash',
       configHashMatch,
-      `live=${configCodehash?.slice(0, 18)}... expected=${expectedConfigCodehash?.slice(0, 18)}...`,
+      `live=${configCodehash?.slice(0, 18)}... expectedAnchor=${expectedConfigCodehash?.slice(0, 18)}...`,
     );
     if (!configHashMatch) onchainSuccess = false;
 
-    // Call factory.protocolConfig()
+    // Derive Function Selectors dynamically from approved compiled ABIs (Requirement 6)
+    let protocolConfigSelector = '0xf5efbb4f';
+    if (factoryArt?.abi) {
+      const fn = factoryArt.abi.find((x) => x.type === 'function' && x.name === 'protocolConfig');
+      if (fn) {
+        protocolConfigSelector = toFunctionSelector(fn);
+        record('factory-protocolConfig-selector-derived', true, `derived selector ${protocolConfigSelector} from compiled ABI`);
+      } else {
+        record('factory-protocolConfig-selector-derived', false, 'protocolConfig() not found in factory ABI');
+        onchainSuccess = false;
+      }
+    }
+
+    let factorySelector = '0xc45a0155';
+    if (configArt?.abi) {
+      const fn = configArt.abi.find((x) => x.type === 'function' && x.name === 'factory');
+      if (fn) {
+        factorySelector = toFunctionSelector(fn);
+        record('config-factory-selector-derived', true, `derived selector ${factorySelector} from compiled ABI`);
+      } else {
+        record('config-factory-selector-derived', false, 'factory() not found in config ABI');
+        onchainSuccess = false;
+      }
+    }
+
+    // Call factory.protocolConfig() via derived selector
     const protocolConfigCall = await rpcCall(rpcUrl, 'eth_call', [
-      { to: factoryAddr, data: '0x05eb62b8' },
+      { to: factoryAddr, data: protocolConfigSelector },
       'latest',
     ]);
     const liveBoundConfig = `0x${protocolConfigCall.slice(-40)}`.toLowerCase();
@@ -230,9 +305,9 @@ export async function verifyDeployment(options = {}) {
     );
     if (!factoryLinkageMatch) onchainSuccess = false;
 
-    // Call config.factory()
+    // Call config.factory() via derived selector
     const factoryCall = await rpcCall(rpcUrl, 'eth_call', [
-      { to: configAddr, data: '0xc45a0155' },
+      { to: configAddr, data: factorySelector },
       'latest',
     ]);
     const liveBoundFactory = `0x${factoryCall.slice(-40)}`.toLowerCase();

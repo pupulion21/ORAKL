@@ -12,10 +12,20 @@ export interface VerificationResult {
   errors: string[];
 }
 
+export interface TrustAnchor {
+  chainId: number;
+  approvedFactoryAbiSha256: string;
+  approvedConfigAbiSha256?: string;
+  expectedFactoryCodehash: string;
+  expectedConfigCodehash?: string;
+  description: string;
+}
+
 export interface VerifyDeploymentOptions {
   mode?: 'artifact-only' | 'onchain-required';
   manifestPath?: string;
   rpcUrl?: string;
+  trustAnchor?: Partial<TrustAnchor>;
   silent?: boolean;
 }
 

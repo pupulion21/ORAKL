@@ -3,7 +3,7 @@
 - **Document ID**: `ORAKL-P2-VERIF-FINAL-001`
 - **Date**: 2026-11-01
 - **Branch**: `feature/orakl-p2-security-readiness`
-- **Authorized Verdict**: `P2 DEPLOYMENT GATE VERIFIED — PUBLIC RELEASE BLOCKED`
+- **Authorized Verdict**: `P2 POSITIVE DEPLOYMENT VERIFICATION PASSED — PUBLIC RELEASE BLOCKED`
 
 ---
 
@@ -12,8 +12,8 @@
 All technical implementation, architecture, research, and verification objectives of **ORAKL P2 (QIE Compatibility, Safe Governance & Security Readiness)** have been executed and verified across isolated local test fixtures (Foundry Forge, Anvil Chain ID 31337, Fastify API, PostgreSQL, and Vite).
 
 > [!CAUTION]
-> **FINAL RELEASE GATE VERDICT: P2 DEPLOYMENT GATE VERIFIED — PUBLIC RELEASE BLOCKED**  
-> While all local tests, deployment verification gates, and static checks have passed with zero failures, public deployment to QIE Testnet (1983) or Mainnet (1990) and real-value financial custody remain **STRICTLY BLOCKED** pending formal third-party smart contract security audit sign-off, production Safe multisig HSM key ceremonies, and legal classification opinions.
+> **FINAL RELEASE GATE VERDICT: P2 POSITIVE DEPLOYMENT VERIFICATION PASSED — PUBLIC RELEASE BLOCKED**  
+> While all local tests, independent trust anchor validations, live Anvil deployment gates, and static checks have passed with zero failures, public deployment to QIE Testnet (1983) or Mainnet (1990) and real-value financial custody remain **STRICTLY BLOCKED** pending formal third-party smart contract security audit sign-off, production Safe multisig HSM key ceremonies, and legal classification opinions. No claim of 100% QIE production compatibility or external audit approval is made.
 
 ---
 
@@ -38,13 +38,13 @@ All technical implementation, architecture, research, and verification objective
 ### 2.2 Backend Vitest Test Suite
 - **Command**: `npm --prefix backend test`
 - **Test Files**: 11 passed (11)
-- **Total Tests Executed**: 158
-- **Passed**: 158
+- **Total Tests Executed**: 160
+- **Passed**: 160
 - **Failed**: 0
-- **Duration**: ~19s
+- **Duration**: ~18s
 - **Breakdown**:
   - `deployment-trust.test.ts`: 20/20 tests passed (10-layer deployment validation pipeline, independent trust anchor enforcement, codehash verification, cached deployment with freshness TTL and invalidation, fail-closed database outage handling, forged manifest rejection, and strict isolation of `TRUSTED_FACTORY`).
-  - `deployment-verification.test.ts`: 7/7 tests passed (testing `scripts/p2/verify-deployment.mjs` modes: `artifact-only` reporting `ONCHAIN_UNVERIFIED` and `onchain-required` failing closed on offline RPC, wrong chain ID, empty bytecode, codehash mismatch, linkage mismatch, unapproved ABI).
+  - `deployment-verification.test.ts`: 9/9 tests passed (testing `scripts/p2/verify-deployment.mjs` modes: `artifact-only` reporting `ONCHAIN_UNVERIFIED` and `onchain-required` positive path on live contracts matching trust anchor, dynamically derived selectors `0xf5efbb4f` and `0xc45a0155`, and mutual linkage; plus negative regressions failing closed on offline RPC, wrong chain ID, empty bytecode, codehash mismatch, linkage mismatch, unapproved ABI, and forged manifest codehash rejected by independent trust anchor).
   - `opcode-probes.test.ts`: 8/8 tests passed (testing `scripts/p2/probe-qie-evm.mjs` distinct classifications: transport error, malformed response, unsupported method, execution revert, invalid opcode, and avoiding full Shanghai hardfork claims).
   - `publication-auth.test.ts`: 16/16 tests passed (EIP-712 / EIP-191 replay protection, atomic nonce consumption).
   - `indexer.test.ts`: 15/15 tests passed (PostgreSQL event ingestion, canonical reorg fork rollback & replay).
@@ -100,9 +100,19 @@ All technical implementation, architecture, research, and verification objective
    - `https://rpc2testnet.qie.digital/`: Active and responsive (Block ~9.5M, gasPrice 7 wei).
    - `https://rpc1mainnet.qie.digital/` & `rpc2mainnet.qie.digital`: Active and responsive (Block ~11.6M, gasPrice ~1.125 Gwei).
 4. **On-Chain & Local Artifact Verification**:
-   - Executed [`scripts/p2/verify-deployment.mjs`](file:///home/pupulion/orakl/scripts/p2/verify-deployment.mjs) with explicit modes:
-     - `artifact-only`: validates local Foundry artifacts and outputs `ONCHAIN_UNVERIFIED`.
-     - `onchain-required`: requires live RPC connectivity, verifies chain ID, nonempty bytecode, runtime codehashes, and mutual linkage calls. Fails closed with non-zero exit code if offline or invalid.
+   - Executed [`scripts/p2/verify-deployment.mjs`](file:///home/pupulion/orakl/scripts/p2/verify-deployment.mjs) with explicit operational modes:
+     - `artifact-only`: validates local Foundry artifacts, independent trust anchors, and outputs `ONCHAIN_UNVERIFIED`.
+     - `onchain-required`: requires live RPC connectivity, verifies chain ID, nonempty bytecode, runtime codehashes against independent trust anchor (`CANONICAL_TRUST_ANCHORS[31337]`), derives function selectors dynamically from compiled ABIs (`protocolConfig()` -> `0xf5efbb4f`, `factory()` -> `0xc45a0155`), and verifies mutual linkage calls. Fails closed with non-zero exit code if offline or invalid.
+   - **Live Isolated Anvil Positive Verification**:
+     - Started clean isolated Anvil instance (Chain ID 31337, port 8546) using disposable test accounts.
+     - Deployed approved `ProtocolConfig` (`0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9`) and `SelectedMarketFactory` (`0xdc64a140aa3e981100a9beca4e685f962f0cf6c9`) preserving all existing economics and source code via `scripts/p1/deploy-local-selected.mjs`.
+     - Ran `node scripts/p2/verify-deployment.mjs --mode onchain-required --manifest backend/deployments/local-selected.json --rpc http://127.0.0.1:8546`.
+     - Verified: `success=true`, `onchainStatus=VERIFIED`, 19/19 checks passed, exit code `0`.
+   - **Demonstrated Failure Modes (Negative Regressions)**:
+     - Offline RPC (`http://127.0.0.1:1`): exits code `1` (`rpc-connectivity` fail).
+     - Wrong chain ID (`1983` vs `31337`): exits code `1` (`chain-id-match` fail).
+     - Altered bytecode / codehash: exits code `1` (`onchain-factory-codehash` fail).
+     - Incorrect linkage: exits code `1` (`manifest-immutable-linkage` fail).
 5. **Multi-Sig Governance Scope**:
    - `Safe3Of5.sol` is a custom test double simulating 3-of-5 threshold mechanics with actual EIP-712 domain `EIP712Domain(uint256 chainId,address verifyingContract)` and custom errors (`InvalidSignatures()`, `Unauthorized()`, `DuplicateOrUnorderedOwner()`, `InvalidThreshold()`, `SetupFailed()`, `ExecutionFailed(bytes)`).
    - Official Safe Global contract integration into local test suite is **BLOCKED** due to external dependency pinning constraints. Real Safe integration is **NOT** claimed.
