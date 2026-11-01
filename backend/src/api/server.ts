@@ -49,7 +49,12 @@ import {
   evidenceContentHash,
   type EvidenceManifest,
 } from "../evidence/evidence.js";
-import { verifyAndConsumePublicationAuth, type PublicationAuth } from "../evidence/auth.js";
+import {
+  verifyPublicationAuth,
+  consumePublicationAuthNonce,
+  verifyAndConsumePublicationAuth,
+  type PublicationAuth,
+} from "../evidence/auth.js";
 
 export type SyncStatus = "SYNCHRONIZED" | "LAGGING" | "UNAVAILABLE";
 
@@ -925,21 +930,15 @@ export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
     if (Buffer.byteLength(manifestBytesOf(body.manifest), "utf8") > config.evidenceManifestMaxBytes) {
       throw new HttpError(400, "PAYLOAD_TOO_LARGE", "manifest exceeds the local size cap");
     }
-    const commitment = evidenceCommitment(em);
-    await verifyAndConsumePublicationAuth(
-      deps.prisma,
-      (body as any).auth,
-      (body as any).signature,
-      {
-        action: "evidence",
-        chainId: config.chainId,
-        factory: em.contract,
-        publisher,
-        commitment,
-      },
-    );
 
-    // Optional exact content storage (local discovery channel only).
+    // P1-FINAL-01: Establish trusted factory from server-side deployment configuration
+    const trustedDeployment = await resolveTrustedDeployment(config, deps.prisma);
+    const trustedFactory = trustedDeployment.factory;
+    if (!em.contract || em.contract.toLowerCase() !== trustedFactory) {
+      throw new HttpError(400, "WRONG_FACTORY", `manifest contract ${em.contract} does not match trusted factory ${trustedFactory}`);
+    }
+
+    // P1-FINAL-02: Deterministic content size and hash validation BEFORE persistence or nonce
     let contentBytes = Buffer.alloc(0);
     if (typeof body.content === "string" && body.content.length > 0) {
       contentBytes = Buffer.from(body.content, "utf8");
@@ -951,47 +950,74 @@ export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
       }
     }
 
-    const dedupe = await deps.prisma.evidenceArtifact.findUnique({ where: { commitment: commitment.toLowerCase() } });
-    if (dedupe != null) {
-      reply.code(200);
-      return ok({ commitment: dedupe.commitment, deduped: true, externalPinning: "UNVERIFIED" });
-    }
+    const commitment = evidenceCommitment(em);
 
-    const link = await linkToMarketEvent(deps.prisma, config.chainId, em.marketId, commitment);
-    const created = await deps.prisma.evidenceArtifact.create({
-      data: {
-        commitment: commitment.toLowerCase(),
-        manifestKeccak: commitment,
-        contentKeccak: evidenceContentHash(contentBytes),
-        manifestBytes: canonical as never,
-        contentBytes: contentBytes as never,
-        contentSize: contentBytes.length,
-        publishedBy: publisher,
+    // Cryptographic validation (pure verification, NO nonce consumption yet)
+    const verifiedAuth = await verifyPublicationAuth(
+      (body as any).auth,
+      (body as any).signature,
+      {
+        action: "evidence",
         chainId: config.chainId,
-        marketOnchainId: link.marketId,
-        linkedEventTx: link.txHash,
-        linkedEventLogIndex: link.logIndex,
+        factory: trustedFactory,
+        publisher,
+        commitment,
       },
-    });
-    // Availability note: this store is local; external pinning is NOT verified.
-    if (link.evidenceRecordId != null) {
-      await deps.prisma.evidenceVerification.create({
+    );
+
+    // Atomic transaction: nonce consumption + artifact persistence
+    const result = await deps.prisma.$transaction(async (tx) => {
+      const dedupe = await tx.evidenceArtifact.findUnique({ where: { commitment: commitment.toLowerCase() } });
+      if (dedupe != null) {
+        // Authenticated content-addressed deduplication: consume nonce to prevent cross-replay
+        await consumePublicationAuthNonce(tx, verifiedAuth);
+        return { commitment: dedupe.commitment, deduped: true, externalPinning: "UNVERIFIED" };
+      }
+
+      await consumePublicationAuthNonce(tx, verifiedAuth);
+
+      const link = await linkToMarketEvent(tx, config.chainId, em.marketId, commitment);
+      const created = await tx.evidenceArtifact.create({
         data: {
-          evidenceRecordId: link.evidenceRecordId,
-          availabilityStatus: contentBytes.length > 0 ? "AVAILABLE" : "UNKNOWN",
-          verificationStatus: "HASH_VERIFIED",
-          observer: "backend-local",
-          reason: `local artifact ${commitment} matched an on-chain commitment`,
+          commitment: commitment.toLowerCase(),
+          manifestKeccak: commitment,
+          contentKeccak: evidenceContentHash(contentBytes),
+          manifestBytes: canonical as never,
+          contentBytes: contentBytes as never,
+          contentSize: contentBytes.length,
+          publishedBy: publisher,
+          chainId: config.chainId,
+          marketOnchainId: link.marketId,
+          linkedEventTx: link.txHash,
+          linkedEventLogIndex: link.logIndex,
         },
       });
-    }
-    return ok({
-      commitment: created.commitment,
-      deduped: false,
-      hasContent: contentBytes.length > 0,
-      marketLinked: link.marketId != null,
-      externalPinning: "UNVERIFIED",
+
+      if (link.evidenceRecordId != null) {
+        await tx.evidenceVerification.create({
+          data: {
+            evidenceRecordId: link.evidenceRecordId,
+            availabilityStatus: contentBytes.length > 0 ? "AVAILABLE" : "UNKNOWN",
+            verificationStatus: "HASH_VERIFIED",
+            observer: "backend-local",
+            reason: `local artifact ${commitment} matched an on-chain commitment`,
+          },
+        });
+      }
+
+      return {
+        commitment: created.commitment,
+        deduped: false,
+        hasContent: contentBytes.length > 0,
+        marketLinked: link.marketId != null,
+        externalPinning: "UNVERIFIED",
+      };
     });
+
+    if (result.deduped) {
+      reply.code(200);
+    }
+    return ok(result);
   });
 
   app.post("/api/v1/markets/metadata", async (request, reply) => {
@@ -1010,43 +1036,64 @@ export async function buildServer(deps: ApiDeps): Promise<FastifyInstance> {
     if (canonical.length > METADATA_MAX_BYTES) {
       throw new HttpError(400, "PAYLOAD_TOO_LARGE", "metadata exceeds the local size cap");
     }
-    const commitmentBytes = { keccak256, stringToBytes };
+
+    // P1-FINAL-01: Establish trusted factory from server-side deployment configuration
+    const trustedDeployment = await resolveTrustedDeployment(config, deps.prisma);
+    const trustedFactory = trustedDeployment.factory;
+    if (!manifest.factory || manifest.factory.toLowerCase() !== trustedFactory) {
+      throw new HttpError(400, "WRONG_FACTORY", `metadata factory ${manifest.factory} does not match trusted factory ${trustedFactory}`);
+    }
+
     const commitment = keccak256(canonical as never);
-    await verifyAndConsumePublicationAuth(
-      deps.prisma,
+
+    // Cryptographic validation (pure verification, NO nonce consumption yet)
+    const verifiedAuth = await verifyPublicationAuth(
       (body as any).auth,
       (body as any).signature,
       {
         action: "metadata",
         chainId: config.chainId,
-        factory: manifest.factory,
+        factory: trustedFactory,
         publisher: manifest.creator,
         commitment,
       },
     );
 
     const uri = `ipfs://orakl-local-remote/${commitment.slice(2)}`.replace("orakl-local-remote", "orakl-local-artifact");
-    const existing = await deps.prisma.marketMetadata.findUnique({ where: { commitment } });
-    if (existing != null) {
-      reply.code(200);
-      return ok({ commitment, uri: existing.uri, deduped: true });
-    }
-    await deps.prisma.marketMetadata.create({
-      data: {
-        chainId: config.chainId,
-        commitment,
-        uriKeccak: keccak256(stringToBytes(uri)),
-        uri,
-        question: manifest.question,
-        description: manifest.description,
-        categorySlug: manifest.category,
-        resolutionCriteria: manifest.resolutionCriteria,
-        evidenceSources: manifest.sources as never,
-        formData: manifest as never,
-        publishedBy: manifest.creator,
-      },
+
+    // Atomic transaction: nonce consumption + metadata persistence
+    const result = await deps.prisma.$transaction(async (tx) => {
+      const existing = await tx.marketMetadata.findUnique({ where: { commitment } });
+      if (existing != null) {
+        await consumePublicationAuthNonce(tx, verifiedAuth);
+        return { commitment, uri: existing.uri, deduped: true };
+      }
+
+      await consumePublicationAuthNonce(tx, verifiedAuth);
+
+      await tx.marketMetadata.create({
+        data: {
+          chainId: config.chainId,
+          commitment,
+          uriKeccak: keccak256(stringToBytes(uri)),
+          uri,
+          question: manifest.question,
+          description: manifest.description,
+          categorySlug: manifest.category,
+          resolutionCriteria: manifest.resolutionCriteria,
+          evidenceSources: manifest.sources as never,
+          formData: manifest as never,
+          publishedBy: manifest.creator,
+        },
+      });
+
+      return { commitment, uri, deduped: false };
     });
-    return ok({ commitment, uri, deduped: false });
+
+    if (result.deduped) {
+      reply.code(200);
+    }
+    return ok(result);
   });
 
   // -------------------------------------------------------- legacy API kept
@@ -1155,6 +1202,108 @@ async function readManifestSafe(): Promise<ManifestLike & { _file?: string } | n
   } catch {
     return null;
   }
+}
+
+export type TrustedDeployment = {
+  chainId: number;
+  factory: string;
+  protocolConfig: string;
+};
+
+export async function resolveTrustedDeployment(
+  config: BackendConfig,
+  prisma?: PrismaClient,
+): Promise<TrustedDeployment> {
+  // 1. Explicit config override (trusted factory address from config / env)
+  if (config.trustedFactory && /^0x[0-9a-fA-F]{40}$/.test(config.trustedFactory)) {
+    return {
+      chainId: config.chainId,
+      factory: config.trustedFactory.toLowerCase(),
+      protocolConfig: "0x0000000000000000000000000000000000000000",
+    };
+  }
+
+  // 2. Read trusted server-side deployment manifest
+  let manifestPath = config.deploymentManifestPath;
+  if (!manifestPath) {
+    const candidate1 = path.resolve(process.cwd(), MANIFEST_DIR, "local-selected.json");
+    const candidate2 = path.resolve(process.cwd(), "..", "backend", MANIFEST_DIR, "local-selected.json");
+    const candidate3 = path.resolve(process.cwd(), "backend", MANIFEST_DIR, "local-selected.json");
+    try {
+      const { existsSync } = await import("node:fs");
+      if (existsSync(candidate1)) manifestPath = candidate1;
+      else if (existsSync(candidate3)) manifestPath = candidate3;
+      else if (existsSync(candidate2)) manifestPath = candidate2;
+      else manifestPath = candidate1;
+    } catch {
+      manifestPath = candidate1;
+    }
+  }
+
+  let raw: string;
+  try {
+    raw = await readFile(manifestPath, "utf8");
+  } catch {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `trusted deployment manifest missing or unreadable: ${manifestPath}`);
+  }
+
+  let manifest: any;
+  try {
+    manifest = JSON.parse(raw);
+  } catch {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "trusted deployment manifest contains invalid JSON");
+  }
+
+  if (manifest.status !== "LOCAL_SIMULATION" || manifest.mode !== "local-selected") {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid manifest mode/status (${manifest.status}/${manifest.mode})`);
+  }
+
+  if (manifest.network?.chainId !== config.chainId) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `manifest chainId ${manifest.network?.chainId} does not match server chainId ${config.chainId}`);
+  }
+
+  const factory = manifest.contracts?.selectedMarketFactory?.address;
+  const protocolConfig = manifest.contracts?.protocolConfig?.address;
+
+  if (!factory || !/^0x[0-9a-fA-F]{40}$/.test(factory)) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid selectedMarketFactory address");
+  }
+  if (!protocolConfig || !/^0x[0-9a-fA-F]{40}$/.test(protocolConfig)) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid protocolConfig address");
+  }
+
+  if (Array.isArray(manifest.contracts?.selectedMarketFactory?.immutableAssignment)) {
+    const immutables = manifest.contracts.selectedMarketFactory.immutableAssignment;
+    if (immutables.length > 0 && typeof immutables[0] === "string") {
+      const boundConfig = `0x${immutables[0].slice(-40)}`.toLowerCase();
+      if (boundConfig !== protocolConfig.toLowerCase()) {
+        throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "selectedMarketFactory immutable binding does not match protocolConfig");
+      }
+    }
+  }
+
+  if (prisma) {
+    try {
+      const dbDep = await prisma.contractDeployment.findFirst({
+        where: { chainId: config.chainId },
+        orderBy: { createdAt: "desc" },
+      });
+      if (dbDep) {
+        if (dbDep.factoryAddress.toLowerCase() !== factory.toLowerCase() ||
+            dbDep.protocolConfigAddress.toLowerCase() !== protocolConfig.toLowerCase()) {
+          throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "deployment manifest and database deployment record mismatch");
+        }
+      }
+    } catch (err) {
+      if (err instanceof HttpError) throw err;
+    }
+  }
+
+  return {
+    chainId: config.chainId,
+    factory: factory.toLowerCase(),
+    protocolConfig: protocolConfig.toLowerCase(),
+  };
 }
 
 async function readVerificationSafe(): Promise<{ allPassed: boolean; checksList: unknown[] } | null> {
@@ -1296,7 +1445,7 @@ async function poolTotals(
 }
 
 async function linkToMarketEvent(
-  prisma: PrismaClient,
+  prisma: any,
   chainId: number,
   marketId: string,
   commitment: string,

@@ -9,6 +9,7 @@ import { privateKeyToAccount } from "viem/accounts";
 
 import { makePrisma, type PrismaDb } from "../src/db.js";
 import { buildServer } from "../src/api/server.js";
+import { loadConfig } from "../src/config.js";
 import { wipeChain } from "./harness.js";
 import { canonicalizeEvidence, evidenceCommitment, type EvidenceManifest } from "../src/evidence/evidence.js";
 import { signPublicationAuthEip712, type PublicationAuth } from "../src/evidence/auth.js";
@@ -419,6 +420,10 @@ describe("Fastify API Automated Integration Suite (TICKET-06 / WP-04)", () => {
     });
 
     app = await buildServer({
+      config: loadConfig({
+        ...process.env,
+        TRUSTED_FACTORY: "0x2222222222222222222222222222222222222222",
+      }),
       prisma: prisma as unknown as PrismaClient,
       getReferenceHead: async () => mockReferenceHead,
     });

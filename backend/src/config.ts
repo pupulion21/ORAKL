@@ -15,6 +15,8 @@ export type BackendConfig = {
   evidenceManifestMaxBytes: number;
   evidencePublishPerWindow: number;
   evidencePublishWindowMs: number;
+  trustedFactory?: string;
+  deploymentManifestPath?: string;
 };
 
 const DEFAULT_ORIGINS = [
@@ -46,5 +48,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     evidenceManifestMaxBytes: 16 * 1024,
     evidencePublishPerWindow: 30,
     evidencePublishWindowMs: 60_000,
+    trustedFactory: env.TRUSTED_FACTORY,
+    deploymentManifestPath: env.DEPLOYMENT_MANIFEST,
   };
 }

@@ -123,8 +123,7 @@ export async function signPublicationAuthEip191(
   return account.signMessage({ message });
 }
 
-export async function verifyAndConsumePublicationAuth(
-  prisma: any,
+export async function verifyPublicationAuth(
   rawAuth: unknown,
   rawSignature: unknown,
   expected: {
@@ -241,28 +240,50 @@ export async function verifyAndConsumePublicationAuth(
     throw new HttpError(401, "INVALID_SIGNATURE", `signature does not verify for declared publisher (${expected.publisher})`);
   }
 
-  // 2. Consume nonce atomically in PostgreSQL
-  await prisma.user.upsert({
-    where: { walletAddress: fullAuth.publisher },
-    create: { walletAddress: fullAuth.publisher },
+  return fullAuth;
+}
+
+export async function consumePublicationAuthNonce(
+  prismaOrTx: any,
+  auth: PublicationAuth,
+): Promise<void> {
+  await prismaOrTx.user.upsert({
+    where: { walletAddress: auth.publisher },
+    create: { walletAddress: auth.publisher },
     update: { lastSeenAt: new Date() },
   });
 
   try {
-    await prisma.authNonce.create({
+    await prismaOrTx.authNonce.create({
       data: {
-        walletAddress: fullAuth.publisher,
-        nonce: fullAuth.nonce,
-        expiresAt: new Date(fullAuth.deadline * 1000),
+        walletAddress: auth.publisher,
+        nonce: auth.nonce,
+        expiresAt: new Date(auth.deadline * 1000),
         consumedAt: new Date(),
       },
     });
   } catch (err: any) {
     if (err?.code === "P2002" || err?.message?.includes("Unique constraint")) {
-      throw new HttpError(409, "REUSED_NONCE", `nonce ${fullAuth.nonce} has already been consumed`);
+      throw new HttpError(409, "REUSED_NONCE", `nonce ${auth.nonce} has already been consumed`);
     }
     throw err;
   }
+}
 
-  return fullAuth;
+export async function verifyAndConsumePublicationAuth(
+  prisma: any,
+  rawAuth: unknown,
+  rawSignature: unknown,
+  expected: {
+    action: PublicationAction;
+    chainId: number;
+    factory: string;
+    publisher: string;
+    commitment: string;
+  },
+  nowSec: number = Math.floor(Date.now() / 1000),
+): Promise<PublicationAuth> {
+  const auth = await verifyPublicationAuth(rawAuth, rawSignature, expected, nowSec);
+  await consumePublicationAuthNonce(prisma, auth);
+  return auth;
 }

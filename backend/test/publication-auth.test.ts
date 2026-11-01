@@ -34,6 +34,7 @@ describe("Signed Publication Replay Protection (ISSUE P1-02)", () => {
       ...process.env,
       PORT: "4399",
       LOCAL_CHAIN_ID: String(CHAIN_ID),
+      TRUSTED_FACTORY: FACTORY,
     });
     prisma = makePrisma(config.databaseUrl);
     await wipeChain(prisma, CHAIN_ID);
@@ -375,5 +376,304 @@ describe("Signed Publication Replay Protection (ISSUE P1-02)", () => {
     const statuses = [resA.statusCode, resB.statusCode].sort();
     // One must succeed (200) and one must be rejected (409)
     expect(statuses).toEqual([200, 409]);
+  });
+
+  it("P1-FINAL-01: rejects arbitrary rogue factory even when manifest and signature agree on rogue factory", async () => {
+    const ROGUE_FACTORY = "0x9999999999999999999999999999999999999999";
+    const { manifest, content } = makeEvidenceManifest("rogue-factory");
+    // Attacker crafts manifest pointing to rogue factory
+    manifest.contract = ROGUE_FACTORY;
+    const rogueCommitment = evidenceCommitment(manifest);
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: ROGUE_FACTORY, // Agrees with manifest.contract!
+      publisher: signer.address.toLowerCase() as `0x${string}`,
+      commitment: rogueCommitment,
+      nonce: uniqueNonce("rogue_fact"),
+      deadline,
+    };
+    // Valid cryptographic signature for ROGUE_FACTORY
+    const signature = await signPublicationAuthEip712(signer, auth);
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/evidence",
+      headers: { "content-type": "application/json" },
+      payload: { manifest, auth, signature, content },
+    });
+
+    // Currently, this passes 200 OK because the server blindly trusts em.contract!
+    // It MUST be rejected with 400 WRONG_FACTORY!
+    expect(res.statusCode).toBe(400);
+    expect(res.json().code).toBe("WRONG_FACTORY");
+  });
+
+  it("P1-FINAL-02: invalid content does not burn nonce — nonce remains usable once content is corrected", async () => {
+    const { manifest, commitment } = makeEvidenceManifest("atomic-nonce");
+    const badContent = "Corrupt / mismatched content payload"; // Content hash won't match manifest!
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const atomicNonce = uniqueNonce("atomic_test");
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: FACTORY,
+      publisher: signer.address.toLowerCase() as `0x${string}`,
+      commitment,
+      nonce: atomicNonce,
+      deadline,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth);
+
+    // 1. Submit with bad content. Must fail validation with 400 CONTENT_HASH_MISMATCH.
+    const res1 = await app.inject({
+      method: "POST",
+      url: "/api/v1/evidence",
+      headers: { "content-type": "application/json" },
+      payload: { manifest, auth, signature, content: badContent },
+    });
+    expect(res1.statusCode).toBe(400);
+    expect(res1.json().code).toBe("CONTENT_HASH_MISMATCH");
+
+    // 2. Client fixes content so hash matches manifest.
+    // In buggy code: nonce was already burned in step 1, so step 2 gets 409 REUSED_NONCE!
+    // In atomic code: nonce was NOT consumed in step 1, so step 2 succeeds with 200 OK!
+    const correctContent = `Verification evidence document text atomic-nonce`;
+    const res2 = await app.inject({
+      method: "POST",
+      url: "/api/v1/evidence",
+      headers: { "content-type": "application/json" },
+      payload: { manifest, auth, signature, content: correctContent },
+    });
+
+    expect(res2.statusCode).toBe(200);
+    expect(res2.json().data.commitment).toBe(commitment);
+  });
+
+  it("P1-FINAL-01: fails closed with 503 DEPLOYMENT_UNAVAILABLE when deployment manifest is missing or invalid", async () => {
+    // Spin up an app instance with a non-existent deployment manifest and no trusted factory
+    const badConfig = loadConfig({
+      ...process.env,
+      PORT: "4398",
+      LOCAL_CHAIN_ID: String(CHAIN_ID),
+      DEPLOYMENT_MANIFEST: "/nonexistent/path/to/manifest.json",
+      TRUSTED_FACTORY: "", // explicit empty to force manifest read
+    });
+    const badApp = await buildServer({ config: badConfig, prisma });
+    await badApp.ready();
+
+    try {
+      const { manifest, commitment, content } = makeEvidenceManifest("missing-manifest");
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
+      const auth: PublicationAuth = {
+        app: "ORAKL",
+        version: "1",
+        action: "evidence",
+        chainId: CHAIN_ID,
+        factory: FACTORY,
+        publisher: signer.address.toLowerCase() as `0x${string}`,
+        commitment,
+        nonce: uniqueNonce("missing_dep"),
+        deadline,
+      };
+      const signature = await signPublicationAuthEip712(signer, auth);
+
+      const res = await badApp.inject({
+        method: "POST",
+        url: "/api/v1/evidence",
+        headers: { "content-type": "application/json" },
+        payload: { manifest, auth, signature, content },
+      });
+
+      expect(res.statusCode).toBe(503);
+      expect(res.json().code).toBe("DEPLOYMENT_UNAVAILABLE");
+    } finally {
+      await badApp.close();
+    }
+  });
+
+  it("P1-FINAL-02: database failure during artifact creation rolls back nonce", async () => {
+    const { manifest, commitment, content } = makeEvidenceManifest("rollback-nonce");
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    const testNonce = uniqueNonce("rollback_tx");
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: FACTORY,
+      publisher: signer.address.toLowerCase() as `0x${string}`,
+      commitment,
+      nonce: testNonce,
+      deadline,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth);
+
+    // Mock $transaction so that tx.evidenceArtifact.create fails inside the transaction
+    const origTx = prisma.$transaction;
+    let failOnce = true;
+    (prisma as any).$transaction = async (fn: any, ...rest: any[]) => {
+      if (failOnce) {
+        failOnce = false;
+        return origTx.call(
+          prisma,
+          async (tx: any) => {
+            const origCreate = tx.evidenceArtifact.create;
+            tx.evidenceArtifact.create = async (...args: any[]) => {
+              throw new Error("Simulated database failure during artifact persistence");
+            };
+            return fn(tx);
+          },
+          ...rest,
+        );
+      }
+      return origTx.call(prisma, fn, ...rest);
+    };
+
+    try {
+      // 1. Submit request that fails during DB insertion
+      const res1 = await app.inject({
+        method: "POST",
+        url: "/api/v1/evidence",
+        headers: { "content-type": "application/json" },
+        payload: { manifest, auth, signature, content },
+      });
+      expect(res1.statusCode).toBe(500);
+
+      // Check if nonce was persisted in DB: IT MUST NOT BE PERSISTED because the tx rolled back!
+      const nonceRow = await prisma.authNonce.findUnique({
+        where: { nonce: testNonce },
+      });
+      expect(nonceRow).toBeNull();
+
+      // 2. Client retries the request with the SAME nonce now that DB is healthy
+      const res2 = await app.inject({
+        method: "POST",
+        url: "/api/v1/evidence",
+        headers: { "content-type": "application/json" },
+        payload: { manifest, auth, signature, content },
+      });
+      expect(res2.statusCode).toBe(200);
+      expect(res2.json().data.commitment).toBe(commitment);
+    } finally {
+      (prisma as any).$transaction = origTx;
+    }
+  });
+
+  it("P1-FINAL-01: metadata publication rejects arbitrary rogue factory even with valid signature", async () => {
+    const ROGUE_FACTORY = "0x9999999999999999999999999999999999999999";
+    const metadata = {
+      schema: "orakl-market-metadata-v1",
+      chainId: String(CHAIN_ID),
+      factory: ROGUE_FACTORY,
+      question: "Will rogue factory test pass?",
+      description: "Testing rejection of rogue factory.",
+      category: "tech",
+      resolutionCriteria: "Strict criteria",
+      sources: ["https://example.com"],
+      creator: signer.address.toLowerCase(),
+      createdAt: "1700000000",
+    };
+    const sortedFields = [
+      `"category":"${metadata.category}"`,
+      `"chainId":"${metadata.chainId}"`,
+      `"createdAt":"${metadata.createdAt}"`,
+      `"creator":"${metadata.creator}"`,
+      `"description":"${metadata.description}"`,
+      `"factory":"${metadata.factory}"`,
+      `"question":"${metadata.question}"`,
+      `"resolutionCriteria":"${metadata.resolutionCriteria}"`,
+      `"schema":"${metadata.schema}"`,
+      `"sources":["${metadata.sources[0]}"]`,
+    ];
+    const canonicalString = `{${sortedFields.join(",")}}`;
+    const commitment = keccak256(stringToBytes(canonicalString));
+
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "metadata",
+      chainId: CHAIN_ID,
+      factory: ROGUE_FACTORY,
+      publisher: signer.address.toLowerCase() as `0x${string}`,
+      commitment,
+      nonce: uniqueNonce("rogue_meta"),
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth);
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/markets/metadata",
+      headers: { "content-type": "application/json" },
+      payload: { metadata, auth, signature },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json().code).toBe("WRONG_FACTORY");
+  });
+
+  it("P1-FINAL-01: fails closed with 503 DEPLOYMENT_UNAVAILABLE when deployment manifest is tampered (bad chainId)", async () => {
+    // Write a temporary tampered manifest to test fail-closed validation
+    const tempManifestPath = `/tmp/tampered-manifest-${Date.now()}.json`;
+    const { writeFile, unlink } = await import("node:fs/promises");
+    await writeFile(
+      tempManifestPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        status: "LOCAL_SIMULATION",
+        mode: "local-selected",
+        network: { chainId: 999999 }, // TAMPERED chain ID!
+        contracts: {
+          selectedMarketFactory: { address: FACTORY },
+          protocolConfig: { address: "0x3333333333333333333333333333333333333333" },
+        },
+      }),
+      "utf8",
+    );
+
+    const tamperedConfig = loadConfig({
+      ...process.env,
+      PORT: "4397",
+      LOCAL_CHAIN_ID: String(CHAIN_ID),
+      DEPLOYMENT_MANIFEST: tempManifestPath,
+      TRUSTED_FACTORY: "", // Force reading the tampered manifest file
+    });
+    const tamperedApp = await buildServer({ config: tamperedConfig, prisma });
+    await tamperedApp.ready();
+
+    try {
+      const { manifest, commitment, content } = makeEvidenceManifest("tampered-manifest");
+      const auth: PublicationAuth = {
+        app: "ORAKL",
+        version: "1",
+        action: "evidence",
+        chainId: CHAIN_ID,
+        factory: FACTORY,
+        publisher: signer.address.toLowerCase() as `0x${string}`,
+        commitment,
+        nonce: uniqueNonce("tampered_man"),
+        deadline: Math.floor(Date.now() / 1000) + 3600,
+      };
+      const signature = await signPublicationAuthEip712(signer, auth);
+
+      const res = await tamperedApp.inject({
+        method: "POST",
+        url: "/api/v1/evidence",
+        headers: { "content-type": "application/json" },
+        payload: { manifest, auth, signature, content },
+      });
+
+      expect(res.statusCode).toBe(503);
+      expect(res.json().code).toBe("DEPLOYMENT_UNAVAILABLE");
+    } finally {
+      await tamperedApp.close();
+      await unlink(tempManifestPath).catch(() => {});
+    }
   });
 });
