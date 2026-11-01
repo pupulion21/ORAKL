@@ -17,6 +17,8 @@ export type BackendConfig = {
   evidencePublishWindowMs: number;
   trustedFactory?: string;
   deploymentManifestPath?: string;
+  expectedFactoryCodehash?: string;
+  deploymentCacheTtlMs?: number;
 };
 
 const DEFAULT_ORIGINS = [
@@ -50,5 +52,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     evidencePublishWindowMs: 60_000,
     trustedFactory: env.TRUSTED_FACTORY,
     deploymentManifestPath: env.DEPLOYMENT_MANIFEST,
+    expectedFactoryCodehash: env.EXPECTED_FACTORY_CODEHASH,
+    deploymentCacheTtlMs: env.DEPLOYMENT_CACHE_TTL_MS ? Number(env.DEPLOYMENT_CACHE_TTL_MS) : 5000,
   };
 }

@@ -1208,19 +1208,50 @@ export type TrustedDeployment = {
   chainId: number;
   factory: string;
   protocolConfig: string;
+  runtimeCodeKeccak256?: string;
+  abiSha256?: string;
+  verifiedAt: number;
 };
+
+type DeploymentCacheEntry = {
+  data: TrustedDeployment;
+  expiresAt: number;
+};
+
+const deploymentCache = new Map<string, DeploymentCacheEntry>();
+
+export function invalidateDeploymentCache(): void {
+  deploymentCache.clear();
+}
 
 export async function resolveTrustedDeployment(
   config: BackendConfig,
   prisma?: PrismaClient,
+  options?: { forceRefresh?: boolean },
 ): Promise<TrustedDeployment> {
+  const cacheKey = `${config.chainId}:${config.deploymentManifestPath ?? "default"}:${config.trustedFactory ?? "none"}:${config.expectedFactoryCodehash ?? "none"}`;
+  const now = Date.now();
+
+  if (!options?.forceRefresh) {
+    const cached = deploymentCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
+    }
+  }
+
   // 1. Explicit config override (trusted factory address from config / env)
-  if (config.trustedFactory && /^0x[0-9a-fA-F]{40}$/.test(config.trustedFactory)) {
-    return {
+  if (config.trustedFactory) {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(config.trustedFactory) || config.trustedFactory.toLowerCase() === "0x0000000000000000000000000000000000000000") {
+      throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid trustedFactory address: ${config.trustedFactory}`);
+    }
+    const result: TrustedDeployment = {
       chainId: config.chainId,
       factory: config.trustedFactory.toLowerCase(),
       protocolConfig: "0x0000000000000000000000000000000000000000",
+      verifiedAt: now,
     };
+    deploymentCache.set(cacheKey, { data: result, expiresAt: now + (config.deploymentCacheTtlMs ?? 5000) });
+    return result;
   }
 
   // 2. Read trusted server-side deployment manifest
@@ -1240,6 +1271,7 @@ export async function resolveTrustedDeployment(
     }
   }
 
+  // Layer 1: Origin & Path Verification
   let raw: string;
   try {
     raw = await readFile(manifestPath, "utf8");
@@ -1254,24 +1286,41 @@ export async function resolveTrustedDeployment(
     throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "trusted deployment manifest contains invalid JSON");
   }
 
-  if (manifest.status !== "LOCAL_SIMULATION" || manifest.mode !== "local-selected") {
-    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid manifest mode/status (${manifest.status}/${manifest.mode})`);
+  // Layer 8: Environment Segregation & Safety Boundary
+  if (manifest.status !== "LOCAL_SIMULATION") {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid manifest status (${manifest.status}) for local simulation`);
+  }
+  if (manifest.safety?.publicDeployment === true) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "refusing manifest with publicDeployment=true in local simulation mode");
   }
 
+  // Layer 7: Approved ABI Identity & Mode Verification
+  if (manifest.mode !== "local-selected") {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `invalid manifest mode (${manifest.mode}); expected local-selected`);
+  }
+  const abiSha256 = manifest.contracts?.selectedMarketFactory?.abiSha256;
+  if (!abiSha256 || !/^0x[0-9a-fA-F]{64}$/.test(abiSha256)) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid abiSha256 for selectedMarketFactory");
+  }
+
+  // Layer 2: Chain ID Consistency
   if (manifest.network?.chainId !== config.chainId) {
     throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `manifest chainId ${manifest.network?.chainId} does not match server chainId ${config.chainId}`);
   }
 
+  // Layer 3: Factory Address Verification
   const factory = manifest.contracts?.selectedMarketFactory?.address;
-  const protocolConfig = manifest.contracts?.protocolConfig?.address;
-
-  if (!factory || !/^0x[0-9a-fA-F]{40}$/.test(factory)) {
+  if (!factory || !/^0x[0-9a-fA-F]{40}$/.test(factory) || factory.toLowerCase() === "0x0000000000000000000000000000000000000000") {
     throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid selectedMarketFactory address");
   }
-  if (!protocolConfig || !/^0x[0-9a-fA-F]{40}$/.test(protocolConfig)) {
+
+  // Layer 4: ProtocolConfig Address Verification
+  const protocolConfig = manifest.contracts?.protocolConfig?.address;
+  if (!protocolConfig || !/^0x[0-9a-fA-F]{40}$/.test(protocolConfig) || protocolConfig.toLowerCase() === "0x0000000000000000000000000000000000000000") {
     throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid protocolConfig address");
   }
 
+  // Layer 5: Factory-to-Config Linkage Verification
   if (Array.isArray(manifest.contracts?.selectedMarketFactory?.immutableAssignment)) {
     const immutables = manifest.contracts.selectedMarketFactory.immutableAssignment;
     if (immutables.length > 0 && typeof immutables[0] === "string") {
@@ -1282,6 +1331,22 @@ export async function resolveTrustedDeployment(
     }
   }
 
+  // Layer 6: Expected Runtime Bytecode Codehash Verification
+  const runtimeCodeKeccak256 = manifest.contracts?.selectedMarketFactory?.runtimeCodeKeccak256;
+  if (!runtimeCodeKeccak256 || !/^0x[0-9a-fA-F]{64}$/.test(runtimeCodeKeccak256)) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "manifest missing valid runtimeCodeKeccak256 for selectedMarketFactory");
+  }
+  if (config.expectedFactoryCodehash) {
+    if (runtimeCodeKeccak256.toLowerCase() !== config.expectedFactoryCodehash.toLowerCase()) {
+      throw new HttpError(
+        503,
+        "DEPLOYMENT_UNAVAILABLE",
+        `factory runtime bytecode codehash mismatch: expected ${config.expectedFactoryCodehash}, observed ${runtimeCodeKeccak256}`,
+      );
+    }
+  }
+
+  // Layer 9: Database Deployment Identity Consistency
   if (prisma) {
     try {
       const dbDep = await prisma.contractDeployment.findFirst({
@@ -1289,8 +1354,10 @@ export async function resolveTrustedDeployment(
         orderBy: { createdAt: "desc" },
       });
       if (dbDep) {
-        if (dbDep.factoryAddress.toLowerCase() !== factory.toLowerCase() ||
-            dbDep.protocolConfigAddress.toLowerCase() !== protocolConfig.toLowerCase()) {
+        if (
+          dbDep.factoryAddress.toLowerCase() !== factory.toLowerCase() ||
+          dbDep.protocolConfigAddress.toLowerCase() !== protocolConfig.toLowerCase()
+        ) {
           throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", "deployment manifest and database deployment record mismatch");
         }
       }
@@ -1299,11 +1366,18 @@ export async function resolveTrustedDeployment(
     }
   }
 
-  return {
+  // Layer 10: Fail-closed verified state persistence to cache
+  const result: TrustedDeployment = {
     chainId: config.chainId,
     factory: factory.toLowerCase(),
     protocolConfig: protocolConfig.toLowerCase(),
+    runtimeCodeKeccak256: runtimeCodeKeccak256.toLowerCase(),
+    abiSha256: abiSha256.toLowerCase(),
+    verifiedAt: now,
   };
+  const ttl = config.deploymentCacheTtlMs ?? 5000;
+  deploymentCache.set(cacheKey, { data: result, expiresAt: now + ttl });
+  return result;
 }
 
 async function readVerificationSafe(): Promise<{ allPassed: boolean; checksList: unknown[] } | null> {
