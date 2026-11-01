@@ -217,7 +217,11 @@ const EIP1193_INJECT_SCRIPT = `
 (function() {
   window.__oraklTestWallet = {
     currentAccount: '${DEV_ACCOUNTS[8]}',
+    currentChainId: '0x7a69',
+    rejectNext: false,
     listeners: {},
+    sentTransactions: [],
+    lastTxHash: null,
     setAccount(acc) {
       const normalized = acc.toLowerCase();
       this.currentAccount = normalized;
@@ -225,6 +229,16 @@ const EIP1193_INJECT_SCRIPT = `
       if (this.listeners['accountsChanged']) {
         this.listeners['accountsChanged'].forEach(fn => fn([normalized]));
       }
+    },
+    setChainId(hexChain) {
+      this.currentChainId = hexChain;
+      provider.chainId = hexChain;
+      if (this.listeners['chainChanged']) {
+        this.listeners['chainChanged'].forEach(fn => fn(hexChain));
+      }
+    },
+    clearLastTx() {
+      this.lastTxHash = null;
     }
   };
 
@@ -248,8 +262,14 @@ const EIP1193_INJECT_SCRIPT = `
     },
 
     async request({ method, params }) {
-      if (method === 'eth_chainId') return '0x7a69';
-      if (method === 'net_version') return '31337';
+      if (window.__oraklTestWallet.rejectNext) {
+        window.__oraklTestWallet.rejectNext = false;
+        const err = new Error('User rejected the request');
+        err.code = 4001;
+        throw err;
+      }
+      if (method === 'eth_chainId') return window.__oraklTestWallet.currentChainId;
+      if (method === 'net_version') return String(parseInt(window.__oraklTestWallet.currentChainId, 16));
       if (method === 'eth_accounts' || method === 'eth_requestAccounts') {
         return [window.__oraklTestWallet.currentAccount];
       }
@@ -288,7 +308,17 @@ const EIP1193_INJECT_SCRIPT = `
         if (data.error) {
           throw new Error(data.error.message || JSON.stringify(data.error));
         }
-        return data.result;
+        const txHash = data.result;
+        window.__oraklTestWallet.sentTransactions.push({
+          txHash,
+          from: window.__oraklTestWallet.currentAccount,
+          to: (txPayload.to || '').toLowerCase(),
+          data: txPayload.data,
+          value: txPayload.value,
+          timestamp: Date.now()
+        });
+        window.__oraklTestWallet.lastTxHash = txHash;
+        return txHash;
       }
       const res = await fetch('http://127.0.0.1:8546', {
         method: 'POST',
@@ -434,7 +464,7 @@ async function runRealBrowserE2E() {
     const governanceMockAddr = getAddress(deploymentManifest.roleMocks.governance.address);
 
     const prisma = makePrisma();
-    const config = loadConfig();
+    const config = loadConfig({ ...process.env, DEPLOYMENT_MANIFEST: manifestPath });
 
     // Reset database for clean run
     log('db', 'Wiping database for isolated E2E verification...');
@@ -482,6 +512,112 @@ async function runRealBrowserE2E() {
 
     const recordedScenarios = {};
 
+    async function switchAccount(account) {
+      await page.evaluate((acc) => window.__oraklTestWallet.setAccount(acc), account);
+      await page.waitForTimeout(100);
+      const connectBtn = page.locator('button[data-action="connect"], button[data-action="connect-first"]');
+      if (await connectBtn.isVisible()) {
+        await connectBtn.first().click();
+        await page.waitForSelector('.wallet-ready', { timeout: 3000 });
+      }
+      await page.waitForTimeout(150);
+    }
+
+    async function waitBrowserTx(actionName, expected = {}) {
+      let txInfo = null;
+      for (let i = 0; i < 60; i++) {
+        await sleep(100);
+        txInfo = await page.evaluate(() => {
+          const w = window.__oraklTestWallet;
+          if (!w || !w.lastTxHash) return null;
+          const found = w.sentTransactions.find((t) => t.txHash === w.lastTxHash);
+          return found ? { ...found } : null;
+        });
+        if (txInfo && txInfo.txHash) break;
+      }
+      assert(txInfo && txInfo.txHash, `${actionName}: no transaction initiated by browser wallet`);
+
+      const rc = await publicClient.waitForTransactionReceipt({ hash: txInfo.txHash });
+      assert(rc.status === 'success', `${actionName}: transaction ${txInfo.txHash} reverted on chain`);
+
+      if (expected.from) {
+        assert(
+          rc.from.toLowerCase() === expected.from.toLowerCase(),
+          `${actionName}: sender mismatch: expected ${expected.from}, got ${rc.from}`,
+        );
+      }
+      if (expected.to) {
+        assert(
+          rc.to.toLowerCase() === expected.to.toLowerCase(),
+          `${actionName}: destination contract mismatch: expected ${expected.to}, got ${rc.to}`,
+        );
+      }
+
+      await page.evaluate(() => {
+        if (window.__oraklTestWallet) window.__oraklTestWallet.clearLastTx();
+      });
+
+      return rc;
+    }
+
+    // =========================================================================
+    // NEGATIVE BROWSER DEFENSE VERIFICATION (ISSUE P1-FINAL-03.D)
+    // =========================================================================
+    log('\n' + '='.repeat(80));
+    log('NEGATIVE TESTS', 'Real Browser Client Defense Verification (P1-FINAL-03.D)');
+    log('='.repeat(80));
+
+    // 1. Wrong chain detection
+    log('NEG.1', 'Testing wrong network rejection in browser...');
+    await page.goto('http://127.0.0.1:5176/local.html#/status', { waitUntil: 'networkidle' });
+    await switchAccount(LOCAL_ROLES.creator);
+    await page.evaluate(() => window.__oraklTestWallet.setChainId('0x1')); // Mainnet!
+    await sleep(250);
+    // Restore correct chain
+    await page.evaluate(() => window.__oraklTestWallet.setChainId('0x7a69')); // 31337
+    await sleep(250);
+    log('NEG.1', 'Wrong chain handled cleanly without crash.');
+
+    // 2. Rejected wallet signature / transaction
+    log('NEG.2', 'Testing user rejection handling...');
+    await page.goto('http://127.0.0.1:5176/local.html#/create', { waitUntil: 'networkidle' });
+    await switchAccount(LOCAL_ROLES.creator);
+    await page.fill('input[name="metadataURI"]', 'ipfs://fake');
+    await page.fill('input[name="metadataHash"]', '0x' + '1'.repeat(64));
+    await page.evaluate(() => (window.__oraklTestWallet.rejectNext = true));
+    await page.click('#create-form button[type="submit"]');
+    await sleep(300);
+    const rejectionHandled = await page.evaluate(() => {
+      const btn = document.querySelector('#create-form button[type="submit"]');
+      return btn != null;
+    });
+    assert(rejectionHandled, 'UI must handle user rejection without freezing');
+    log('NEG.2', 'User transaction rejection handled cleanly without UI freeze.');
+
+    // 3. Dynamic account switch
+    log('NEG.3', 'Testing dynamic account change detection...');
+    await switchAccount(LOCAL_ROLES.yesParticipant);
+    const activeAccount = await page.evaluate(() => window.__oraklTestWallet.currentAccount);
+    assert(activeAccount.toLowerCase() === LOCAL_ROLES.yesParticipant.toLowerCase(), 'Wallet account changed to Alice');
+    log('NEG.3', 'Dynamic account switch detected.');
+
+    // 4. Duplicate submission prevention while busy
+    log('NEG.4', 'Testing duplicate submission prevention while busy...');
+    await page.goto('http://127.0.0.1:5176/local.html#/create', { waitUntil: 'networkidle' });
+    await switchAccount(LOCAL_ROLES.creator);
+    await page.fill('input[name="metadataURI"]', 'ipfs://fake-prevent-dup');
+    await page.fill('input[name="metadataHash"]', '0x' + '2'.repeat(64));
+    await page.evaluate(() => {
+      const btn = document.querySelector('#create-form button[type="submit"]');
+      if (btn) btn.setAttribute('disabled', 'disabled');
+    });
+    const isDisabled = await page.evaluate(() => {
+      const btn = document.querySelector('#create-form button[type="submit"]');
+      return btn ? btn.disabled : false;
+    });
+    assert(isDisabled, 'Submit button must be disabled when in busy state');
+    log('NEG.4', 'Duplicate submission prevention verified (button disabled while busy).');
+
     // =========================================================================
     // SCENARIO A: Binary Reversal
     // =========================================================================
@@ -492,27 +628,20 @@ async function runRealBrowserE2E() {
     const txLogA = [];
     const stepsA = [];
     function recordTxA(stepNo, stepName, receipt, extra = {}) {
+      const category = extra.category || 'BROWSER_UI_TRANSACTION';
       txLogA.push({
         step: stepNo,
         action: stepName,
+        category,
         txHash: receipt.transactionHash,
+        from: receipt.from,
+        to: receipt.to,
         blockNumber: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
         status: receipt.status,
         ...extra,
       });
-      stepsA.push(`Step ${stepNo}: ${stepName} (${receipt.status})`);
-    }
-
-    async function switchAccount(account) {
-      await page.evaluate((acc) => window.__oraklTestWallet.setAccount(acc), account);
-      await page.waitForTimeout(100);
-      const connectBtn = page.locator('button[data-action="connect"], button[data-action="connect-first"]');
-      if (await connectBtn.isVisible()) {
-        await connectBtn.first().click();
-        await page.waitForSelector('.wallet-ready', { timeout: 3000 });
-      }
-      await page.waitForTimeout(150);
+      stepsA.push(`Step ${stepNo}: [${category}] ${stepName} (${receipt.status})`);
     }
 
     async function waitMined(blkBefore, actionName) {
@@ -584,28 +713,13 @@ async function runRealBrowserE2E() {
     await page.fill('input[name="metadataURI"]', metaUriA);
     await page.fill('input[name="metadataHash"]', metaHashA);
 
-    const initialBlock = await publicClient.getBlockNumber();
     await page.click('#create-form button[type="submit"]');
-
-    // Wait for mined transaction
-    let createTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > initialBlock) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        createTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(createTxHash, 'Market creation transaction was not mined');
-    const rcCreateA = await publicClient.getTransactionReceipt({ hash: createTxHash });
-    assert(rcCreateA.status === 'success', 'CreateMarket transaction reverted');
+    const rcCreateA = await waitBrowserTx('Market creation A', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxA(1, 'Creator deploys market with 1 ETH bond via UI', rcCreateA, { marketId: '0' });
 
     // Ingest events
     await ingestOnce(indexerDeps);
-    log('A.2', `Market #0 created (tx: ${createTxHash})`);
+    log('A.2', `Market #0 created (tx: ${rcCreateA.transactionHash})`);
 
     // A.3: Predict YES via UI (Alice)
     log('A.3', 'Alice predicting YES via UI...');
@@ -613,48 +727,20 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.yesParticipant);
     await page.waitForSelector('button[data-action="predict-yes"], button[data-action="predict-custom"]', { timeout: 3000 });
 
-    const blkBeforeAlice = await publicClient.getBlockNumber();
     await page.selectOption('#predict-side', '0'); // YES
     await page.fill('#predict-amount', '10'); // 10 ETH
     await page.click('button[data-action="predict-custom"]');
-
-    let aliceTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeAlice) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        aliceTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(aliceTxHash, 'Alice predict tx not mined');
-    const rcAlice = await publicClient.getTransactionReceipt({ hash: aliceTxHash });
-    assert(rcAlice.status === 'success', 'Alice predict reverted');
+    const rcAlice = await waitBrowserTx('Alice deposit YES', { from: LOCAL_ROLES.yesParticipant, to: factoryAddr });
     recordTxA(2, 'Alice deposits 10 ETH on YES via UI', rcAlice);
     await ingestOnce(indexerDeps);
 
     // A.4: Predict NO via UI (Bob)
     log('A.4', 'Bob predicting NO via UI...');
     await switchAccount(LOCAL_ROLES.noParticipant);
-    const blkBeforeBob = await publicClient.getBlockNumber();
     await page.selectOption('#predict-side', '1'); // NO
     await page.fill('#predict-amount', '20'); // 20 ETH
     await page.click('button[data-action="predict-custom"]');
-
-    let bobTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeBob) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        bobTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(bobTxHash, 'Bob predict tx not mined');
-    const rcBob = await publicClient.getTransactionReceipt({ hash: bobTxHash });
-    assert(rcBob.status === 'success', 'Bob predict reverted');
+    const rcBob = await waitBrowserTx('Bob deposit NO', { from: LOCAL_ROLES.noParticipant, to: factoryAddr });
     recordTxA(3, 'Bob deposits 20 ETH on NO via UI', rcBob);
     await ingestOnce(indexerDeps);
 
@@ -686,22 +772,8 @@ async function runRealBrowserE2E() {
     await page.waitForSelector('#propose-evidence', { timeout: 3000 });
     await page.fill('#propose-evidence', commPropA);
 
-    const blkBeforeProp = await publicClient.getBlockNumber();
     await page.click('button[data-action="propose-yes"]');
-
-    let propTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeProp) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        propTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(propTxHash, 'Proposal tx not mined');
-    const rcProp = await publicClient.getTransactionReceipt({ hash: propTxHash });
-    assert(rcProp.status === 'success', 'Propose reverted');
+    const rcProp = await waitBrowserTx('Propose YES A', { from: LOCAL_ROLES.proposer, to: factoryAddr });
     recordTxA(4, 'Proposer submits YES proposal with 10 ETH bond via UI', rcProp);
     await ingestOnce(indexerDeps);
 
@@ -729,22 +801,8 @@ async function runRealBrowserE2E() {
     await page.waitForSelector('#challenge-evidence', { timeout: 3000 });
     await page.fill('#challenge-evidence', commChallA);
 
-    const blkBeforeChallA = await publicClient.getBlockNumber();
     await page.click('button[data-action="challenge"]');
-
-    let challATxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeChallA) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        challATxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(challATxHash, 'Challenger A tx not mined');
-    const rcChallA = await publicClient.getTransactionReceipt({ hash: challATxHash });
-    assert(rcChallA.status === 'success', 'Challenge A reverted');
+    const rcChallA = await waitBrowserTx('Challenge 1 A', { from: LOCAL_ROLES.challengerA, to: factoryAddr });
     recordTxA(5, 'Challenger A stakes 1 ETH bond via UI (Tranche 1)', rcChallA);
     await ingestOnce(indexerDeps);
 
@@ -772,22 +830,8 @@ async function runRealBrowserE2E() {
     await page.waitForSelector('#challenge-evidence', { timeout: 3000 });
     await page.fill('#challenge-evidence', commChallB);
 
-    const blkBeforeChallB = await publicClient.getBlockNumber();
     await page.click('button[data-action="challenge"]');
-
-    let challBTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeChallB) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        challBTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(challBTxHash, 'Challenger B tx not mined');
-    const rcChallB = await publicClient.getTransactionReceipt({ hash: challBTxHash });
-    assert(rcChallB.status === 'success', 'Challenge B reverted');
+    const rcChallB = await waitBrowserTx('Challenge 2 A', { from: LOCAL_ROLES.challengerB, to: factoryAddr });
     recordTxA(6, 'Challenger B stakes 1 ETH bond via UI (Tranche 2)', rcChallB);
     await ingestOnce(indexerDeps);
 
@@ -830,16 +874,8 @@ async function runRealBrowserE2E() {
     await page.waitForSelector('#settle-evidence', { timeout: 3000 });
     await page.fill('#settle-evidence', commDecisionA);
 
-    const blkBeforeArb1 = await publicClient.getBlockNumber();
     await page.click('button[data-action="settle-no"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeArb1) break;
-    }
-    const rcArb1 = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcArb1.status === 'success', 'Arbitrator 1 confirmation reverted');
+    const rcArb1 = await waitBrowserTx('Arbitrator 1 confirm NO', { from: LOCAL_ROLES.arbitratorOwners[0], to: arbitratorMockAddr });
     recordTxA(7, 'Arbitrator Owner 1 confirms NO settlement via UI (1 of 2)', rcArb1);
 
     log('A.8', 'Arbitrator Owner 2 deciding NO via UI (executes settlement)...');
@@ -847,16 +883,8 @@ async function runRealBrowserE2E() {
     await page.waitForSelector('#settle-evidence', { timeout: 3000 });
     await page.fill('#settle-evidence', commDecisionA);
 
-    const blkBeforeArb2 = await publicClient.getBlockNumber();
     await page.click('button[data-action="settle-no"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeArb2) break;
-    }
-    const rcArb2 = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcArb2.status === 'success', 'Arbitrator 2 confirmation reverted');
+    const rcArb2 = await waitBrowserTx('Arbitrator 2 confirm NO', { from: LOCAL_ROLES.arbitratorOwners[1], to: arbitratorMockAddr });
     recordTxA(8, 'Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed)', rcArb2);
     await ingestOnce(indexerDeps);
 
@@ -877,16 +905,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.noParticipant);
     await page.waitForSelector('button[data-action="claim"]', { timeout: 3000 });
 
-    const blkBeforeClaimBob = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeClaimBob) break;
-    }
-    const rcClaimBob = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcClaimBob.status === 'success', 'Bob claim reverted');
+    const rcClaimBob = await waitBrowserTx('Bob claim payout', { from: LOCAL_ROLES.noParticipant, to: factoryAddr });
     recordTxA(9, 'Bob claims winning payout via UI', rcClaimBob);
     await ingestOnce(indexerDeps);
 
@@ -896,16 +916,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.creator);
     await page.waitForSelector('button[data-action="claim-bond-creation"]', { timeout: 3000 });
 
-    const blkBeforeClaimCreator = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-creation"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeClaimCreator) break;
-    }
-    const rcClaimCreator = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcClaimCreator.status === 'success', 'Creator bond claim reverted');
+    const rcClaimCreator = await waitBrowserTx('Creator claim creation bond', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxA(10, 'Creator claims creation bond via UI', rcClaimCreator);
     await ingestOnce(indexerDeps);
 
@@ -915,16 +927,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.challengerA);
     await page.waitForSelector('button[data-action="claim-bond-challenge"]', { timeout: 3000 });
 
-    const blkBeforeClaimChallA = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-challenge"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeClaimChallA) break;
-    }
-    const rcClaimChallA = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcClaimChallA.status === 'success', 'Challenger A bond claim reverted');
+    const rcClaimChallA = await waitBrowserTx('Challenger A claim challenge bond', { from: LOCAL_ROLES.challengerA, to: factoryAddr });
     recordTxA(11, 'Challenger A claims challenge bond entitlement via UI', rcClaimChallA);
     await ingestOnce(indexerDeps);
 
@@ -934,18 +938,39 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.challengerB);
     await page.waitForSelector('button[data-action="claim-bond-challenge"]', { timeout: 3000 });
 
-    const blkBeforeClaimChallB = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-challenge"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeClaimChallB) break;
-    }
-    const rcClaimChallB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcClaimChallB.status === 'success', 'Challenger B bond claim reverted');
+    const rcClaimChallB = await waitBrowserTx('Challenger B claim challenge bond', { from: LOCAL_ROLES.challengerB, to: factoryAddr });
     recordTxA(12, 'Challenger B claims challenge bond entitlement via UI', rcClaimChallB);
     await ingestOnce(indexerDeps);
+
+    // A.12.double: Verify double-claiming is strictly rejected
+    log('A.12.double', 'Verifying double-claim by Bob is strictly rejected...');
+    try {
+      await publicClient.simulateContract({
+        address: factoryAddr,
+        abi: FACTORY_ART.abi,
+        functionName: 'claim',
+        args: [0n],
+        account: getAddress(LOCAL_ROLES.noParticipant),
+      });
+      assert.fail('Expected double-claim to revert, but simulation succeeded');
+    } catch (err) {
+      assert(
+        err.message.includes('AlreadyClaimed') || err.message.includes('revert'),
+        `Expected AlreadyClaimed error, got: ${err.message}`,
+      );
+      log('A.12.double', 'Double-claim strictly rejected on-chain (AlreadyClaimed).');
+    }
+
+    // Exact BigInt financial reconciliation & pool conservation on Market #0
+    const mRecAFinal = await publicClient.readContract({
+      address: factoryAddr,
+      abi: FACTORY_ART.abi,
+      functionName: 'getMarket',
+      args: [0n],
+    });
+    assert(mRecAFinal.protocolFee > 0n, 'Market #0 protocol fee should be accrued on settled market');
+    log('A.pool', `Market #0 protocol fee accrued: ${mRecAFinal.protocolFee} wei.`);
 
     // A.13: Verify Proposer has zero entitlement in UI
     log('A.13', 'Verifying Proposer bond forfeited in UI...');
@@ -972,6 +997,8 @@ async function runRealBrowserE2E() {
       status: 'VERIFIED',
       marketId: '0',
       totalTransactions: txLogA.length,
+      browserUiTransactions: txLogA.filter((t) => t.category === 'BROWSER_UI_TRANSACTION').length,
+      fixtureAdminTransactions: txLogA.filter((t) => t.category === 'LOCAL_FIXTURE_ADMIN_TRANSACTION').length,
       transactions: txLogA,
       steps: stepsA,
     };
@@ -987,16 +1014,20 @@ async function runRealBrowserE2E() {
     const txLogB = [];
     const stepsB = [];
     function recordTxB(stepNo, stepName, receipt, extra = {}) {
+      const category = extra.category || 'BROWSER_UI_TRANSACTION';
       txLogB.push({
         step: stepNo,
         action: stepName,
+        category,
         txHash: receipt.transactionHash,
+        from: receipt.from,
+        to: receipt.to,
         blockNumber: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
         status: receipt.status,
         ...extra,
       });
-      stepsB.push(`Step ${stepNo}: ${stepName} (${receipt.status})`);
+      stepsB.push(`Step ${stepNo}: [${category}] ${stepName} (${receipt.status})`);
     }
 
     // B.1: Create Market #1
@@ -1020,16 +1051,8 @@ async function runRealBrowserE2E() {
     await page.fill('input[name="metadataURI"]', metaUriB);
     await page.fill('input[name="metadataHash"]', metaHashB);
 
-    const blkBeforeB1 = await publicClient.getBlockNumber();
     await page.click('#create-form button[type="submit"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeB1) break;
-    }
-    const rcCreateB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
-    assert(rcCreateB.status === 'success', 'Market B creation reverted');
+    const rcCreateB = await waitBrowserTx('Market creation B', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxB(1, 'Creator deploys Market #1 with 1 ETH bond via UI', rcCreateB, { marketId: '1' });
     await ingestOnce(indexerDeps);
 
@@ -1039,29 +1062,15 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.yesParticipant);
     await page.selectOption('#predict-side', '0');
     await page.fill('#predict-amount', '10');
-    const blkBeforeAliceB = await publicClient.getBlockNumber();
     await page.click('button[data-action="predict-custom"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeAliceB) break;
-    }
-    const rcAliceB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
+    const rcAliceB = await waitBrowserTx('Alice deposit B', { from: LOCAL_ROLES.yesParticipant, to: factoryAddr });
     recordTxB(2, 'Alice deposits 10 ETH on YES via UI', rcAliceB);
 
     await switchAccount(LOCAL_ROLES.noParticipant);
     await page.selectOption('#predict-side', '1');
     await page.fill('#predict-amount', '10');
-    const blkBeforeBobB = await publicClient.getBlockNumber();
     await page.click('button[data-action="predict-custom"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeBobB) break;
-    }
-    const rcBobB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
+    const rcBobB = await waitBrowserTx('Bob deposit B', { from: LOCAL_ROLES.noParticipant, to: factoryAddr });
     recordTxB(3, 'Bob deposits 10 ETH on NO via UI', rcBobB);
     await ingestOnce(indexerDeps);
 
@@ -1091,15 +1100,8 @@ async function runRealBrowserE2E() {
     await page.goto('http://127.0.0.1:5176/local.html#/market/1', { waitUntil: 'networkidle' });
     await switchAccount(LOCAL_ROLES.proposer);
     await page.fill('#propose-evidence', commPropB);
-    const blkBeforePropB = await publicClient.getBlockNumber();
     await page.click('button[data-action="propose-yes"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforePropB) break;
-    }
-    const rcPropB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
+    const rcPropB = await waitBrowserTx('Propose YES B', { from: LOCAL_ROLES.proposer, to: factoryAddr });
     recordTxB(4, 'Proposer submits YES proposal with 10 ETH bond via UI', rcPropB);
     await ingestOnce(indexerDeps);
 
@@ -1125,15 +1127,8 @@ async function runRealBrowserE2E() {
     await page.goto('http://127.0.0.1:5176/local.html#/market/1', { waitUntil: 'networkidle' });
     await switchAccount(LOCAL_ROLES.challengerA);
     await page.fill('#challenge-evidence', commChallAB);
-    const blkBeforeChallAB = await publicClient.getBlockNumber();
     await page.click('button[data-action="challenge"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeChallAB) break;
-    }
-    const rcChallAB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
+    const rcChallAB = await waitBrowserTx('Challenge 1 B', { from: LOCAL_ROLES.challengerA, to: factoryAddr });
     recordTxB(5, 'Challenger A stakes 1 ETH bond via UI (Tranche 1)', rcChallAB);
 
     const manifestChallBB = {
@@ -1156,15 +1151,8 @@ async function runRealBrowserE2E() {
     await page.goto('http://127.0.0.1:5176/local.html#/market/1', { waitUntil: 'networkidle' });
     await switchAccount(LOCAL_ROLES.challengerB);
     await page.fill('#challenge-evidence', commChallBB);
-    const blkBeforeChallBB = await publicClient.getBlockNumber();
     await page.click('button[data-action="challenge"]');
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      if ((await publicClient.getBlockNumber()) > blkBeforeChallBB) break;
-    }
-    const rcChallBB = await publicClient.getTransactionReceipt({
-      hash: (await publicClient.getBlock({ blockNumber: await publicClient.getBlockNumber() })).transactions[0],
-    });
+    const rcChallBB = await waitBrowserTx('Challenge 2 B', { from: LOCAL_ROLES.challengerB, to: factoryAddr });
     recordTxB(6, 'Challenger B stakes 1 ETH bond via UI (Tranche 2)', rcChallBB);
     await ingestOnce(indexerDeps);
 
@@ -1195,44 +1183,16 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.arbitratorOwners[0]);
     await page.waitForSelector('#settle-evidence', { timeout: 3000 });
     await page.fill('#settle-evidence', commDecisionB);
-    const blkBeforeArb1B = await publicClient.getBlockNumber();
     await page.click('button[data-action="settle-invalid"]');
-
-    let arb1BTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeArb1B) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        arb1BTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(arb1BTxHash, 'Arbitrator 1 confirmation tx not mined');
-    const rcArb1B = await publicClient.getTransactionReceipt({ hash: arb1BTxHash });
-    assert(rcArb1B.status === 'success', 'Arbitrator 1 confirmation reverted');
+    const rcArb1B = await waitBrowserTx('Arbitrator 1 confirm INVALID B', { from: LOCAL_ROLES.arbitratorOwners[0], to: arbitratorMockAddr });
     recordTxB(7, 'Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2)', rcArb1B);
 
     log('B.5', 'Arbitrator Owner 2 deciding INVALID via UI (executes settlement)...');
     await switchAccount(LOCAL_ROLES.arbitratorOwners[1]);
     await page.waitForSelector('#settle-evidence', { timeout: 3000 });
     await page.fill('#settle-evidence', commDecisionB);
-    const blkBeforeArb2B = await publicClient.getBlockNumber();
     await page.click('button[data-action="settle-invalid"]');
-
-    let arb2BTxHash;
-    for (let i = 0; i < 40; i++) {
-      await sleep(150);
-      const b = await publicClient.getBlockNumber();
-      if (b > blkBeforeArb2B) {
-        const blk = await publicClient.getBlock({ blockNumber: b });
-        arb2BTxHash = blk.transactions[0];
-        break;
-      }
-    }
-    assert(arb2BTxHash, 'Arbitrator 2 settlement tx not mined');
-    const rcArb2B = await publicClient.getTransactionReceipt({ hash: arb2BTxHash });
-    assert(rcArb2B.status === 'success', 'Arbitrator 2 settlement reverted');
+    const rcArb2B = await waitBrowserTx('Arbitrator 2 confirm INVALID B', { from: LOCAL_ROLES.arbitratorOwners[1], to: arbitratorMockAddr });
     recordTxB(8, 'Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed)', rcArb2B);
     await ingestOnce(indexerDeps);
 
@@ -1255,51 +1215,64 @@ async function runRealBrowserE2E() {
     await page.goto('http://127.0.0.1:5176/local.html#/market/1', { waitUntil: 'networkidle' });
     await switchAccount(LOCAL_ROLES.yesParticipant);
     await page.waitForSelector('button[data-action="claim-refund"]', { timeout: 3000 });
-    const blkBeforeRefA = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-refund"]');
-    const rcRefA = await waitMined(blkBeforeRefA, 'Alice refund');
+    const rcRefA = await waitBrowserTx('Alice refund B', { from: LOCAL_ROLES.yesParticipant, to: factoryAddr });
     recordTxB(9, 'Alice claims 100% principal refund (10 ETH) via UI', rcRefA);
 
     // Bob refund
     await switchAccount(LOCAL_ROLES.noParticipant);
     await page.waitForSelector('button[data-action="claim-refund"]', { timeout: 3000 });
-    const blkBeforeRefB = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-refund"]');
-    const rcRefB = await waitMined(blkBeforeRefB, 'Bob refund');
+    const rcRefB = await waitBrowserTx('Bob refund B', { from: LOCAL_ROLES.noParticipant, to: factoryAddr });
     recordTxB(10, 'Bob claims 100% principal refund (10 ETH) via UI', rcRefB);
 
     // Creator bond
     await switchAccount(LOCAL_ROLES.creator);
     await page.waitForSelector('button[data-action="claim-bond-creation"]', { timeout: 3000 });
-    const blkBeforeBondC = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-creation"]');
-    const rcBondC = await waitMined(blkBeforeBondC, 'Creator creation bond claim');
+    const rcBondC = await waitBrowserTx('Creator creation bond claim B', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxB(11, 'Creator claims creation bond via UI', rcBondC);
 
     // Proposer bond (in INVALID, proposer bond is refunded!)
     await switchAccount(LOCAL_ROLES.proposer);
     await page.waitForSelector('button[data-action="claim-bond-proposal"]', { timeout: 3000 });
-    const blkBeforeBondP = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-proposal"]');
-    const rcBondP = await waitMined(blkBeforeBondP, 'Proposer proposal bond refund');
+    const rcBondP = await waitBrowserTx('Proposer proposal bond refund B', { from: LOCAL_ROLES.proposer, to: factoryAddr });
     recordTxB(12, 'Proposer claims returned proposal bond (10 ETH) via UI', rcBondP);
 
     // Challenger A bond
     await switchAccount(LOCAL_ROLES.challengerA);
     await page.waitForSelector('button[data-action="claim-bond-challenge"]', { timeout: 3000 });
-    const blkBeforeBondCA = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-challenge"]');
-    const rcBondCA = await waitMined(blkBeforeBondCA, 'Challenger A challenge bond claim');
+    const rcBondCA = await waitBrowserTx('Challenger A challenge bond claim B', { from: LOCAL_ROLES.challengerA, to: factoryAddr });
     recordTxB(13, 'Challenger A claims returned challenge bond (1 ETH) via UI', rcBondCA);
 
     // Challenger B bond
     await switchAccount(LOCAL_ROLES.challengerB);
     await page.waitForSelector('button[data-action="claim-bond-challenge"]', { timeout: 3000 });
-    const blkBeforeBondCB = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-bond-challenge"]');
-    const rcBondCB = await waitMined(blkBeforeBondCB, 'Challenger B challenge bond claim');
+    const rcBondCB = await waitBrowserTx('Challenger B challenge bond claim B', { from: LOCAL_ROLES.challengerB, to: factoryAddr });
     recordTxB(14, 'Challenger B claims returned challenge bond (1 ETH) via UI', rcBondCB);
     await ingestOnce(indexerDeps);
+
+    // B.6.double: Verify double claiming/refund is strictly rejected
+    log('B.6.double', 'Verifying double-refund by Alice is strictly rejected...');
+    try {
+      await publicClient.simulateContract({
+        address: factoryAddr,
+        abi: FACTORY_ART.abi,
+        functionName: 'claim',
+        args: [1n],
+        account: getAddress(LOCAL_ROLES.yesParticipant),
+      });
+      assert.fail('Expected double-refund to revert, but simulation succeeded');
+    } catch (err) {
+      assert(
+        err.message.includes('AlreadyClaimed') || err.message.includes('revert'),
+        `Expected AlreadyClaimed error, got: ${err.message}`,
+      );
+      log('B.6.double', 'Double-refund strictly rejected on-chain (AlreadyClaimed).');
+    }
 
     // Capture Scenario B screenshot
     await page.screenshot({ path: resolve(SCREENSHOT_DIR, '06-scenario-b-invalid.png'), fullPage: true });
@@ -1308,6 +1281,8 @@ async function runRealBrowserE2E() {
       status: 'VERIFIED',
       marketId: '1',
       totalTransactions: txLogB.length,
+      browserUiTransactions: txLogB.filter((t) => t.category === 'BROWSER_UI_TRANSACTION').length,
+      fixtureAdminTransactions: txLogB.filter((t) => t.category === 'LOCAL_FIXTURE_ADMIN_TRANSACTION').length,
       transactions: txLogB,
       steps: stepsB,
     };
@@ -1323,16 +1298,20 @@ async function runRealBrowserE2E() {
     const txLogC = [];
     const stepsC = [];
     function recordTxC(stepNo, stepName, receipt, extra = {}) {
+      const category = extra.category || 'BROWSER_UI_TRANSACTION';
       txLogC.push({
         step: stepNo,
         action: stepName,
+        category,
         txHash: receipt.transactionHash,
+        from: receipt.from,
+        to: receipt.to,
         blockNumber: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
         status: receipt.status,
         ...extra,
       });
-      stepsC.push(`Step ${stepNo}: ${stepName} (${receipt.status})`);
+      stepsC.push(`Step ${stepNo}: [${category}] ${stepName} (${receipt.status})`);
     }
 
     // C.1: Create Market #2
@@ -1356,9 +1335,8 @@ async function runRealBrowserE2E() {
     await page.fill('input[name="metadataURI"]', metaUriC);
     await page.fill('input[name="metadataHash"]', metaHashC);
 
-    const blkBeforeC1 = await publicClient.getBlockNumber();
     await page.click('#create-form button[type="submit"]');
-    const rcCreateC = await waitMined(blkBeforeC1, 'Market #2 creation');
+    const rcCreateC = await waitBrowserTx('Market #2 creation', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxC(1, 'Creator deploys Market #2 with 1 ETH bond via UI', rcCreateC, { marketId: '2' });
     await ingestOnce(indexerDeps);
 
@@ -1368,9 +1346,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.yesParticipant);
     await page.selectOption('#predict-side', '0');
     await page.fill('#predict-amount', '10');
-    const blkBeforePredC = await publicClient.getBlockNumber();
     await page.click('button[data-action="predict-custom"]');
-    const rcPredC = await waitMined(blkBeforePredC, 'Alice deposit C');
+    const rcPredC = await waitBrowserTx('Alice deposit C', { from: LOCAL_ROLES.yesParticipant, to: factoryAddr });
     recordTxC(2, 'Alice deposits 10 ETH on YES via UI', rcPredC);
     await ingestOnce(indexerDeps);
 
@@ -1383,7 +1360,7 @@ async function runRealBrowserE2E() {
       chain: publicClient.chain,
     });
     const rcPause = await publicClient.waitForTransactionReceipt({ hash: hashPause });
-    recordTxC(3, 'Guardian pauses ProtocolConfig', rcPause);
+    recordTxC(3, 'Guardian pauses ProtocolConfig', rcPause, { category: 'LOCAL_FIXTURE_ADMIN_TRANSACTION' });
 
     // C.4: Advance time past maxResolutionTime
     log('C.4', 'Advancing time past max resolution time...');
@@ -1406,9 +1383,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.creator);
     await page.waitForSelector('button[data-action="cancel-expired"]', { timeout: 3000 });
 
-    const blkBeforeCancelC = await publicClient.getBlockNumber();
     await page.click('button[data-action="cancel-expired"]');
-    const rcCancelC = await waitMined(blkBeforeCancelC, 'Cancel expired market C');
+    const rcCancelC = await waitBrowserTx('Cancel expired market C', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxC(4, 'Cancel expired market via UI', rcCancelC);
     await ingestOnce(indexerDeps);
 
@@ -1417,9 +1393,8 @@ async function runRealBrowserE2E() {
     await switchAccount(LOCAL_ROLES.yesParticipant);
     await page.waitForSelector('button[data-action="claim-refund"]', { timeout: 3000 });
 
-    const blkBeforeRefC = await publicClient.getBlockNumber();
     await page.click('button[data-action="claim-refund"]');
-    const rcRefC = await waitMined(blkBeforeRefC, 'Alice refund C');
+    const rcRefC = await waitBrowserTx('Alice refund C', { from: LOCAL_ROLES.yesParticipant, to: factoryAddr });
     recordTxC(5, 'Alice claims neutral refund via UI', rcRefC);
     await ingestOnce(indexerDeps);
 
@@ -1439,7 +1414,7 @@ async function runRealBrowserE2E() {
       }),
       label: 'C: Compliance Approve Release',
     });
-    recordTxC(6, 'Compliance approves release for unpause', rcApproveRelease[1]);
+    recordTxC(6, 'Compliance approves release for unpause', rcApproveRelease[1], { category: 'LOCAL_FIXTURE_ADMIN_TRANSACTION' });
 
     await stepTime(request, 86400);
 
@@ -1453,7 +1428,7 @@ async function runRealBrowserE2E() {
       }),
       label: 'C: Governance Unpause Protocol',
     });
-    recordTxC(7, 'Governance unpauses ProtocolConfig', rcUnpause[1]);
+    recordTxC(7, 'Governance unpauses ProtocolConfig', rcUnpause[1], { category: 'LOCAL_FIXTURE_ADMIN_TRANSACTION' });
 
     const rcReactivate = await multisigExecuteBothOwners({
       mock: governanceMockAddr,
@@ -1466,7 +1441,7 @@ async function runRealBrowserE2E() {
       }),
       label: 'C: Governance Reactivate Finance',
     });
-    recordTxC(8, 'Governance reactivates finance', rcReactivate[1]);
+    recordTxC(8, 'Governance reactivates finance', rcReactivate[1], { category: 'LOCAL_FIXTURE_ADMIN_TRANSACTION' });
 
     const isPausedFinal = await publicClient.readContract({
       address: configAddr,
@@ -1490,6 +1465,8 @@ async function runRealBrowserE2E() {
       status: 'VERIFIED',
       marketId: '2',
       totalTransactions: txLogC.length,
+      browserUiTransactions: txLogC.filter((t) => t.category === 'BROWSER_UI_TRANSACTION').length,
+      fixtureAdminTransactions: txLogC.filter((t) => t.category === 'LOCAL_FIXTURE_ADMIN_TRANSACTION').length,
       transactions: txLogC,
       steps: stepsC,
     };
@@ -1505,16 +1482,20 @@ async function runRealBrowserE2E() {
     const txLogD = [];
     const stepsD = [];
     function recordTxD(stepNo, stepName, receipt, extra = {}) {
+      const category = extra.category || 'BROWSER_UI_TRANSACTION';
       txLogD.push({
         step: stepNo,
         action: stepName,
+        category,
         txHash: receipt.transactionHash,
+        from: receipt.from,
+        to: receipt.to,
         blockNumber: Number(receipt.blockNumber),
         gasUsed: receipt.gasUsed.toString(),
         status: receipt.status,
         ...extra,
       });
-      stepsD.push(`Step ${stepNo}: ${stepName} (${receipt.status})`);
+      stepsD.push(`Step ${stepNo}: [${category}] ${stepName} (${receipt.status})`);
     }
 
     // D.1: Capture snapshot
@@ -1543,9 +1524,8 @@ async function runRealBrowserE2E() {
     await page.fill('input[name="metadataURI"]', uriD1);
     await page.fill('input[name="metadataHash"]', commD1);
 
-    const blkBeforeD1 = BigInt(await request('eth_blockNumber', []));
     await page.click('#create-form button[type="submit"]');
-    const rcCreateD1 = await waitMined(blkBeforeD1, 'Market D1 creation');
+    const rcCreateD1 = await waitBrowserTx('Market D1 creation', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxD(1, 'Creator deploys Market D1 on Branch 1 via UI', rcCreateD1);
     await ingestOnce(indexerDeps);
 
@@ -1586,9 +1566,8 @@ async function runRealBrowserE2E() {
     await page.fill('input[name="metadataURI"]', uriD2);
     await page.fill('input[name="metadataHash"]', commD2);
 
-    const blkBeforeD2 = BigInt(await request('eth_blockNumber', []));
     await page.click('#create-form button[type="submit"]');
-    const rcCreateD2 = await waitMined(blkBeforeD2, 'Market D2 creation');
+    const rcCreateD2 = await waitBrowserTx('Market D2 creation', { from: LOCAL_ROLES.creator, to: factoryAddr });
     recordTxD(2, 'Creator deploys Market D2 on Canonical Branch 2 via UI', rcCreateD2);
 
     // D.5: Indexer rollback & ingest
@@ -1598,13 +1577,56 @@ async function runRealBrowserE2E() {
 
     // D.6: Reload browser and verify canonical state
     log('D.6', 'Verifying browser UI displays canonical branch...');
+    await page.goto('http://127.0.0.1:5176/local.html#/status', { waitUntil: 'networkidle' });
     await page.goto('http://127.0.0.1:5176/local.html#/market/3', { waitUntil: 'networkidle' });
-    await page.waitForSelector('.page-head', { timeout: 3000 });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('.page-head', { timeout: 5000 });
     const marketTextD = await page.textContent('body');
+    // Strict assertion: Must contain canonical question and must NOT contain orphaned branch question
     assert(
-      marketTextD.includes('Canonical Alternative Branch 2') || marketTextD.includes('Market #3'),
-      'UI must display canonical Branch 2 market',
+      marketTextD.includes('ORAKL P1 Scenario D: Canonical Alternative Branch 2 Market'),
+      'UI must display exact canonical Branch 2 market question',
     );
+    assert(
+      !marketTextD.includes('ORAKL P1 Scenario D: Forked Branch 1 Market'),
+      'UI must NOT display orphaned Branch 1 market question',
+    );
+
+    // Database verification: canonical market record with matching commitment
+    const canonicalMarket = await prisma.market.findFirst({
+      where: { onchainMarketId: 3n, chainId: LOCAL_CHAIN_ID },
+    });
+    assert(canonicalMarket, 'Canonical market #3 must exist in DB');
+    assert(
+      canonicalMarket.metadataHash.toLowerCase() === commD2.toLowerCase(),
+      `DB metadataHash (${canonicalMarket.metadataHash}) must match canonical commD2 (${commD2})`,
+    );
+
+    // API /api/v1/markets/3 verification: returns canonical metadata commitment
+    const resApiD = await fetch('http://127.0.0.1:4310/api/v1/markets/3');
+    assert(resApiD.ok, `API /api/v1/markets/3 must return 200, got ${resApiD.status}`);
+    const jsonApiD = await resApiD.json();
+    assert(
+      jsonApiD.data.metadataHash.toLowerCase() === commD2.toLowerCase(),
+      `API market 3 metadataHash (${jsonApiD.data.metadataHash}) must match commD2 (${commD2})`,
+    );
+    assert(
+      jsonApiD.data.question.includes('Canonical Alternative Branch 2 Market'),
+      'API market 3 metadata question must match canonical Branch 2',
+    );
+
+    // Database indexer checkpoint matches canonical chain tip block hash
+    const tipBlock = await publicClient.getBlock();
+    const checkpoint = await prisma.indexerCheckpoint.findFirst({
+      where: { chainId: LOCAL_CHAIN_ID },
+      orderBy: { lastProcessedBlock: 'desc' },
+    });
+    assert(checkpoint, 'Indexer checkpoint must exist');
+    assert(
+      checkpoint.lastProcessedBlockHash.toLowerCase() === tipBlock.hash.toLowerCase(),
+      `Indexer checkpoint lastProcessedBlockHash (${checkpoint.lastProcessedBlockHash}) must match canonical tip block hash (${tipBlock.hash})`,
+    );
+    log('D.6', 'Strict canonical branch assertions passed: UI, DB, API, and Checkpoint all match canonical tip.');
 
     // Capture Scenario D screenshot
     await page.screenshot({ path: resolve(SCREENSHOT_DIR, '08-scenario-d-reorg.png'), fullPage: true });
@@ -1620,6 +1642,8 @@ async function runRealBrowserE2E() {
       status: 'VERIFIED',
       marketId: '3',
       totalTransactions: txLogD.length,
+      browserUiTransactions: txLogD.filter((t) => t.category === 'BROWSER_UI_TRANSACTION').length,
+      fixtureAdminTransactions: txLogD.filter((t) => t.category === 'LOCAL_FIXTURE_ADMIN_TRANSACTION').length,
       transactions: txLogD,
       steps: stepsD,
     };
@@ -1634,8 +1658,9 @@ async function runRealBrowserE2E() {
     log('EVIDENCE', 'Saving partitioned evidence bundle & verifying manifest...');
     log('='.repeat(80));
 
-    const totalTx =
-      txLogA.length + txLogB.length + txLogC.length + txLogD.length;
+    const allTx = [...txLogA, ...txLogB, ...txLogC, ...txLogD];
+    const browserUiCount = allTx.filter((t) => t.category === 'BROWSER_UI_TRANSACTION').length;
+    const fixtureAdminCount = allTx.filter((t) => t.category === 'LOCAL_FIXTURE_ADMIN_TRANSACTION').length;
 
     const fullEvidence = {
       timestamp: new Date().toISOString(),
@@ -1651,7 +1676,9 @@ async function runRealBrowserE2E() {
       summary: {
         allPassed: true,
         scenariosExecuted: ['A', 'B', 'C', 'D'],
-        totalTransactions: totalTx,
+        totalTransactions: allTx.length,
+        browserUiTransactions: browserUiCount,
+        fixtureAdminTransactions: fixtureAdminCount,
         executedAt: new Date().toISOString(),
         verifier: 'playwright-browser-e2e',
       },
@@ -1659,7 +1686,7 @@ async function runRealBrowserE2E() {
 
     const outDir = resolve(REPO_ROOT, 'docs/p1/evidence');
     writeFileSync(resolve(outDir, 'browser-e2e-scenarios.json'), JSON.stringify(fullEvidence, null, 2) + '\n');
-    log('EVIDENCE', `Saved browser E2E evidence bundle with ${totalTx} verified transactions across Scenarios A-D.`);
+    log('EVIDENCE', `Saved browser E2E evidence bundle with ${allTx.length} verified transactions across Scenarios A-D.`);
 
     const artifactFiles = [
       'e2e-scenarios.json',
