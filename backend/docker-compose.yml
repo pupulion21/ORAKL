@@ -13,6 +13,7 @@ services:
       POSTGRES_USER: orakl
       POSTGRES_PASSWORD: orakl_local_p1
       POSTGRES_DB: orakl_p1
+    command: ["postgres", "-c", "listen_addresses=127.0.0.1"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U orakl -d orakl_p1"]
       interval: 2s

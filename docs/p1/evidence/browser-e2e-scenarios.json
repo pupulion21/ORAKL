@@ -1,0 +1,388 @@
+{
+  "timestamp": "2026-11-01T03:22:11.292Z",
+  "chainId": 31337,
+  "contracts": {
+    "factory": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "config": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+    "arbitrator": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "compliance": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "governance": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  },
+  "scenarios": {
+    "scenarioA": {
+      "status": "VERIFIED",
+      "marketId": "0",
+      "totalTransactions": 12,
+      "transactions": [
+        {
+          "step": 1,
+          "action": "Creator deploys market with 1 ETH bond via UI",
+          "txHash": "0xe07ef5e8ef07482122312584c3f74a491d79ddc765d00e1a9d0ac01640de07b8",
+          "blockNumber": 13,
+          "gasUsed": "502699",
+          "status": "success",
+          "marketId": "0"
+        },
+        {
+          "step": 2,
+          "action": "Alice deposits 10 ETH on YES via UI",
+          "txHash": "0x5403fb2833c73342553f2f47c89203bf59765aea272e995a1b6f01e654d9c371",
+          "blockNumber": 14,
+          "gasUsed": "241013",
+          "status": "success"
+        },
+        {
+          "step": 3,
+          "action": "Bob deposits 20 ETH on NO via UI",
+          "txHash": "0x3da2db0df6e6956d8db377150aee68640b85ec8e9c668106d34dbe968e6663c8",
+          "blockNumber": 15,
+          "gasUsed": "155679",
+          "status": "success"
+        },
+        {
+          "step": 4,
+          "action": "Proposer submits YES proposal with 10 ETH bond via UI",
+          "txHash": "0x6a058061e3143d26c9bfc17a0a8fa390cc04e473901e157d7cc5068bd8d54634",
+          "blockNumber": 17,
+          "gasUsed": "231943",
+          "status": "success"
+        },
+        {
+          "step": 5,
+          "action": "Challenger A stakes 1 ETH bond via UI (Tranche 1)",
+          "txHash": "0x24335a23d2aad1bf715126cfb0749475447d5805e221035276e1203a584a2baf",
+          "blockNumber": 18,
+          "gasUsed": "156480",
+          "status": "success"
+        },
+        {
+          "step": 6,
+          "action": "Challenger B stakes 1 ETH bond via UI (Tranche 2)",
+          "txHash": "0x7d707da22d0d567d5764766471d5304765abd77fed3e2ee6e45656c4034cee38",
+          "blockNumber": 19,
+          "gasUsed": "109906",
+          "status": "success"
+        },
+        {
+          "step": 7,
+          "action": "Arbitrator Owner 1 confirms NO settlement via UI (1 of 2)",
+          "txHash": "0xab1d41a5528eba19fc683fa4ac4d7607b4d55aa5ba63f8305267b7ab542d0e0d",
+          "blockNumber": 21,
+          "gasUsed": "63606",
+          "status": "success"
+        },
+        {
+          "step": 8,
+          "action": "Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed)",
+          "txHash": "0xaf3d6f53b0344df3aec31cb20c84f145e24c03a47828820478315557c31e0cf0",
+          "blockNumber": 22,
+          "gasUsed": "315823",
+          "status": "success"
+        },
+        {
+          "step": 9,
+          "action": "Bob claims winning payout via UI",
+          "txHash": "0x75ab06eb8cd7e4b0bf21494330ebb0d1106c9fefac50f023d00a561a99eb3f8a",
+          "blockNumber": 23,
+          "gasUsed": "114705",
+          "status": "success"
+        },
+        {
+          "step": 10,
+          "action": "Creator claims creation bond via UI",
+          "txHash": "0x0f9e68ae353520d29be2aa77f83d35152f4843fe13182e2a2dc3f161ad7c36aa",
+          "blockNumber": 24,
+          "gasUsed": "79320",
+          "status": "success"
+        },
+        {
+          "step": 11,
+          "action": "Challenger A claims challenge bond entitlement via UI",
+          "txHash": "0x8fa74491cf9d4c01c34250c94607096f8a0525c1f8c4912bccb2e12ed2ed7329",
+          "blockNumber": 25,
+          "gasUsed": "84320",
+          "status": "success"
+        },
+        {
+          "step": 12,
+          "action": "Challenger B claims challenge bond entitlement via UI",
+          "txHash": "0xac7733eb02a7e59cabc3c3e365aba3bc56894ce919ff8b9b008ae310c2e9b13d",
+          "blockNumber": 26,
+          "gasUsed": "79520",
+          "status": "success"
+        }
+      ],
+      "steps": [
+        "Step 1: Creator deploys market with 1 ETH bond via UI (success)",
+        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: Bob deposits 20 ETH on NO via UI (success)",
+        "Step 4: Proposer submits YES proposal with 10 ETH bond via UI (success)",
+        "Step 5: Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
+        "Step 6: Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
+        "Step 7: Arbitrator Owner 1 confirms NO settlement via UI (1 of 2) (success)",
+        "Step 8: Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed) (success)",
+        "Step 9: Bob claims winning payout via UI (success)",
+        "Step 10: Creator claims creation bond via UI (success)",
+        "Step 11: Challenger A claims challenge bond entitlement via UI (success)",
+        "Step 12: Challenger B claims challenge bond entitlement via UI (success)"
+      ]
+    },
+    "scenarioB": {
+      "status": "VERIFIED",
+      "marketId": "1",
+      "totalTransactions": 14,
+      "transactions": [
+        {
+          "step": 1,
+          "action": "Creator deploys Market #1 with 1 ETH bond via UI",
+          "txHash": "0x3e14419b8a60466c5af83012cfd65251d6b7b1e8c180bc6c56297cca80bf88b8",
+          "blockNumber": 27,
+          "gasUsed": "468511",
+          "status": "success",
+          "marketId": "1"
+        },
+        {
+          "step": 2,
+          "action": "Alice deposits 10 ETH on YES via UI",
+          "txHash": "0x98635a7fac78accd3895db08a6438939ae4f18eab9ffe326bb0f9eb650315fc1",
+          "blockNumber": 28,
+          "gasUsed": "223925",
+          "status": "success"
+        },
+        {
+          "step": 3,
+          "action": "Bob deposits 10 ETH on NO via UI",
+          "txHash": "0xf4776074526b418a84ddd123051239845d0d0acd7b24289af58a83959bf48928",
+          "blockNumber": 29,
+          "gasUsed": "155691",
+          "status": "success"
+        },
+        {
+          "step": 4,
+          "action": "Proposer submits YES proposal with 10 ETH bond via UI",
+          "txHash": "0xf9abae8b1e936b11820445c60790615162292a728389158f909befed7c24b330",
+          "blockNumber": 31,
+          "gasUsed": "231955",
+          "status": "success"
+        },
+        {
+          "step": 5,
+          "action": "Challenger A stakes 1 ETH bond via UI (Tranche 1)",
+          "txHash": "0xfff3400b83e0187e387ebb4c496482b63f96d7adeab1b97daa444a66ba795a8d",
+          "blockNumber": 32,
+          "gasUsed": "156492",
+          "status": "success"
+        },
+        {
+          "step": 6,
+          "action": "Challenger B stakes 1 ETH bond via UI (Tranche 2)",
+          "txHash": "0x5881467e4232e9cead37cb27dd674906ab55a2a72e0143b34c63bcfc733b0e9e",
+          "blockNumber": 33,
+          "gasUsed": "109918",
+          "status": "success"
+        },
+        {
+          "step": 7,
+          "action": "Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2)",
+          "txHash": "0xe89be8a50625174e860ef23f7673224ea32c73bb5d77b7a29134c7a4e1a91a5b",
+          "blockNumber": 35,
+          "gasUsed": "63618",
+          "status": "success"
+        },
+        {
+          "step": 8,
+          "action": "Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed)",
+          "txHash": "0x6cd722dfbd75b10dcf15830d0f7381234afa055a25da36d525f7ac5506a78f76",
+          "blockNumber": 36,
+          "gasUsed": "200185",
+          "status": "success"
+        },
+        {
+          "step": 9,
+          "action": "Alice claims 100% principal refund (10 ETH) via UI",
+          "txHash": "0xd75f58c01e1df8ad99a353fec7b75de5d3a2b6272f06bf19baaedf14c88695eb",
+          "blockNumber": 37,
+          "gasUsed": "97324",
+          "status": "success"
+        },
+        {
+          "step": 10,
+          "action": "Bob claims 100% principal refund (10 ETH) via UI",
+          "txHash": "0x970515ac6e99b78f21e9dac9d3531fbccbce1a4f22e20d125d8fee9276f3549a",
+          "blockNumber": 38,
+          "gasUsed": "75424",
+          "status": "success"
+        },
+        {
+          "step": 11,
+          "action": "Creator claims creation bond via UI",
+          "txHash": "0x15e4774addb7ada1a2cd2af3f5374371d4a67424c14fec10da6977800614feaa",
+          "blockNumber": 39,
+          "gasUsed": "62528",
+          "status": "success"
+        },
+        {
+          "step": 12,
+          "action": "Proposer claims returned proposal bond (10 ETH) via UI",
+          "txHash": "0xa13a0e362af35615548e5524b7241c8444f1aeacc699522098a5dfca7b569248",
+          "blockNumber": 40,
+          "gasUsed": "62577",
+          "status": "success"
+        },
+        {
+          "step": 13,
+          "action": "Challenger A claims returned challenge bond (1 ETH) via UI",
+          "txHash": "0x8f3a4d9bd8bbefe5536bb770f9bd214c51d4bb410c56108d05150a85ae51f8ec",
+          "blockNumber": 41,
+          "gasUsed": "79439",
+          "status": "success"
+        },
+        {
+          "step": 14,
+          "action": "Challenger B claims returned challenge bond (1 ETH) via UI",
+          "txHash": "0x30386355c119eb3af18f546cafc6157c21a56a59e210190e197f787daffe280e",
+          "blockNumber": 42,
+          "gasUsed": "74639",
+          "status": "success"
+        }
+      ],
+      "steps": [
+        "Step 1: Creator deploys Market #1 with 1 ETH bond via UI (success)",
+        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: Bob deposits 10 ETH on NO via UI (success)",
+        "Step 4: Proposer submits YES proposal with 10 ETH bond via UI (success)",
+        "Step 5: Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
+        "Step 6: Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
+        "Step 7: Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2) (success)",
+        "Step 8: Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed) (success)",
+        "Step 9: Alice claims 100% principal refund (10 ETH) via UI (success)",
+        "Step 10: Bob claims 100% principal refund (10 ETH) via UI (success)",
+        "Step 11: Creator claims creation bond via UI (success)",
+        "Step 12: Proposer claims returned proposal bond (10 ETH) via UI (success)",
+        "Step 13: Challenger A claims returned challenge bond (1 ETH) via UI (success)",
+        "Step 14: Challenger B claims returned challenge bond (1 ETH) via UI (success)"
+      ]
+    },
+    "scenarioC": {
+      "status": "VERIFIED",
+      "marketId": "2",
+      "totalTransactions": 8,
+      "transactions": [
+        {
+          "step": 1,
+          "action": "Creator deploys Market #2 with 1 ETH bond via UI",
+          "txHash": "0xf8f02d58c07b0c45f5ff828377015ba1c3d347168e19c4d505ba6eceafcd7031",
+          "blockNumber": 43,
+          "gasUsed": "468511",
+          "status": "success",
+          "marketId": "2"
+        },
+        {
+          "step": 2,
+          "action": "Alice deposits 10 ETH on YES via UI",
+          "txHash": "0x820a59e5b64ca470dd7d784b047264f151b5016fd40a666a6be05dd3155f6ce8",
+          "blockNumber": 44,
+          "gasUsed": "223925",
+          "status": "success"
+        },
+        {
+          "step": 3,
+          "action": "Guardian pauses ProtocolConfig",
+          "txHash": "0xeb54086ce33517659624d73abf5c61b36cd830700e56a12d90b882ad090e0f49",
+          "blockNumber": 45,
+          "gasUsed": "59070",
+          "status": "success"
+        },
+        {
+          "step": 4,
+          "action": "Cancel expired market via UI",
+          "txHash": "0xdbd537c7dc7cc4cd7598b6dc05dd3dc89e8ecf2e1c311a0eb7da51f9e7334c26",
+          "blockNumber": 47,
+          "gasUsed": "113273",
+          "status": "success"
+        },
+        {
+          "step": 5,
+          "action": "Alice claims neutral refund via UI",
+          "txHash": "0xd38d772c87421ac2c8416ae32d3997d0927bc67805655b17e115cc36b76962c6",
+          "blockNumber": 48,
+          "gasUsed": "92524",
+          "status": "success"
+        },
+        {
+          "step": 6,
+          "action": "Compliance approves release for unpause",
+          "txHash": "0xe004a8713e6853bebc7253d4032aa187df372e5ead70b4e39a4ddd7e9db11281",
+          "blockNumber": 50,
+          "gasUsed": "223693",
+          "status": "success"
+        },
+        {
+          "step": 7,
+          "action": "Governance unpauses ProtocolConfig",
+          "txHash": "0x2a2fceedcb900936fe35d1061b0a1a1a59e5f92a736eb0ab18ba80a578e96c2c",
+          "blockNumber": 53,
+          "gasUsed": "119589",
+          "status": "success"
+        },
+        {
+          "step": 8,
+          "action": "Governance reactivates finance",
+          "txHash": "0x8b3b949f0fdb8f6812ac43e6ca7cc0d9f19b728146db4813367a0ed85e857895",
+          "blockNumber": 55,
+          "gasUsed": "124685",
+          "status": "success"
+        }
+      ],
+      "steps": [
+        "Step 1: Creator deploys Market #2 with 1 ETH bond via UI (success)",
+        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: Guardian pauses ProtocolConfig (success)",
+        "Step 4: Cancel expired market via UI (success)",
+        "Step 5: Alice claims neutral refund via UI (success)",
+        "Step 6: Compliance approves release for unpause (success)",
+        "Step 7: Governance unpauses ProtocolConfig (success)",
+        "Step 8: Governance reactivates finance (success)"
+      ]
+    },
+    "scenarioD": {
+      "status": "VERIFIED",
+      "marketId": "3",
+      "totalTransactions": 2,
+      "transactions": [
+        {
+          "step": 1,
+          "action": "Creator deploys Market D1 on Branch 1 via UI",
+          "txHash": "0x5900f908129627d7a51b5b8d9ab6047dfade02f197a5dd955147cb458d375c90",
+          "blockNumber": 56,
+          "gasUsed": "471299",
+          "status": "success"
+        },
+        {
+          "step": 2,
+          "action": "Creator deploys Market D2 on Canonical Branch 2 via UI",
+          "txHash": "0xa505ec04183e802ddc9535761e7547dca74762f91f60ccd1dd76472140dced14",
+          "blockNumber": 57,
+          "gasUsed": "471311",
+          "status": "success"
+        }
+      ],
+      "steps": [
+        "Step 1: Creator deploys Market D1 on Branch 1 via UI (success)",
+        "Step 2: Creator deploys Market D2 on Canonical Branch 2 via UI (success)"
+      ]
+    }
+  },
+  "summary": {
+    "allPassed": true,
+    "scenariosExecuted": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "totalTransactions": 36,
+    "executedAt": "2026-11-01T03:22:11.292Z",
+    "verifier": "playwright-browser-e2e"
+  }
+}

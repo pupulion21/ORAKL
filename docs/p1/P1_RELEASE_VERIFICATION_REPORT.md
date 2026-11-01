@@ -64,20 +64,21 @@ $$\mathbf{LOCAL\_SIMULATION\_VERIFIED} \quad \wedge \quad \mathbf{PRODUCTION\_RE
 To prevent misleading aggregation, verification evidence is categorized strictly into:
 1. **Automated Unit, Fuzz & Invariant Test Cases**
 2. **Independent Deployment Verification Checks**
-3. **End-to-End On-Chain Scenarios & Transactions**
-4. **Browser & UI Smoke Inspections**
+3. **Real Playwright Browser Financial E2E Scenarios & Transactions**
+4. **Historical Direct-Viem Financial Scenarios & Transactions**
+5. **Browser & UI Smoke Inspections**
 
 ```
 ====================================================================================================
-                            INDEPENDENT AUTOMATED TEST CASES (410 Total)
+                            INDEPENDENT AUTOMATED TEST CASES (443 Total)
 ====================================================================================================
  Component                  Suites     Test Cases Passed     Failed     Skipped    Duration
 ----------------------------------------------------------------------------------------------------
- Smart Contracts (Foundry)  27         235                   0          0          111.96s
- Backend Integration (Vitest) 6         93                    0          0          15.41s
- Frontend Integration (Node) 2         82                    0          0          0.73s
+ Smart Contracts (Foundry)  27         235                   0          0          96.59s
+ Backend Integration (Vitest) 8         117                   0          0          16.77s
+ Frontend Integration (Node) 6         91                    0          0          0.87s
 ----------------------------------------------------------------------------------------------------
- SUB-TOTAL TEST CASES       35         410                   0          0          ~128s
+ SUB-TOTAL TEST CASES       41         443                   0          0          ~114s
 ====================================================================================================
 
 ====================================================================================================
@@ -86,12 +87,25 @@ To prevent misleading aggregation, verification evidence is categorized strictly
  Activity Category          Scope                     Result                Status     Duration
 ----------------------------------------------------------------------------------------------------
  Deployment Verification    15 Contract Claims        15/15 Checks PASS     PASS       1.1s
- Automated E2E Runner       4 Scenarios (A, B, C, D)  56 On-Chain Txs Confirmed PASS    7.6s
- Browser Smoke Checks       4 Key Local Views         0 Console/Page Errors PASS       5.8s
+ Real Browser Financial E2E 4 Scenarios (A, B, C, D)  36 On-Chain Txs (UI)  PASS       95.2s
+ Historical Direct-Viem E2E 4 Scenarios (A, B, C, D)  56 On-Chain Txs       PASS       7.6s
+ Manifest Cryptographic Check 13 Evidence Artifacts   13/13 SHA-256 Match   PASS       0.08s
+ Browser UI Screenshots     8 Full-Page Captures      All 8 Rendered Clean  PASS       —
  Static Code Checks         Backend & Frontend Types  0 Errors (tsc)        PASS       13.4s
  Production Bundle Build    Frontend SPA (Vite)       dist/ built clean     PASS       2.19s
 ====================================================================================================
 ```
+
+---
+
+## 4.1 Four Mandatory Strict Remediations
+
+| Issue ID | Remediation Area | Technical Fix Applied | Verification Proof |
+| :--- | :--- | :--- | :--- |
+| **`P1-01`** | **Real Browser Financial E2E** | Implemented deterministic Playwright test harness (`scripts/p1/run-browser-e2e.mjs`) driving real Chromium, Fastify API, PostgreSQL indexer, and Anvil 31337 via injected EIP-1193 provider (`window.__oraklTestWallet`). Executes Scenarios A (12 txs), B (14 txs), C (8 txs), and D (2 txs). | 36 on-chain transactions confirmed; 8 verified screenshots captured in `docs/p1/evidence/screenshots/`. |
+| **`P1-02`** | **Signed Publication Replay Protection** | Added domain-separated authorization (`backend/src/evidence/auth.ts`, `frontend/src/selected/auth.ts`) binding application ID, version, action type, chainId, factory address, publisher, commitment, single-use nonce, and expiration. Atomic single-use nonces tracked in PostgreSQL (`AuthNonce`). | `backend/test/publication-auth.test.ts` (10/10 tests pass), rejecting wrong chain, wrong factory, expired signatures, and reused nonces with `409 REUSED_NONCE`. |
+| **`P1-03`** | **Complete Financial Frontend Controls** | Implemented side selector (`#predict-side` for YES/NO), exact BigInt wei stake parsing, multi-bond claims (`#claim-bond-recipient-0/1/2` for CREATION, PROPOSAL, CHALLENGE) with recipient redirection, and dedicated Portfolio view (`#/portfolio`). | `frontend/test/frontend-controls.test.ts` (9/9 tests pass) and verified browser interaction in Scenarios A, B, C. |
+| **`P1-04`** | **Evidence Manifest Cryptographic Integrity** | Built automated validation script (`scripts/p1/verify-evidence-manifest.mjs`) auditing existence, byte count, and SHA-256 checksum of every artifact in `docs/p1/evidence/MANIFEST.json` and `CHECKSUMS.txt`. | Exits 0 on match; tested to fail fast with exit code 1 upon file tampering. 13/13 artifacts verified. |
 
 ---
 
@@ -107,7 +121,7 @@ $$\text{Share}_2 = \left\lfloor \frac{10 \cdot 3}{3} \right\rfloor - \left\lfloo
 $$\sum_{i=1}^2 \text{Share}_i = 3.333... + 6.666... = 10.0\text{ ETH} = P \quad (\text{Dust} = 0\text{ WEI})$$
 
 ### Demonstration 2: Total Collateral Solvency (Invariant A)
-Across all 56 on-chain transactions executed in Scenarios A, B, C, and D:
+Across all on-chain transactions executed in Scenarios A, B, C, and D:
 $$\Delta V_{\text{contract}} = \Delta L_{\text{participant}} + \Delta L_{\text{bond}} + \Delta L_{\text{fee}}$$
 In Scenario A: $44.0\text{ ETH deposited} - 43.4\text{ ETH claimed} = 0.6\text{ ETH retained fee liability}$.
 In Scenario B: $34.0\text{ ETH deposited} - 34.0\text{ ETH refunded} = 0\text{ WEI balance delta}$.
@@ -118,18 +132,23 @@ Unaccounted residual dust across all scenarios: **$0\text{ WEI}$**.
 
 ## 6. Checksum Manifest of Evidence Artifacts
 
-All verification artifacts under [`docs/p1/evidence/`](file:///home/pupulion/orakl/docs/p1/evidence/) have been cryptographically audited with SHA-256 hashes:
+All verification artifacts under [`docs/p1/evidence/`](file:///home/pupulion/orakl/docs/p1/evidence/) have been cryptographically audited with SHA-256 hashes against [`MANIFEST.json`](file:///home/pupulion/orakl/docs/p1/evidence/MANIFEST.json):
 
 | File Path | SHA-256 Checksum | Size | Verified Content |
 | :--- | :--- | :--- | :--- |
-| `docs/p1/evidence/e2e-scenarios.json` | `e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820` | 24,432 B | Full 56-tx E2E receipts (Scenarios A-D) |
-| `docs/p1/evidence/e2e-scenarios-a-b.json` | `6d46e4fcabd67685225a617c59812f981b24048df473378a236838f9a2da6e30` | 13,355 B | Scoped Scenarios A & B receipts (28 txs, derived with provenance) |
-| `docs/p1/evidence/e2e-scenarios-c-d.json` | `ca5f2e88376a02f45e55dce880eb48975e0556e71a551554461f1c7fa56c311e` | 12,302 B | Scoped Scenarios C & D receipts (28 txs, derived with provenance) |
+| `docs/p1/evidence/e2e-scenarios.json` | `e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820` | 24,432 B | Historical direct-viem 56-tx receipts (Scenarios A-D) |
+| `docs/p1/evidence/e2e-scenarios-a-b.json` | `6d46e4fcabd67685225a617c59812f981b24048df473378a236838f9a2da6e30` | 13,355 B | Historical scoped Scenarios A & B receipts (28 txs) |
+| `docs/p1/evidence/e2e-scenarios-c-d.json` | `ca5f2e88376a02f45e55dce880eb48975e0556e71a551554461f1c7fa56c311e` | 12,302 B | Historical scoped Scenarios C & D receipts (28 txs) |
+| `docs/p1/evidence/browser-e2e-scenarios.json` | `9c3059ae173b1af6cf56f9c4576dc995712e40fb9de6e447f6f9823cb881b231` | 14,609 B | Real browser Playwright 36-tx receipts (Scenarios A-D) |
 | `docs/p1/evidence/local-deployment-verification.json` | `ac8f19f0020ab6e93b2dda4a6b9ef427235ab52d8ca43aa78fe1095eae387ab8` | 2,667 B | 15/15 deployment checks PASS |
-| `docs/p1/evidence/screenshots/01-market-browsing.png` | `4864fea10d2310db22b272387ee4240276f611ed2285179dea243ff9e638e549` | 141,251 B | Browser render of market list view |
-| `docs/p1/evidence/screenshots/02-market-detail.png` | `d0e0556c9ebf03f4a8e0b179ed2081c06fd07a5907e99c0e48a6117d8409f610` | 149,450 B | Browser render of dispute tranche ladder |
-| `docs/p1/evidence/screenshots/03-evidence-lab.png` | `62c0890c59abd108700971edb4b85ccdf9339e963d53cd1ceb921bf0c14d8042` | 85,106 B | Browser render of RFC 8785 evidence lab |
-| `docs/p1/evidence/screenshots/04-protocol-status.png` | `eb80b8491b1edec038b44a1b72d6d16bab861a93368ce181d6468e0215d58704` | 129,652 B | Browser render of protocol health status |
+| `docs/p1/evidence/screenshots/01-market-browsing.png` | `09a83de2e9a28521b98d66bdeb786a79cbca561661738f94ffcb3d275e0cb64b` | 86,850 B | Browser render of market list view |
+| `docs/p1/evidence/screenshots/02-market-detail.png` | `6e1bf7c2668d7937d8b5ddd82d3b2edec1afc697565508985ca28dfa64eda3cb` | 224,226 B | Browser render of dispute tranche ladder |
+| `docs/p1/evidence/screenshots/03-evidence-lab.png` | `90c355067af02a1b39ebb76ceac2e6079921ce017e597ec44da33a65cf5e8d31` | 131,811 B | Browser render of RFC 8785 evidence lab |
+| `docs/p1/evidence/screenshots/04-protocol-status.png` | `1aa3fa67987e6e63c6ae8a65836139da03361464427175007fd94554acf53c23` | 79,292 B | Browser render of protocol health status |
+| `docs/p1/evidence/screenshots/05-scenario-a-settled.png` | `87bbdc2fa0ab89fb82ffc1c9c09143edbe5296d9006250315e449e6d86c2e554` | 122,534 B | Browser render of settled binary reversal market |
+| `docs/p1/evidence/screenshots/06-scenario-b-invalid.png` | `a820e92d538dc0dd6d24fec2739c7ff70e9c37ab526fda590e19979aa06d8886` | 224,481 B | Browser render of INVALID settled market and refunds |
+| `docs/p1/evidence/screenshots/07-scenario-c-cancelled.png` | `e373b6eda1940196fdb5c93b35700fe345a2f60e50595e71710aec49d12aefc4` | 161,397 B | Browser render of cancelled emergency market |
+| `docs/p1/evidence/screenshots/08-scenario-d-reorg.png` | `2d0784fbe3a3a3395ddc54bf379b535b97e9eeb7156821550857a8709ebaf3d9` | 154,938 B | Browser render of canonical alternative Branch 2 |
 
 ---
 

@@ -127,14 +127,36 @@ async function publishMetadataToApi(metadata, signerAddress, request) {
   const canonicalString = `{${sortedFields.join(',')}}`;
   const commitment = keccak256(stringToBytes(canonicalString));
 
-  const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-market-metadata-v1\ncommitment: ${commitment}\npublisher: ${metadata.creator}`;
+  const auth = {
+    app: 'ORAKL',
+    version: '1',
+    action: 'metadata',
+    chainId: LOCAL_CHAIN_ID,
+    factory: metadata.factory.toLowerCase(),
+    publisher: metadata.creator.toLowerCase(),
+    commitment: commitment.toLowerCase(),
+    nonce: `meta_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+    deadline: Math.floor(Date.now() / 1000) + 3600,
+  };
+  const message = [
+    'ORAKL PUBLICATION AUTHORIZATION',
+    `app: ${auth.app}`,
+    `version: ${auth.version}`,
+    `action: ${auth.action}`,
+    `chainId: ${auth.chainId}`,
+    `factory: ${auth.factory}`,
+    `publisher: ${auth.publisher}`,
+    `commitment: ${auth.commitment}`,
+    `nonce: ${auth.nonce}`,
+    `deadline: ${auth.deadline}`,
+  ].join('\n');
   const msgHex = toHex(stringToBytes(message));
   const signature = await request('personal_sign', [msgHex, signerAddress]);
 
   const res = await fetch('http://127.0.0.1:4310/api/v1/markets/metadata', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ metadata, signature }),
+    body: JSON.stringify({ metadata, auth, signature }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -146,14 +168,36 @@ async function publishMetadataToApi(metadata, signerAddress, request) {
 
 async function publishEvidenceToApi(manifest, signerAddress, request) {
   const commitment = evidenceCommitment(manifest);
-  const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-evidence-v1\ncommitment: ${commitment}\npublisher: ${manifest.publisher}`;
+  const auth = {
+    app: 'ORAKL',
+    version: '1',
+    action: 'evidence',
+    chainId: LOCAL_CHAIN_ID,
+    factory: manifest.contract.toLowerCase(),
+    publisher: manifest.publisher.toLowerCase(),
+    commitment: commitment.toLowerCase(),
+    nonce: `evi_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+    deadline: Math.floor(Date.now() / 1000) + 3600,
+  };
+  const message = [
+    'ORAKL PUBLICATION AUTHORIZATION',
+    `app: ${auth.app}`,
+    `version: ${auth.version}`,
+    `action: ${auth.action}`,
+    `chainId: ${auth.chainId}`,
+    `factory: ${auth.factory}`,
+    `publisher: ${auth.publisher}`,
+    `commitment: ${auth.commitment}`,
+    `nonce: ${auth.nonce}`,
+    `deadline: ${auth.deadline}`,
+  ].join('\n');
   const msgHex = toHex(stringToBytes(message));
   const signature = await request('personal_sign', [msgHex, signerAddress]);
 
   const res = await fetch('http://127.0.0.1:4310/api/v1/evidence', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ manifest, signature }),
+    body: JSON.stringify({ manifest, auth, signature }),
   });
   if (!res.ok) {
     const err = await res.text();

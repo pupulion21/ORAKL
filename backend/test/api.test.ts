@@ -11,6 +11,7 @@ import { makePrisma, type PrismaDb } from "../src/db.js";
 import { buildServer } from "../src/api/server.js";
 import { wipeChain } from "./harness.js";
 import { canonicalizeEvidence, evidenceCommitment, type EvidenceManifest } from "../src/evidence/evidence.js";
+import { signPublicationAuthEip712, type PublicationAuth } from "../src/evidence/auth.js";
 
 const CHAIN_ID = 31337;
 const ANVIL_PK = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
@@ -685,27 +686,42 @@ describe("Fastify API Automated Integration Suite (TICKET-06 / WP-04)", () => {
     };
 
     const commitment = evidenceCommitment(manifest);
-    const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-evidence-v1\ncommitment: ${commitment}\npublisher: ${SENDER_ADDR}`;
-    const signature = await signer.signMessage({ message });
+    const auth1: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: manifest.contract,
+      publisher: SENDER_ADDR,
+      commitment,
+      nonce: `api_evi_1_${Date.now()}_${Math.random()}`,
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth1);
 
     // First publish
     const res = await app.inject({
       method: "POST",
       url: "/api/v1/evidence",
       headers: { "content-type": "application/json" },
-      payload: { manifest, signature, content },
+      payload: { manifest, auth: auth1, signature, content },
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.data.commitment).toBe(commitment);
     expect(body.data.deduped).toBe(false);
 
-    // Re-publish same commitment -> deduped: true
+    // Re-publish same commitment -> deduped: true (with new single-use nonce)
+    const auth2: PublicationAuth = {
+      ...auth1,
+      nonce: `api_evi_2_${Date.now()}_${Math.random()}`,
+    };
+    const signature2 = await signPublicationAuthEip712(signer, auth2);
     const resDedupe = await app.inject({
       method: "POST",
       url: "/api/v1/evidence",
       headers: { "content-type": "application/json" },
-      payload: { manifest, signature, content },
+      payload: { manifest, auth: auth2, signature: signature2, content },
     });
     expect(resDedupe.statusCode).toBe(200);
     expect(resDedupe.json().data.deduped).toBe(true);
@@ -729,15 +745,25 @@ describe("Fastify API Automated Integration Suite (TICKET-06 / WP-04)", () => {
       media: [],
     };
     const commitment = evidenceCommitment(manifest);
-    const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-evidence-v1\ncommitment: ${commitment}\npublisher: ${SENDER_ADDR}`;
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: manifest.contract,
+      publisher: SENDER_ADDR,
+      commitment,
+      nonce: `bad_sig_${Date.now()}_${Math.random()}`,
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
     // Signed by wrong account
-    const badSignature = await otherAccount.signMessage({ message });
+    const badSignature = await signPublicationAuthEip712(otherAccount, auth);
 
     const res = await app.inject({
       method: "POST",
       url: "/api/v1/evidence",
       headers: { "content-type": "application/json" },
-      payload: { manifest, signature: badSignature },
+      payload: { manifest, auth, signature: badSignature },
     });
     expect(res.statusCode).toBe(401);
     expect(res.json().code).toBe("INVALID_SIGNATURE");
@@ -760,14 +786,24 @@ describe("Fastify API Automated Integration Suite (TICKET-06 / WP-04)", () => {
       media: [],
     };
     const commitment = evidenceCommitment(manifest);
-    const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-evidence-v1\ncommitment: ${commitment}\npublisher: ${SENDER_ADDR}`;
-    const signature = await signer.signMessage({ message });
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "evidence",
+      chainId: CHAIN_ID,
+      factory: manifest.contract,
+      publisher: SENDER_ADDR,
+      commitment,
+      nonce: `mismatch_${Date.now()}_${Math.random()}`,
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth);
 
     const res = await app.inject({
       method: "POST",
       url: "/api/v1/evidence",
       headers: { "content-type": "application/json" },
-      payload: { manifest, signature, content: "Different text that will not hash to 1111..." },
+      payload: { manifest, auth, signature, content: "Different text that will not hash to 1111..." },
     });
     expect(res.statusCode).toBe(400);
     expect(res.json().code).toBe("CONTENT_HASH_MISMATCH");
@@ -803,14 +839,24 @@ describe("Fastify API Automated Integration Suite (TICKET-06 / WP-04)", () => {
     const canonicalString = `{${sortedFields.join(",")}}`;
     const commitment = keccak256(stringToBytes(canonicalString));
 
-    const message = `ORAKL LOCAL ARTIFACT\nschema: orakl-market-metadata-v1\ncommitment: ${commitment}\npublisher: ${SENDER_ADDR}`;
-    const signature = await signer.signMessage({ message });
+    const auth: PublicationAuth = {
+      app: "ORAKL",
+      version: "1",
+      action: "metadata",
+      chainId: CHAIN_ID,
+      factory: metadata.factory,
+      publisher: SENDER_ADDR,
+      commitment,
+      nonce: `meta_api_${Date.now()}_${Math.random()}`,
+      deadline: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const signature = await signPublicationAuthEip712(signer, auth);
 
     const res = await app.inject({
       method: "POST",
       url: "/api/v1/markets/metadata",
       headers: { "content-type": "application/json" },
-      payload: { metadata, signature },
+      payload: { metadata, auth, signature },
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();

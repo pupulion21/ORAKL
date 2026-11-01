@@ -1,8 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-31T16:10:44.719Z",
-  "totalFiles": 8,
+  "generatedAt": "2026-11-01T03:22:11.294Z",
+  "totalFiles": 13,
   "artifacts": [
+    {
+      "file": "e2e-scenarios.json",
+      "sha256": "e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820",
+      "bytes": 24432
+    },
     {
       "file": "e2e-scenarios-a-b.json",
       "sha256": "6d46e4fcabd67685225a617c59812f981b24048df473378a236838f9a2da6e30",
@@ -14,9 +19,9 @@
       "bytes": 12302
     },
     {
-      "file": "e2e-scenarios.json",
-      "sha256": "e345fb0434efa71b125dc0f4e7015ba1351c915dd954b701099e43d95e98b820",
-      "bytes": 24432
+      "file": "browser-e2e-scenarios.json",
+      "sha256": "9c3059ae173b1af6cf56f9c4576dc995712e40fb9de6e447f6f9823cb881b231",
+      "bytes": 14609
     },
     {
       "file": "local-deployment-verification.json",
@@ -25,23 +30,43 @@
     },
     {
       "file": "screenshots/01-market-browsing.png",
-      "sha256": "4864fea10d2310db22b272387ee4240276f611ed2285179dea243ff9e638e549",
-      "bytes": 141251
+      "sha256": "09a83de2e9a28521b98d66bdeb786a79cbca561661738f94ffcb3d275e0cb64b",
+      "bytes": 86850
     },
     {
       "file": "screenshots/02-market-detail.png",
-      "sha256": "d0e0556c9ebf03f4a8e0b179ed2081c06fd07a5907e99c0e48a6117d8409f610",
-      "bytes": 149450
+      "sha256": "6e1bf7c2668d7937d8b5ddd82d3b2edec1afc697565508985ca28dfa64eda3cb",
+      "bytes": 224226
     },
     {
       "file": "screenshots/03-evidence-lab.png",
-      "sha256": "62c0890c59abd108700971edb4b85ccdf9339e963d53cd1ceb921bf0c14d8042",
-      "bytes": 85106
+      "sha256": "90c355067af02a1b39ebb76ceac2e6079921ce017e597ec44da33a65cf5e8d31",
+      "bytes": 131811
     },
     {
       "file": "screenshots/04-protocol-status.png",
-      "sha256": "eb80b8491b1edec038b44a1b72d6d16bab861a93368ce181d6468e0215d58704",
-      "bytes": 129652
+      "sha256": "1aa3fa67987e6e63c6ae8a65836139da03361464427175007fd94554acf53c23",
+      "bytes": 79292
+    },
+    {
+      "file": "screenshots/05-scenario-a-settled.png",
+      "sha256": "87bbdc2fa0ab89fb82ffc1c9c09143edbe5296d9006250315e449e6d86c2e554",
+      "bytes": 122534
+    },
+    {
+      "file": "screenshots/06-scenario-b-invalid.png",
+      "sha256": "a820e92d538dc0dd6d24fec2739c7ff70e9c37ab526fda590e19979aa06d8886",
+      "bytes": 224481
+    },
+    {
+      "file": "screenshots/07-scenario-c-cancelled.png",
+      "sha256": "e373b6eda1940196fdb5c93b35700fe345a2f60e50595e71710aec49d12aefc4",
+      "bytes": 161397
+    },
+    {
+      "file": "screenshots/08-scenario-d-reorg.png",
+      "sha256": "2d0784fbe3a3a3395ddc54bf379b535b97e9eeb7156821550857a8709ebaf3d9",
+      "bytes": 154938
     }
   ]
 }

@@ -288,4 +288,5 @@ export async function wipeChain(prisma: ReturnType<typeof makePrisma>, chainId: 
   await prisma.contractDeployment.deleteMany({ where: { chainId } });
   await prisma.marketMetadata.deleteMany({ where: { chainId } });
   await prisma.evidenceArtifact.deleteMany({ where: { chainId } });
+  await prisma.authNonce.deleteMany();
 }
