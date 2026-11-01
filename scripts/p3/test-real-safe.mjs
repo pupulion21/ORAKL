@@ -42,6 +42,17 @@ const CHAIN_ID = 31337;
 
 const MNEMONIC = 'test test test test test test test test test test test junk';
 
+const ERROR_SELECTORS = {
+  'Unauthorized': '0x82b42900',
+  'InvalidMultisig': '0x07de2154',
+  'ControlChanged': '0xe1eb243c',
+  'NotApproved': '0xc19f17a9',
+  'InvalidTimelock': '0xf8d10e82',
+  'InvalidTime': '0x6f7eac26',
+  'InvalidState': '0xbaf3f0f7',
+  'FinancialActivityDisabled': '0xc2622a0e',
+};
+
 function log(testId, msg) {
   console.log(`[TEST ${String(testId).padStart(2, '0')}] ${msg}`);
 }
@@ -53,6 +64,25 @@ function pass(testId, msg) {
 function fail(testId, msg) {
   console.error(`[FAIL ${String(testId).padStart(2, '0')}] ${msg}`);
   throw new Error(`Test ${testId} failed: ${msg}`);
+}
+
+/**
+ * Asserts that a caught error matches an expected revert reason or error selector.
+ * Fails immediately if the error is a transport/RPC failure or unrelated revert.
+ */
+function assertRevertMatches(err, expectedPattern, testId, contextDesc) {
+  if (!err) {
+    fail(testId, `${contextDesc}: expected revert matching "${expectedPattern}", but no error was thrown`);
+  }
+  const errStr = String(err?.message || err?.details || err?.shortMessage || err);
+  const selector = ERROR_SELECTORS[expectedPattern];
+  const matched = errStr.includes(expectedPattern) || (selector && errStr.includes(selector));
+  if (!matched) {
+    fail(
+      testId,
+      `${contextDesc}: expected revert matching "${expectedPattern}" (selector: ${selector || 'N/A'}), but got unexpected error: ${errStr.slice(0, 300)}`
+    );
+  }
 }
 
 /**
@@ -292,7 +322,12 @@ export async function runRealSafeTestSuite() {
     const twoSigners = [govOwners[0], govOwners[1]];
     const twoSigData = await signTx(govSafeAddress, twoSigners, { to: dummyTo, value: 0n, data: '0x' });
 
-    let twoSigFailed = false;
+    const nonceBeforeSc3 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let twoSigError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -300,17 +335,30 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', twoSigData.signatures],
       });
-    } catch {
-      twoSigFailed = true;
+    } catch (err) {
+      twoSigError = err;
     }
-    if (!twoSigFailed) fail(3, 'Execution succeeded with only 2 signatures; expected revert');
-    pass(3, 'Two signatures cannot authorize execution (reverted with GS020)');
+    assertRevertMatches(twoSigError, 'GS020', 3, 'Insufficient signatures');
+    const nonceAfterSc3 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc3 !== nonceBeforeSc3) {
+      fail(3, `Nonce modified on failed under-quorum execution: expected ${nonceBeforeSc3}, got ${nonceAfterSc3}`);
+    }
+    pass(3, 'Two signatures cannot authorize execution (reverted with GS020, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 4: Three valid signatures can authorize execution
     // ------------------------------------------------------------------------
     const threeSigners = [govOwners[0], govOwners[1], govOwners[2]];
     const threeSigData = await signTx(govSafeAddress, threeSigners, { to: dummyTo, value: 0n, data: '0x' });
+    const nonceBeforeSc4 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
     const threeSigTx = await walletClient.writeContract({
       address: govSafeAddress,
       abi: SAFE_SINGLETON_ARTIFACT.abi,
@@ -319,14 +367,27 @@ export async function runRealSafeTestSuite() {
     });
     const threeSigReceipt = await publicClient.waitForTransactionReceipt({ hash: threeSigTx });
     if (threeSigReceipt.status !== 'success') fail(4, 'Execution failed with 3 valid signatures');
-    pass(4, 'Three valid signatures can authorize execution');
+    const nonceAfterSc4 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc4 !== nonceBeforeSc4 + 1n) {
+      fail(4, `Expected nonce progression ${nonceBeforeSc4} -> ${nonceBeforeSc4 + 1n}, got ${nonceAfterSc4}`);
+    }
+    pass(4, 'Three valid signatures can authorize execution (ExecutionSuccess verified, nonce advanced)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 5: Unregistered signer rejected
     // ------------------------------------------------------------------------
     const unregSigners = [govOwners[0], govOwners[1], externalAccount];
     const unregSigData = await signTx(govSafeAddress, unregSigners, { to: dummyTo, value: 0n, data: '0x' });
-    let unregFailed = false;
+    const nonceBeforeSc5 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let unregError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -334,25 +395,38 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', unregSigData.signatures],
       });
-    } catch {
-      unregFailed = true;
+    } catch (err) {
+      unregError = err;
     }
-    if (!unregFailed) fail(5, 'Execution succeeded with unregistered signer; expected revert');
-    pass(5, 'Unregistered signer rejected (reverted with GS026)');
+    assertRevertMatches(unregError, 'GS026', 5, 'Unregistered signer');
+    const nonceAfterSc5 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc5 !== nonceBeforeSc5) {
+      fail(5, `Nonce modified on rejected unregistered execution: expected ${nonceBeforeSc5}, got ${nonceAfterSc5}`);
+    }
+    pass(5, 'Unregistered signer rejected (reverted with GS026, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 6: Duplicate signer rejected
     // ------------------------------------------------------------------------
     const dupSigner = govOwners[0];
+    const nonceBeforeSc6 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
     const dupSigHash = await publicClient.readContract({
       address: govSafeAddress,
       abi: SAFE_SINGLETON_ARTIFACT.abi,
       functionName: 'getTransactionHash',
-      args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', 1n],
+      args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', nonceBeforeSc6],
     });
     const singleSig = await dupSigner.sign({ hash: dupSigHash });
     const dupSignatures = '0x' + singleSig.slice(2) + singleSig.slice(2) + singleSig.slice(2);
-    let dupFailed = false;
+    let dupError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -360,11 +434,19 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', dupSignatures],
       });
-    } catch {
-      dupFailed = true;
+    } catch (err) {
+      dupError = err;
     }
-    if (!dupFailed) fail(6, 'Execution succeeded with duplicate signatures; expected revert');
-    pass(6, 'Duplicate signer rejected (reverted with GS026)');
+    assertRevertMatches(dupError, 'GS026', 6, 'Duplicate signer');
+    const nonceAfterSc6 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc6 !== nonceBeforeSc6) {
+      fail(6, `Nonce modified on rejected duplicate execution: expected ${nonceBeforeSc6}, got ${nonceAfterSc6}`);
+    }
+    pass(6, 'Duplicate signer rejected (reverted with GS026, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 7: Incorrect signature order rejected
@@ -377,7 +459,12 @@ export async function runRealSafeTestSuite() {
       const sig = await s.sign({ hash: dupSigHash });
       descSigs += sig.slice(2);
     }
-    let descFailed = false;
+    const nonceBeforeSc7 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let descError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -385,18 +472,31 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', descSigs],
       });
-    } catch {
-      descFailed = true;
+    } catch (err) {
+      descError = err;
     }
-    if (!descFailed) fail(7, 'Execution succeeded with unordered signatures; expected revert');
-    pass(7, 'Incorrect signature order rejected (reverted with GS026)');
+    assertRevertMatches(descError, 'GS026', 7, 'Unsorted signatures');
+    const nonceAfterSc7 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc7 !== nonceBeforeSc7) {
+      fail(7, `Nonce modified on rejected unsorted execution: expected ${nonceBeforeSc7}, got ${nonceAfterSc7}`);
+    }
+    pass(7, 'Incorrect signature order rejected (reverted with GS026, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 8: Invalid EIP-712 digest rejected
     // ------------------------------------------------------------------------
     const corruptedHash = '0x1234567890123456789012345678901234567890123456789012345678901234';
     const corruptedSigs = await signHashWithSigners(corruptedHash, threeSigners);
-    let corruptFailed = false;
+    const nonceBeforeSc8 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let corruptError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -404,11 +504,19 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', corruptedSigs],
       });
-    } catch {
-      corruptFailed = true;
+    } catch (err) {
+      corruptError = err;
     }
-    if (!corruptFailed) fail(8, 'Execution succeeded with corrupted digest signatures; expected revert');
-    pass(8, 'Invalid EIP-712 digest rejected');
+    assertRevertMatches(corruptError, 'GS026', 8, 'Corrupted digest');
+    const nonceAfterSc8 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc8 !== nonceBeforeSc8) {
+      fail(8, `Nonce modified on rejected corrupt digest execution: expected ${nonceBeforeSc8}, got ${nonceAfterSc8}`);
+    }
+    pass(8, 'Invalid EIP-712 digest rejected (reverted with GS026, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 9: Tampered calldata rejected
@@ -418,7 +526,12 @@ export async function runRealSafeTestSuite() {
       value: 0n,
       data: '0x1234',
     });
-    let tamperFailed = false;
+    const nonceBeforeSc9 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let tamperError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -426,11 +539,19 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x9999', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', validCalldataTx.signatures],
       });
-    } catch {
-      tamperFailed = true;
+    } catch (err) {
+      tamperError = err;
     }
-    if (!tamperFailed) fail(9, 'Execution succeeded with tampered calldata; expected revert');
-    pass(9, 'Tampered calldata rejected');
+    assertRevertMatches(tamperError, 'GS026', 9, 'Tampered calldata');
+    const nonceAfterSc9 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc9 !== nonceBeforeSc9) {
+      fail(9, `Nonce modified on rejected tampered calldata execution: expected ${nonceBeforeSc9}, got ${nonceAfterSc9}`);
+    }
+    pass(9, 'Tampered calldata rejected (reverted with GS026, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 10: Wrong Safe proxy address invalidates signature (domain separator defense)
@@ -462,7 +583,12 @@ export async function runRealSafeTestSuite() {
     const domainSafeATx = await signTx(domainSafeA, threeSigners, domainTxData);
 
     // Submit domainSafeA's signatures to domainSafeB.execTransaction
-    let crossProxyReplayFailed = false;
+    const nonceDomainBBefore = await publicClient.readContract({
+      address: domainSafeB,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let crossProxyError = null;
     try {
       await walletClient.writeContract({
         address: domainSafeB,
@@ -481,12 +607,10 @@ export async function runRealSafeTestSuite() {
           domainSafeATx.signatures,
         ],
       });
-    } catch {
-      crossProxyReplayFailed = true;
+    } catch (err) {
+      crossProxyError = err;
     }
-    if (!crossProxyReplayFailed) {
-      fail(10, 'Cross-Safe signature replay succeeded on domainSafeB; expected revert GS026');
-    }
+    assertRevertMatches(crossProxyError, 'GS026', 10, 'Cross-proxy replay');
 
     // Verify domainSafeB nonce remains 0
     const nonceDomainB = await publicClient.readContract({
@@ -494,8 +618,8 @@ export async function runRealSafeTestSuite() {
       abi: SAFE_SINGLETON_ARTIFACT.abi,
       functionName: 'nonce',
     });
-    if (nonceDomainB !== 0n) {
-      fail(10, `Expected domainSafeB nonce 0, got ${nonceDomainB}`);
+    if (nonceDomainB !== nonceDomainBBefore) {
+      fail(10, `Expected domainSafeB nonce ${nonceDomainBBefore}, got ${nonceDomainB}`);
     }
 
     // Verify same signatures execute successfully on domainSafeA
@@ -528,11 +652,16 @@ export async function runRealSafeTestSuite() {
     if (nonceDomainA !== 1n) {
       fail(10, `Expected domainSafeA nonce 1, got ${nonceDomainA}`);
     }
-    pass(10, 'Wrong Safe proxy address invalidates signature with identical signers (EIP-712 domain separation GS026)');
+    pass(10, 'Wrong Safe proxy address invalidates signature with identical signers (EIP-712 domain separation GS026, nonces verified)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 11: Wrong chain ID invalidates signature
     // ------------------------------------------------------------------------
+    const nonceBeforeSc11 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
     const wrongChainTxData = {
       to: dummyTo,
       value: 0n,
@@ -543,17 +672,13 @@ export async function runRealSafeTestSuite() {
       gasPrice: 0n,
       gasToken: '0x0000000000000000000000000000000000000000',
       refundReceiver: '0x0000000000000000000000000000000000000000',
-      nonce: await publicClient.readContract({
-        address: govSafeAddress,
-        abi: SAFE_SINGLETON_ARTIFACT.abi,
-        functionName: 'nonce',
-      }),
+      nonce: nonceBeforeSc11,
     };
     // Compute digest under Ethereum Mainnet (chainId = 1) instead of local Anvil (31337)
     const mainnetHash = computeSafeTransactionHash(govSafeAddress, 1n, wrongChainTxData);
     const wrongChainSigs = await signHashWithSigners(mainnetHash, threeSigners);
 
-    let wrongChainFailed = false;
+    let wrongChainError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -572,13 +697,19 @@ export async function runRealSafeTestSuite() {
           wrongChainSigs,
         ],
       });
-    } catch {
-      wrongChainFailed = true;
+    } catch (err) {
+      wrongChainError = err;
     }
-    if (!wrongChainFailed) {
-      fail(11, 'Execution succeeded with wrong-chain-ID signature; expected revert GS026');
+    assertRevertMatches(wrongChainError, 'GS026', 11, 'Wrong chain ID');
+    const nonceAfterSc11 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc11 !== nonceBeforeSc11) {
+      fail(11, `Safe nonce modified on rejected wrong-chain execution: expected ${nonceBeforeSc11}, got ${nonceAfterSc11}`);
     }
-    pass(11, 'Wrong chain ID invalidates signature (EIP-712 domain binds chainId 31337)');
+    pass(11, 'Wrong chain ID invalidates signature (EIP-712 domain binds chainId 31337, nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 12: Replayed transaction rejected
@@ -596,9 +727,14 @@ export async function runRealSafeTestSuite() {
       args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', replayPayload.signatures],
     });
     await publicClient.waitForTransactionReceipt({ hash: firstExec });
+    const nonceAfterFirstExec = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
 
     // Replay attempt with same signatures
-    let replayFailed = false;
+    let replayError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -606,21 +742,24 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [dummyTo, 0n, '0x', 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', replayPayload.signatures],
       });
-    } catch {
-      replayFailed = true;
+    } catch (err) {
+      replayError = err;
     }
-    if (!replayFailed) fail(12, 'Replayed transaction succeeded; expected revert');
-    pass(12, 'Replayed transaction rejected (nonce advanced)');
-
-    // ------------------------------------------------------------------------
-    // SCENARIO 13: Safe nonce increments correctly
-    // ------------------------------------------------------------------------
-    const postReplayNonce = await publicClient.readContract({
+    assertRevertMatches(replayError, 'GS026', 12, 'Replay protection');
+    const nonceAfterReplay = await publicClient.readContract({
       address: govSafeAddress,
       abi: SAFE_SINGLETON_ARTIFACT.abi,
       functionName: 'nonce',
     });
-    if (postReplayNonce !== 2n) fail(13, `Expected nonce 2, got ${postReplayNonce}`);
+    if (nonceAfterReplay !== nonceAfterFirstExec) {
+      fail(12, `Nonce modified on rejected replay execution: expected ${nonceAfterFirstExec}, got ${nonceAfterReplay}`);
+    }
+    pass(12, 'Replayed transaction rejected (reverted with GS026, nonce advanced monotonically)');
+
+    // ------------------------------------------------------------------------
+    // SCENARIO 13: Safe nonce increments correctly
+    // ------------------------------------------------------------------------
+    if (nonceAfterReplay !== 2n) fail(13, `Expected nonce 2, got ${nonceAfterReplay}`);
     pass(13, 'Safe nonce increments monotonically on successful execution');
 
     // ------------------------------------------------------------------------
@@ -638,7 +777,7 @@ export async function runRealSafeTestSuite() {
       data: '0x',
     }, futureNonce);
 
-    let futureNonceFailed = false;
+    let futureNonceError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -657,12 +796,10 @@ export async function runRealSafeTestSuite() {
           futureNonceTx.signatures,
         ],
       });
-    } catch {
-      futureNonceFailed = true;
+    } catch (err) {
+      futureNonceError = err;
     }
-    if (!futureNonceFailed) {
-      fail(14, 'Execution succeeded with future nonce; expected revert GS026');
-    }
+    assertRevertMatches(futureNonceError, 'GS026', 14, 'Future nonce rejection');
     const nonceAfterFutureAttempt = await publicClient.readContract({
       address: govSafeAddress,
       abi: SAFE_SINGLETON_ARTIFACT.abi,
@@ -676,7 +813,12 @@ export async function runRealSafeTestSuite() {
     // ------------------------------------------------------------------------
     // SCENARIO 15: Unauthorized direct call to ProtocolConfig rejected
     // ------------------------------------------------------------------------
-    let directCallFailed = false;
+    const factoryBeforeSc15 = await publicClient.readContract({
+      address: configAddress,
+      abi: configArt.abi,
+      functionName: 'factory',
+    });
+    let directCallError = null;
     try {
       await externalWallet.writeContract({
         address: configAddress,
@@ -684,11 +826,19 @@ export async function runRealSafeTestSuite() {
         functionName: 'bindFactory',
         args: [selectedFactoryAddress],
       });
-    } catch {
-      directCallFailed = true;
+    } catch (err) {
+      directCallError = err;
     }
-    if (!directCallFailed) fail(15, 'Unauthorized direct call succeeded; expected revert Unauthorized()');
-    pass(15, 'Unauthorized direct call to ProtocolConfig rejected (onlyGovernance)');
+    assertRevertMatches(directCallError, 'Unauthorized', 15, 'Unauthorized direct call to ProtocolConfig');
+    const factoryAfterSc15 = await publicClient.readContract({
+      address: configAddress,
+      abi: configArt.abi,
+      functionName: 'factory',
+    });
+    if (factoryAfterSc15 !== factoryBeforeSc15) {
+      fail(15, `Factory address mutated on rejected direct call: expected ${factoryBeforeSc15}, got ${factoryAfterSc15}`);
+    }
+    pass(15, 'Unauthorized direct call to ProtocolConfig rejected (onlyGovernance, state unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 16: Governance Safe can bind factory as authorized
@@ -763,7 +913,12 @@ export async function runRealSafeTestSuite() {
       value: 0n,
       data: activateCalldata,
     });
-    let prematureFailed = false;
+    const nonceBeforeSc18 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let prematureError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -771,17 +926,25 @@ export async function runRealSafeTestSuite() {
         functionName: 'execTransaction',
         args: [configAddress, 0n, activateCalldata, 0, 0n, 0n, 0n, '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', prematureTx.signatures],
       });
-    } catch {
-      prematureFailed = true;
+    } catch (err) {
+      prematureError = err;
     }
-    if (!prematureFailed) fail(18, 'Finance activated prematurely before 24-hour delay');
+    assertRevertMatches(prematureError, 'GS013', 18, 'Premature activation');
+    const nonceAfterSc18 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc18 !== nonceBeforeSc18) {
+      fail(18, `Safe nonce modified on rejected premature activation: expected ${nonceBeforeSc18}, got ${nonceAfterSc18}`);
+    }
     const financeActiveBeforeDelay = await publicClient.readContract({
       address: configAddress,
       abi: configArt.abi,
       functionName: 'financialActive',
     });
     if (financeActiveBeforeDelay) fail(18, 'Finance state active before 24-hour delay');
-    pass(18, 'Governance Safe cannot bypass 24-hour timelock (subcall reverted GS013/InvalidTimelock)');
+    pass(18, 'Governance Safe cannot bypass 24-hour timelock (subcall reverted GS013/InvalidTimelock, state and nonce unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 19: Governance Safe activates finance after delay elapses
@@ -830,18 +993,24 @@ export async function runRealSafeTestSuite() {
     // ------------------------------------------------------------------------
     // SCENARIO 21: Guardian cannot unpause
     // ------------------------------------------------------------------------
-    let guardianUnpauseFailed = false;
+    let guardianUnpauseError = null;
     try {
       await guardianWallet.writeContract({
         address: configAddress,
         abi: configArt.abi,
         functionName: 'unpause',
       });
-    } catch {
-      guardianUnpauseFailed = true;
+    } catch (err) {
+      guardianUnpauseError = err;
     }
-    if (!guardianUnpauseFailed) fail(21, 'Guardian unpaused protocol; expected Unauthorized()');
-    pass(21, 'Guardian cannot unpause (restricted strictly to Governance Safe)');
+    assertRevertMatches(guardianUnpauseError, 'Unauthorized', 21, 'Guardian cannot unpause');
+    const pausedStillTrue = await publicClient.readContract({
+      address: configAddress,
+      abi: configArt.abi,
+      functionName: 'paused',
+    });
+    if (!pausedStillTrue) fail(21, 'Protocol unexpectedly unpaused on rejected guardian attempt');
+    pass(21, 'Guardian cannot unpause (restricted strictly to Governance Safe, state unmutated)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 22: Emergency pause invalidates prior release approval
@@ -869,7 +1038,12 @@ export async function runRealSafeTestSuite() {
       value: 0n,
       data: unpauseCalldata,
     });
-    let unpauseWithoutApprovalFailed = false;
+    const nonceBeforeSc23Step1 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let unpauseWithoutApprovalError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -888,11 +1062,17 @@ export async function runRealSafeTestSuite() {
           unpauseTxWithoutApproval.signatures,
         ],
       });
-    } catch {
-      unpauseWithoutApprovalFailed = true;
+    } catch (err) {
+      unpauseWithoutApprovalError = err;
     }
-    if (!unpauseWithoutApprovalFailed) {
-      fail(23, 'Unpause succeeded without re-approval; expected revert GS013');
+    assertRevertMatches(unpauseWithoutApprovalError, 'GS013', 23, 'Unpause without approval');
+    const nonceAfterSc23Step1 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc23Step1 !== nonceBeforeSc23Step1) {
+      fail(23, `Safe nonce modified on rejected unpause: expected ${nonceBeforeSc23Step1}, got ${nonceAfterSc23Step1}`);
     }
 
     const stillPaused = await publicClient.readContract({
@@ -933,7 +1113,12 @@ export async function runRealSafeTestSuite() {
       value: 0n,
       data: unpauseCalldata,
     });
-    let unpausePrematureFailed = false;
+    const nonceBeforeSc23Step3 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let unpausePrematureError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -952,11 +1137,17 @@ export async function runRealSafeTestSuite() {
           unpauseTxPremature.signatures,
         ],
       });
-    } catch {
-      unpausePrematureFailed = true;
+    } catch (err) {
+      unpausePrematureError = err;
     }
-    if (!unpausePrematureFailed) {
-      fail(23, 'Unpause succeeded before 24-hour timelock elapsed; expected revert');
+    assertRevertMatches(unpausePrematureError, 'GS013', 23, 'Premature unpause before timelock');
+    const nonceAfterSc23Step3 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc23Step3 !== nonceBeforeSc23Step3) {
+      fail(23, `Safe nonce modified on rejected premature unpause: expected ${nonceBeforeSc23Step3}, got ${nonceAfterSc23Step3}`);
     }
 
     // Step 4: Warp time past 24-hour timelock (86,400s + 10s)
@@ -1116,29 +1307,168 @@ export async function runRealSafeTestSuite() {
     // ------------------------------------------------------------------------
     // SCENARIO 25: Unauthorized arbitration decisions rejected
     // ------------------------------------------------------------------------
+    // Workstream A2: Fix unauthorized arbitration isolation.
+    // Market 0 was finalized in Scenario 24. We create dedicated fixture Market 1
+    // and transition it to DISPUTED state within its active arbitration window.
+    // Verify external EOA, Governance Safe, and Compliance Safe cannot settle
+    // and do not mutate state/accounting/exposure.
+    // Then verify authorized Arbitration Safe settles Market 1 to FINALIZED.
+    const currentBlockM1 = await publicClient.getBlock();
+    const nowTimeM1 = Number(currentBlockM1.timestamp);
+
+    const closeTimeM1 = BigInt(nowTimeM1 + 30);
+    const resolutionTimeM1 = BigInt(nowTimeM1 + 40);
+    const challengePeriodM1 = 172800n; // 48 hours
+    const arbitrationPeriodM1 = 345600n; // 96 hours
+    const maxResolutionTimeM1 = resolutionTimeM1 + challengePeriodM1 + arbitrationPeriodM1 + 172800n + 3600n;
+
+    const metadataHashM1 = keccak256(toHex('Market 002 Test Metadata'));
+    const metadataURIM1 = 'ipfs://bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi/2';
+
+    log('test 25', 'Creating dedicated Market 1 fixture for dispute isolation...');
+    const createMarketTx1 = await walletClient.writeContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'createMarket',
+      args: [metadataHashM1, metadataURIM1, closeTimeM1, resolutionTimeM1, maxResolutionTimeM1],
+      value: 1000000000000000000n, // 1 ETH creationBond
+    });
+    await publicClient.waitForTransactionReceipt({ hash: createMarketTx1 });
+    const marketId1 = 1n;
+
+    // Warp time past closeTimeM1 and resolutionTimeM1
+    await publicClient.request({ method: 'evm_increaseTime', params: [50] });
+    await publicClient.request({ method: 'evm_mine', params: [] });
+
+    // Propose result: outcome YES (1)
+    const proposeEvidenceM1 = keccak256(toHex('Evidence Proposer Market 1'));
+    const proposeTx1 = await proposerWallet.writeContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'proposeResult',
+      args: [marketId1, 1, proposeEvidenceM1],
+      value: 10000000000000000000n, // 10 ETH proposalBond
+    });
+    await publicClient.waitForTransactionReceipt({ hash: proposeTx1 });
+
+    // Challenge result: stake 1 ETH challengeBond
+    const challengeEvidenceM1 = keccak256(toHex('Evidence Challenger Market 1'));
+    const challengeTx1 = await challengerWallet.writeContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'challengeResult',
+      args: [marketId1, challengeEvidenceM1],
+      value: 1000000000000000000n, // 1 ETH challengeBond
+    });
+    await publicClient.waitForTransactionReceipt({ hash: challengeTx1 });
+
+    // Warp time past challengeDeadline (48 hours = 172,800s + 10s) into active arbitration window
+    await publicClient.request({ method: 'evm_increaseTime', params: [172810] });
+    await publicClient.request({ method: 'evm_mine', params: [] });
+
+    // Verify Market 1 is now DISPUTED (state = 3) and within arbitration window
+    const market1Before = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'getMarket',
+      args: [marketId1],
+    });
+    if (market1Before.storedState !== 3) {
+      fail(25, `Expected Market 1 state DISPUTED (3), got ${market1Before.storedState}`);
+    }
+
+    const exposureBeforeSc25 = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'totalUnresolvedExposure',
+    });
+
     // Check A: Direct call from non-arbitrator reverts Unauthorized()
-    let directSettleFailed = false;
+    const arbRulingEvidenceM1 = keccak256(toHex('Arbitration Safe Ruling Market 1'));
+    let directSettleError = null;
     try {
       await externalWallet.writeContract({
         address: selectedFactoryAddress,
         abi: factoryArt.abi,
         functionName: 'settleDispute',
-        args: [marketId, 2, arbRulingEvidence],
+        args: [marketId1, 2, arbRulingEvidenceM1],
       });
-    } catch {
-      directSettleFailed = true;
+    } catch (err) {
+      directSettleError = err;
     }
-    if (!directSettleFailed) {
-      fail(25, 'Direct settleDispute call by external account succeeded; expected revert Unauthorized');
+    assertRevertMatches(directSettleError, 'Unauthorized', 25, 'Direct settleDispute by external account');
+
+    // Verify Market 1 state and protocol exposure are unmodified
+    const market1AfterDirect = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'getMarket',
+      args: [marketId1],
+    });
+    if (market1AfterDirect.storedState !== 3) {
+      fail(25, `Market 1 state mutated by unauthorized direct call: ${market1AfterDirect.storedState}`);
     }
 
-    // Check B: Compliance Safe executing settleDispute reverts GS013 (Unauthorized)
+    // Check B: Governance Safe executing settleDispute reverts GS013 (Unauthorized)
+    const govSettleCalldata = encodeFunctionData({
+      abi: factoryArt.abi,
+      functionName: 'settleDispute',
+      args: [marketId1, 2, arbRulingEvidenceM1],
+    });
+    const govSettleTx = await signTx(govSafeAddress, threeSigners, {
+      to: selectedFactoryAddress,
+      value: 0n,
+      data: govSettleCalldata,
+    });
+    const govNonceBeforeSc25 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let govSettleError = null;
+    try {
+      await walletClient.writeContract({
+        address: govSafeAddress,
+        abi: SAFE_SINGLETON_ARTIFACT.abi,
+        functionName: 'execTransaction',
+        args: [
+          selectedFactoryAddress,
+          0n,
+          govSettleCalldata,
+          0,
+          0n,
+          0n,
+          0n,
+          '0x0000000000000000000000000000000000000000',
+          '0x0000000000000000000000000000000000000000',
+          govSettleTx.signatures,
+        ],
+      });
+    } catch (err) {
+      govSettleError = err;
+    }
+    assertRevertMatches(govSettleError, 'GS013', 25, 'Governance Safe settleDispute');
+    const govNonceAfterSc25 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (govNonceAfterSc25 !== govNonceBeforeSc25) {
+      fail(25, `Gov Safe nonce mutated on rejected settleDispute: expected ${govNonceBeforeSc25}, got ${govNonceAfterSc25}`);
+    }
+
+    // Check C: Compliance Safe executing settleDispute reverts GS013 (Unauthorized)
     const compSettleTx = await signTx(compSafeAddress, compOwners.slice(0, 3), {
       to: selectedFactoryAddress,
       value: 0n,
-      data: settleCalldata,
+      data: govSettleCalldata,
     });
-    let compSettleFailed = false;
+    const compNonceBeforeSc25 = await publicClient.readContract({
+      address: compSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let compSettleError = null;
     try {
       await walletClient.writeContract({
         address: compSafeAddress,
@@ -1147,7 +1477,7 @@ export async function runRealSafeTestSuite() {
         args: [
           selectedFactoryAddress,
           0n,
-          settleCalldata,
+          govSettleCalldata,
           0,
           0n,
           0n,
@@ -1157,15 +1487,21 @@ export async function runRealSafeTestSuite() {
           compSettleTx.signatures,
         ],
       });
-    } catch {
-      compSettleFailed = true;
+    } catch (err) {
+      compSettleError = err;
     }
-    if (!compSettleFailed) {
-      fail(25, 'Compliance Safe settleDispute succeeded; expected revert GS013');
+    assertRevertMatches(compSettleError, 'GS013', 25, 'Compliance Safe settleDispute');
+    const compNonceAfterSc25 = await publicClient.readContract({
+      address: compSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (compNonceAfterSc25 !== compNonceBeforeSc25) {
+      fail(25, `Comp Safe nonce mutated on rejected settleDispute: expected ${compNonceBeforeSc25}, got ${compNonceAfterSc25}`);
     }
 
-    // Check C: requireArbitrator with non-multisig reverts InvalidMultisig()
-    let nonMultisigFailed = false;
+    // Check D: requireArbitrator with non-multisig reverts InvalidMultisig()
+    let nonMultisigError = null;
     try {
       await publicClient.readContract({
         address: configAddress,
@@ -1173,15 +1509,13 @@ export async function runRealSafeTestSuite() {
         functionName: 'requireArbitrator',
         args: [externalAccount.address, keccak256(toHex('dummy'))],
       });
-    } catch {
-      nonMultisigFailed = true;
+    } catch (err) {
+      nonMultisigError = err;
     }
-    if (!nonMultisigFailed) {
-      fail(25, 'requireArbitrator succeeded for non-multisig account; expected revert InvalidMultisig');
-    }
+    assertRevertMatches(nonMultisigError, 'InvalidMultisig', 25, 'requireArbitrator for non-multisig');
 
-    // Check D: requireArbitrator with wrong fingerprint reverts ControlChanged()
-    let wrongFingerprintFailed = false;
+    // Check E: requireArbitrator with wrong fingerprint reverts ControlChanged()
+    let wrongFingerprintError = null;
     try {
       await publicClient.readContract({
         address: configAddress,
@@ -1189,20 +1523,74 @@ export async function runRealSafeTestSuite() {
         functionName: 'requireArbitrator',
         args: [arbSafeAddress, keccak256(toHex('corrupted-fingerprint'))],
       });
-    } catch {
-      wrongFingerprintFailed = true;
+    } catch (err) {
+      wrongFingerprintError = err;
     }
-    if (!wrongFingerprintFailed) {
-      fail(25, 'requireArbitrator succeeded with wrong fingerprint; expected revert ControlChanged');
+    assertRevertMatches(wrongFingerprintError, 'ControlChanged', 25, 'requireArbitrator with wrong fingerprint');
+
+    // Verify state unchanged after all negative attempts
+    const market1BeforeAuth = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'getMarket',
+      args: [marketId1],
+    });
+    if (market1BeforeAuth.storedState !== 3) {
+      fail(25, `Market 1 state mutated after negative tests: ${market1BeforeAuth.storedState}`);
     }
-    pass(25, 'Unauthorized arbitration decisions rejected (disjoint authority checked)');
+    const exposureAfterNegative = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'totalUnresolvedExposure',
+    });
+    if (exposureAfterNegative !== exposureBeforeSc25) {
+      fail(25, `Total exposure mutated after negative tests: expected ${exposureBeforeSc25}, got ${exposureAfterNegative}`);
+    }
+
+    // Check F: Authorized Arbitration Safe settles Market 1 to FINALIZED
+    const settleM1Calldata = encodeFunctionData({
+      abi: factoryArt.abi,
+      functionName: 'settleDispute',
+      args: [marketId1, 1, arbRulingEvidenceM1], // Outcome YES (1)
+    });
+    const settleM1Res = await executeSafeTransaction(walletClient, publicClient, {
+      safeAddress: arbSafeAddress,
+      to: selectedFactoryAddress,
+      data: settleM1Calldata,
+      signers: arbOwners.slice(0, 3),
+    });
+    if (!settleM1Res.executionSuccess) {
+      fail(25, 'Authorized Arbitration Safe settleDispute on Market 1 failed');
+    }
+    const market1AfterAuth = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'getMarket',
+      args: [marketId1],
+    });
+    if (market1AfterAuth.storedState !== 4) {
+      fail(25, `Expected Market 1 state FINALIZED (4), got ${market1AfterAuth.storedState}`);
+    }
+    if (market1AfterAuth.finalOutcome !== 1) {
+      fail(25, `Expected Market 1 final outcome YES (1), got ${market1AfterAuth.finalOutcome}`);
+    }
+    const exposure1Released = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'exposureReleased',
+      args: [marketId1],
+    });
+    if (!exposure1Released) {
+      fail(25, 'Exposure not released for Market 1 after authorized settlement');
+    }
+    pass(25, 'Unauthorized arbitration decisions rejected and authorized settlement isolated & verified on Market 1');
 
     // ------------------------------------------------------------------------
     // SCENARIO 26: Safe ownership changes follow Safe authorization rules
     // ------------------------------------------------------------------------
     // Only Safe calling self (selfauthorized) can modify owners or threshold.
-    // 1. Direct call to changeThreshold reverts
-    let directThresholdChangeFailed = false;
+    // 1. Direct call to changeThreshold reverts with GS031
+    let directThresholdChangeError = null;
     try {
       await externalWallet.writeContract({
         address: govSafeAddress,
@@ -1210,12 +1598,10 @@ export async function runRealSafeTestSuite() {
         functionName: 'changeThreshold',
         args: [4n],
       });
-    } catch {
-      directThresholdChangeFailed = true;
+    } catch (err) {
+      directThresholdChangeError = err;
     }
-    if (!directThresholdChangeFailed) {
-      fail(26, 'Direct changeThreshold call succeeded; expected revert');
-    }
+    assertRevertMatches(directThresholdChangeError, 'GS031', 26, 'Direct changeThreshold without self-call');
 
     // 2. Authorized self-call via 3-of-5 multisig to increase threshold to 4
     const changeThresholdCalldata4 = encodeFunctionData({
@@ -1241,10 +1627,15 @@ export async function runRealSafeTestSuite() {
       fail(26, `Expected threshold 4, got ${threshold4}`);
     }
 
-    // 3. Confirm 3 signatures are now rejected under threshold 4
+    // 3. Confirm 3 signatures are now rejected under threshold 4 with GS020
     const testPayloadData = { to: dummyTo, value: 0n, data: '0x' };
     const threeSigsUnderTh4 = await signTx(govSafeAddress, threeSigners, testPayloadData);
-    let underQuorumFailed = false;
+    const nonceBeforeSc26UnderQuorum = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let underQuorumError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -1263,11 +1654,17 @@ export async function runRealSafeTestSuite() {
           threeSigsUnderTh4.signatures,
         ],
       });
-    } catch {
-      underQuorumFailed = true;
+    } catch (err) {
+      underQuorumError = err;
     }
-    if (!underQuorumFailed) {
-      fail(26, 'Execution succeeded with 3 signatures when threshold was 4; expected revert GS020');
+    assertRevertMatches(underQuorumError, 'GS020', 26, 'Under-quorum execution when threshold is 4');
+    const nonceAfterSc26UnderQuorum = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc26UnderQuorum !== nonceBeforeSc26UnderQuorum) {
+      fail(26, `Nonce mutated on under-quorum: expected ${nonceBeforeSc26UnderQuorum}, got ${nonceAfterSc26UnderQuorum}`);
     }
 
     // 4. Restore threshold to 3 using 4 signatures
@@ -1294,7 +1691,7 @@ export async function runRealSafeTestSuite() {
     if (thresholdRestored !== 3n) {
       fail(26, `Expected threshold 3, got ${thresholdRestored}`);
     }
-    pass(26, 'Changes to Safe ownership follow strict self-authorized Safe execution rules');
+    pass(26, 'Changes to Safe ownership follow strict self-authorized Safe execution rules (GS031 & GS020 enforced)');
 
     // ------------------------------------------------------------------------
     // SCENARIO 27: Safe execution failure does not silently create state changes
@@ -1316,7 +1713,12 @@ export async function runRealSafeTestSuite() {
       value: 0n,
       data: invalidParamsCalldata,
     });
-    let invalidGovFailed = false;
+    const nonceBeforeSc27 = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    let invalidGovError = null;
     try {
       await walletClient.writeContract({
         address: govSafeAddress,
@@ -1335,11 +1737,17 @@ export async function runRealSafeTestSuite() {
           invalidGovTx.signatures,
         ],
       });
-    } catch {
-      invalidGovFailed = true;
+    } catch (err) {
+      invalidGovError = err;
     }
-    if (!invalidGovFailed) {
-      fail(27, 'Execution of invalid setParameters succeeded; expected revert GS013');
+    assertRevertMatches(invalidGovError, 'GS013', 27, 'Atomic rollback on invalid setParameters');
+    const nonceAfterSc27CaseA = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc27CaseA !== nonceBeforeSc27) {
+      fail(27, `Nonce modified on atomic rollback: expected ${nonceBeforeSc27}, got ${nonceAfterSc27CaseA}`);
     }
 
     // Verify ProtocolConfig parameters are unchanged
@@ -1359,6 +1767,11 @@ export async function runRealSafeTestSuite() {
       data: invalidParamsCalldata,
       safeTxGas: 300000n,
     });
+    const nonceBeforeSc27CaseB = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
     const subcallFailHash = await walletClient.writeContract({
       address: govSafeAddress,
       abi: SAFE_SINGLETON_ARTIFACT.abi,
@@ -1377,6 +1790,9 @@ export async function runRealSafeTestSuite() {
       ],
     });
     const subcallFailReceipt = await publicClient.waitForTransactionReceipt({ hash: subcallFailHash });
+    if (subcallFailReceipt.status !== 'success') {
+      fail(27, 'Safe outer transaction unexpectedly failed for safeTxGas > 0');
+    }
     let sawExecutionFailure = false;
     for (const logItem of subcallFailReceipt.logs) {
       if (logItem.address.toLowerCase() === govSafeAddress.toLowerCase()) {
@@ -1394,6 +1810,14 @@ export async function runRealSafeTestSuite() {
     }
     if (!sawExecutionFailure) {
       fail(27, 'Expected ExecutionFailure event for failed inner subcall with safeTxGas > 0');
+    }
+    const nonceAfterSc27CaseB = await publicClient.readContract({
+      address: govSafeAddress,
+      abi: SAFE_SINGLETON_ARTIFACT.abi,
+      functionName: 'nonce',
+    });
+    if (nonceAfterSc27CaseB !== nonceBeforeSc27CaseB + 1n) {
+      fail(27, `Nonce did not advance on safeTxGas > 0 failure: expected ${nonceBeforeSc27CaseB + 1n}, got ${nonceAfterSc27CaseB}`);
     }
 
     // Verify ProtocolConfig parameters remain strictly unmodified
@@ -1453,7 +1877,17 @@ export async function runRealSafeTestSuite() {
       args: [marketId],
     });
     if (!exposureReleased0) {
-      fail(28, 'Exposure was not released on settled market');
+      fail(28, 'Exposure was not released on settled Market 0');
+    }
+
+    const exposureReleased1 = await publicClient.readContract({
+      address: selectedFactoryAddress,
+      abi: factoryArt.abi,
+      functionName: 'exposureReleased',
+      args: [marketId1],
+    });
+    if (!exposureReleased1) {
+      fail(28, 'Exposure was not released on settled Market 1');
     }
 
     const isPaused = await publicClient.readContract({
