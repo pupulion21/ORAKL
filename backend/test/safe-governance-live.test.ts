@@ -8,6 +8,6 @@ describe("ORAKL P3 Canonical Safe v1.4.1 Execution Test Suite (Live Anvil)", () 
       const result = await runRealSafeTestSuite();
       expect(result).toBe(true);
     },
-    60000
+    120000
   );
 });

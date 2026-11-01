@@ -3,6 +3,8 @@ export const SAFE_PROXY_FACTORY_ARTIFACT: any;
 export const SAFE_PROXY_ARTIFACT: any;
 export const CANONICAL_SAFE_CODEHASH: string;
 export const CANONICAL_FACTORY_CODEHASH: string;
+export const GUARD_STORAGE_SLOT: string;
+export const FALLBACK_HANDLER_STORAGE_SLOT: string;
 
 export function deploySafeInfrastructure(
   walletClient: any,
@@ -26,7 +28,11 @@ export function verifySafeInstance(
   publicClient: any,
   proxyAddress: string,
   expectedOwners: string[],
-  expectedThreshold: number | bigint
+  expectedThreshold: number | bigint,
+  options?: {
+    expectedSingletonAddress?: string;
+    expectedFallbackHandler?: string;
+  }
 ): Promise<{
   proxyAddress: `0x${string}`;
   owners: string[];
@@ -35,6 +41,9 @@ export function verifySafeInstance(
   ownersMatch: boolean;
   thresholdMatch: boolean;
   boundMasterCopy: string;
+  modules: string[];
+  guard: string;
+  fallbackHandler: string;
 }>;
 
 export function executeSafeTransaction(
@@ -58,5 +67,9 @@ export function executeSafeTransaction(
   txHash: `0x${string}`;
   receipt: any;
   signatures: `0x${string}`;
-  nonce: bigint;
+  nonceBefore: bigint;
+  nonceAfter: bigint;
+  executionSuccess: boolean;
+  executionFailure: boolean;
+  payment: bigint;
 }>;
