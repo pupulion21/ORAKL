@@ -1,0 +1,225 @@
+{
+  "generatedAt": "2026-11-01T04:45:54.797Z",
+  "purpose": "ORAKL P2-01 QIE Compatibility & EVM Profile Assessment",
+  "safetyBoundary": "Strictly read-only; no accounts, no private keys, zero public transactions.",
+  "networks": {
+    "qie-testnet": {
+      "network": "qie-testnet",
+      "expectedChainId": 1983,
+      "probedAt": "2026-11-01T04:45:52.305Z",
+      "endpoints": {
+        "https://rpc1testnet.qie.digital/": {
+          "reachable": false,
+          "error": "fetch failed"
+        },
+        "https://rpc2testnet.qie.digital/": {
+          "reachable": true,
+          "chainId": 1983,
+          "latencyMs": 219,
+          "chainMatch": true
+        }
+      },
+      "effectiveActiveEndpoint": "https://rpc2testnet.qie.digital/",
+      "profile": {
+        "clientVersion": "Version dev ()\nCompiled at  using Go go1.22.12 (amd64)",
+        "latestBlockNumber": 9496650,
+        "latestBlockHash": "0x7d23602f8b87c15e3c520dc5c8c8d88d4d4b7335607bbd58cde68dab269a4ee4",
+        "blockGasLimit": 4294967295,
+        "gasPriceWei": "7",
+        "eip1559Supported": true,
+        "baseFeePerGas": "7",
+        "avgBlockTimeSec": "4.50",
+        "sampleBlocks": [
+          {
+            "number": 9496650,
+            "timestamp": 1793508346,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "7",
+            "extraData": "0x"
+          },
+          {
+            "number": 9496649,
+            "timestamp": 1793508341,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "7",
+            "extraData": "0x"
+          },
+          {
+            "number": 9496648,
+            "timestamp": 1793508337,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "7",
+            "extraData": "0x"
+          },
+          {
+            "number": 9496647,
+            "timestamp": 1793508333,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "7",
+            "extraData": "0x"
+          },
+          {
+            "number": 9496646,
+            "timestamp": 1793508328,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "7",
+            "extraData": "0x"
+          }
+        ],
+        "feeHistorySample": {
+          "oldestBlock": "0x90e847",
+          "reward": [
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ]
+          ],
+          "baseFeePerGas": [
+            "0x7",
+            "0x7",
+            "0x7",
+            "0x7",
+            "0x7"
+          ],
+          "gasUsedRatio": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "qie-mainnet": {
+      "network": "qie-mainnet",
+      "expectedChainId": 1990,
+      "probedAt": "2026-11-01T04:45:53.413Z",
+      "endpoints": {
+        "https://rpc1mainnet.qie.digital/": {
+          "reachable": true,
+          "chainId": 1990,
+          "latencyMs": 204,
+          "chainMatch": true
+        },
+        "https://rpc2mainnet.qie.digital/": {
+          "reachable": true,
+          "chainId": 1990,
+          "latencyMs": 317,
+          "chainMatch": true
+        }
+      },
+      "effectiveActiveEndpoint": "https://rpc1mainnet.qie.digital/",
+      "profile": {
+        "clientVersion": "Version dev ()\nCompiled at  using Go go1.22.2 (amd64)",
+        "latestBlockNumber": 11589191,
+        "latestBlockHash": "0xa49fffdaf08f0ca4390af457c0e08f990c210c633c2dc5afba973a77b80c761b",
+        "blockGasLimit": 4294967295,
+        "gasPriceWei": "1125000000",
+        "eip1559Supported": true,
+        "baseFeePerGas": "1000000000",
+        "avgBlockTimeSec": "3.75",
+        "sampleBlocks": [
+          {
+            "number": 11589191,
+            "timestamp": 1793508349,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "1000000000",
+            "extraData": "0x"
+          },
+          {
+            "number": 11589190,
+            "timestamp": 1793508345,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "1000000000",
+            "extraData": "0x"
+          },
+          {
+            "number": 11589189,
+            "timestamp": 1793508341,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "1000000000",
+            "extraData": "0x"
+          },
+          {
+            "number": 11589188,
+            "timestamp": 1793508338,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "1000000000",
+            "extraData": "0x"
+          },
+          {
+            "number": 11589187,
+            "timestamp": 1793508334,
+            "gasLimit": 4294967295,
+            "gasUsed": 0,
+            "baseFeePerGas": "1000000000",
+            "extraData": "0x"
+          }
+        ],
+        "feeHistorySample": {
+          "oldestBlock": "0xb0d644",
+          "reward": [
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ],
+            [
+              "0x0",
+              "0x0",
+              "0x0"
+            ]
+          ],
+          "baseFeePerGas": [
+            "0x3b9aca00",
+            "0x3b9aca00",
+            "0x3b9aca00",
+            "0x3b9aca00",
+            "0x3b9aca00"
+          ],
+          "gasUsedRatio": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}
