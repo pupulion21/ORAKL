@@ -121,6 +121,21 @@ export async function verifyDeployment(options = {}) {
     ...(options.trustAnchor || {}),
   };
 
+  const hasTrustAnchor = Boolean(
+    trustAnchor.approvedFactoryAbiSha256 &&
+    trustAnchor.approvedConfigAbiSha256 &&
+    trustAnchor.expectedFactoryCodehash &&
+    trustAnchor.expectedConfigCodehash
+  );
+
+  record(
+    'trust-anchor-available',
+    hasTrustAnchor,
+    hasTrustAnchor
+      ? `Independent trust anchor available for chainId ${chainId}`
+      : `Missing or incomplete independent trust anchor for chainId ${chainId}`
+  );
+
   // 2. Compiled Foundry Artifacts vs Manifest ABI Hashes
   const factoryArtifactPath = resolve(REPO_ROOT, 'contracts/out/SelectedMarketFactory.sol/SelectedMarketFactory.json');
   const configArtifactPath = resolve(REPO_ROOT, 'contracts/out/ProtocolConfig.sol/ProtocolConfig.json');
@@ -138,14 +153,12 @@ export async function verifyDeployment(options = {}) {
       `compiled=${factoryAbiSha.slice(0, 18)}... manifest=${manifestFactoryAbiSha?.slice(0, 18)}...`,
     );
 
-    // Verify against independent trust anchor if present
-    if (trustAnchor.approvedFactoryAbiSha256) {
-      record(
-        'trust-anchor-factory-abi',
-        manifestFactoryAbiSha?.toLowerCase() === trustAnchor.approvedFactoryAbiSha256.toLowerCase(),
-        `manifest=${manifestFactoryAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedFactoryAbiSha256.slice(0, 18)}...`,
-      );
-    }
+    // Verify against independent trust anchor (mandatory)
+    record(
+      'trust-anchor-factory-abi',
+      Boolean(trustAnchor.approvedFactoryAbiSha256 && manifestFactoryAbiSha?.toLowerCase() === trustAnchor.approvedFactoryAbiSha256.toLowerCase()),
+      `manifest=${manifestFactoryAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedFactoryAbiSha256?.slice(0, 18)}...`,
+    );
   } else {
     record('factory-artifact', false, `artifact missing at ${factoryArtifactPath}`);
   }
@@ -160,14 +173,12 @@ export async function verifyDeployment(options = {}) {
       `compiled=${configAbiSha.slice(0, 18)}... manifest=${manifestConfigAbiSha?.slice(0, 18)}...`,
     );
 
-    // Verify against independent trust anchor if present
-    if (trustAnchor.approvedConfigAbiSha256) {
-      record(
-        'trust-anchor-config-abi',
-        manifestConfigAbiSha?.toLowerCase() === trustAnchor.approvedConfigAbiSha256.toLowerCase(),
-        `manifest=${manifestConfigAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedConfigAbiSha256.slice(0, 18)}...`,
-      );
-    }
+    // Verify against independent trust anchor (mandatory)
+    record(
+      'trust-anchor-config-abi',
+      Boolean(trustAnchor.approvedConfigAbiSha256 && manifestConfigAbiSha?.toLowerCase() === trustAnchor.approvedConfigAbiSha256.toLowerCase()),
+      `manifest=${manifestConfigAbiSha?.slice(0, 18)}... anchor=${trustAnchor.approvedConfigAbiSha256?.slice(0, 18)}...`,
+    );
   } else {
     record('config-artifact', false, `artifact missing at ${configArtifactPath}`);
   }
@@ -232,10 +243,10 @@ export async function verifyDeployment(options = {}) {
 
     const factoryCodehash = factoryHasCode ? keccak256(factoryBytecode) : null;
     const manifestFactoryCodehash = manifest.contracts?.selectedMarketFactory?.runtimeCodeKeccak256?.toLowerCase();
-    const expectedFactoryCodehash = (trustAnchor.expectedFactoryCodehash || manifestFactoryCodehash)?.toLowerCase();
+    const expectedFactoryCodehash = trustAnchor.expectedFactoryCodehash?.toLowerCase();
     
-    const factoryHashMatchesManifest = factoryCodehash?.toLowerCase() === manifestFactoryCodehash;
-    const factoryHashMatchesAnchor = !trustAnchor.expectedFactoryCodehash || (factoryCodehash?.toLowerCase() === trustAnchor.expectedFactoryCodehash.toLowerCase());
+    const factoryHashMatchesManifest = Boolean(manifestFactoryCodehash && factoryCodehash?.toLowerCase() === manifestFactoryCodehash);
+    const factoryHashMatchesAnchor = Boolean(expectedFactoryCodehash && factoryCodehash?.toLowerCase() === expectedFactoryCodehash);
     const factoryHashMatch = factoryHashMatchesManifest && factoryHashMatchesAnchor;
     
     record(
@@ -253,10 +264,10 @@ export async function verifyDeployment(options = {}) {
 
     const configCodehash = configHasCode ? keccak256(configBytecode) : null;
     const manifestConfigCodehash = manifest.contracts?.protocolConfig?.runtimeCodeKeccak256?.toLowerCase();
-    const expectedConfigCodehash = (trustAnchor.expectedConfigCodehash || manifestConfigCodehash)?.toLowerCase();
+    const expectedConfigCodehash = trustAnchor.expectedConfigCodehash?.toLowerCase();
 
-    const configHashMatchesManifest = configCodehash?.toLowerCase() === manifestConfigCodehash;
-    const configHashMatchesAnchor = !trustAnchor.expectedConfigCodehash || (configCodehash?.toLowerCase() === trustAnchor.expectedConfigCodehash.toLowerCase());
+    const configHashMatchesManifest = Boolean(manifestConfigCodehash && configCodehash?.toLowerCase() === manifestConfigCodehash);
+    const configHashMatchesAnchor = Boolean(expectedConfigCodehash && configCodehash?.toLowerCase() === expectedConfigCodehash);
     const configHashMatch = configHashMatchesManifest && configHashMatchesAnchor;
 
     record(
