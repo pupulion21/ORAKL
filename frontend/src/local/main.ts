@@ -2043,14 +2043,11 @@ async function actPublishEvidenceForm(form: HTMLFormElement): Promise<void> {
       commitment,
     });
     let signature: string | undefined;
-    if (state.session?.provider) {
+    if (state.session) {
       const msg = publicationAuthMessage(auth);
       const msgHex = `0x${Array.from(new TextEncoder().encode(msg)).map(b => b.toString(16).padStart(2, '0')).join('')}`;
       try {
-        signature = (await state.session.provider.request({
-          method: 'personal_sign',
-          params: [msgHex, publisher],
-        })) as string;
+        signature = await state.session.request<string>('personal_sign', [msgHex, publisher]);
       } catch {
         // Fallback or leave undefined if user cancels
       }

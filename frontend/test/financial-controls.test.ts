@@ -3,16 +3,12 @@ import assert from 'node:assert/strict';
 import {
   encodePredict,
   encodeClaimBond,
-  encodeClaim,
-  encodeClaimRefund,
   type BondType,
-  type Side,
   type Address,
 } from '../src/selected/chain.ts';
-import { parseQie, formatQie } from '../src/format.ts';
+import { parseQie } from '../src/format.ts';
 import { createApiClient } from '../src/selected/api-client.ts';
 
-const FACTORY = '0x8f86403a4de0bb5791fa46b8e795c547942fe4cf' as Address;
 const ALICE = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8' as Address;
 const BOB = '0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc' as Address;
 
