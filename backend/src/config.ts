@@ -1,3 +1,5 @@
+import type { TrustAnchor } from "./evidence/trust-anchor.js";
+
 // ORAKL P1 — backend runtime configuration. LOCAL SIMULATION ONLY.
 // This service reads the isolated Anvil chain and its own PostgreSQL database.
 // It never holds keys, never signs transactions and never custodies funds.
@@ -20,6 +22,8 @@ export type BackendConfig = {
   requireDbDeploymentRecord?: boolean;
   deploymentManifestPath?: string;
   expectedFactoryCodehash?: string;
+  approvedFactoryAbiSha256?: string;
+  trustAnchor?: Partial<TrustAnchor>;
   deploymentCacheTtlMs?: number;
 };
 
@@ -64,6 +68,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
     requireDbDeploymentRecord: env.REQUIRE_DB_DEPLOYMENT === "true",
     deploymentManifestPath: env.DEPLOYMENT_MANIFEST,
     expectedFactoryCodehash: env.EXPECTED_FACTORY_CODEHASH,
+    approvedFactoryAbiSha256: env.APPROVED_FACTORY_ABI_SHA256,
     deploymentCacheTtlMs: env.DEPLOYMENT_CACHE_TTL_MS ? Number(env.DEPLOYMENT_CACHE_TTL_MS) : 5000,
   };
 }

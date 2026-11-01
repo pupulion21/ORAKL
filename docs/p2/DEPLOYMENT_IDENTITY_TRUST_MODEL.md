@@ -41,7 +41,9 @@ flowchart TD
 
 ---
 
-## 2. The 10-Layer Deployment Validation Pipeline
+## 2. The Deployment Validation Pipeline & Independent Trust Anchor
+
+Manifest content must **not** self-establish the trusted runtime codehash or ABI identity. Off-chain services must validate declared manifest artifacts against an independently approved Trust Anchor (`backend/src/evidence/trust-anchor.ts`).
 
 | Layer | Validation Stage | Failure Condition | Security Defended |
 | :--- | :--- | :--- | :--- |
@@ -52,9 +54,29 @@ flowchart TD
 | **Layer 5** | **Factory-to-Config Linkage** | Factory's `immutableAssignment[0]` mismatch with `protocolConfig` | Rogue factory bound to unauthorized configuration |
 | **Layer 6** | **Runtime Bytecode Codehash Verification** | Missing codehash or mismatch against expected codehash | Surrogate / proxy contract masquerading as factory |
 | **Layer 7** | **Approved ABI Identity** | `mode !== "local-selected"` or missing `abiSha256` | Incompatible or legacy ABI spoofing |
+| **Layer 7b** | **Independent Trust Anchor Enforcement** | Manifest declared `abiSha256` or `runtimeCodeKeccak256` does not match approved trust anchor | Self-referential or forged manifests injecting unapproved code |
 | **Layer 8** | **Environment Segregation** | `status !== "LOCAL_SIMULATION"` or `safety.publicDeployment === true` | Public mainnet/testnet configurations loaded into dev environment |
 | **Layer 9** | **Database Identity Consistency (FAIL CLOSED)** | DB query fails (outage/timeout) or Prisma DB `contractDeployment` record has differing address | Database outage, manifest desynchronization, rogue deployment insertion |
 | **Layer 10** | **Fail-Closed Enforcement** | Any layer fails or throws | Complete rejection (503 HTTP status) without fallback |
+
+---
+
+## 2.1 Deployment Verification Gate (`scripts/p2/verify-deployment.mjs`)
+
+To prevent false-positive verifications when RPC endpoints are offline, the deployment verification tool supports explicit operational modes:
+
+1. **`artifact-only` Mode**:
+   - Validates local JSON manifest structure, safety boundaries, immutable linkages, and compiled Foundry artifact ABI sha256 hashes (`contracts/out/SelectedMarketFactory.sol/SelectedMarketFactory.json`).
+   - Does **not** perform network requests.
+   - Outputs: `STATUS: ONCHAIN_UNVERIFIED`.
+   - Explicitly does **not** claim full deployment verification pass.
+2. **`onchain-required` Mode**:
+   - Mandatory RPC connectivity check. If RPC is offline, unreachable, or errors, exits **non-zero** immediately.
+   - Enforces live `eth_chainId` matching manifest chain ID.
+   - Enforces nonempty on-chain bytecode (`eth_getCode !== "0x"`).
+   - Enforces on-chain runtime codehash (`keccak256(bytecode)` matching approved artifact).
+   - Enforces live mutual contract linkage calls (`factory.protocolConfig()` and `config.factory()`).
+   - Any failure exits non-zero (`process.exit(1)`). Full verification success is never reported if on-chain checks are skipped.
 
 ---
 

@@ -3,7 +3,7 @@
 - **Document ID**: `ORAKL-P2-VERIF-FINAL-001`
 - **Date**: 2026-11-01
 - **Branch**: `feature/orakl-p2-security-readiness`
-- **Authorized Verdict**: `P2 LOCAL READINESS VERIFIED — PUBLIC RELEASE BLOCKED`
+- **Authorized Verdict**: `P2 DEPLOYMENT GATE VERIFIED — PUBLIC RELEASE BLOCKED`
 
 ---
 
@@ -12,8 +12,8 @@
 All technical implementation, architecture, research, and verification objectives of **ORAKL P2 (QIE Compatibility, Safe Governance & Security Readiness)** have been executed and verified across isolated local test fixtures (Foundry Forge, Anvil Chain ID 31337, Fastify API, PostgreSQL, and Vite).
 
 > [!CAUTION]
-> **FINAL RELEASE GATE VERDICT: PUBLIC RELEASE BLOCKED**  
-> While all local tests and static checks have passed with zero failures, public deployment to QIE Testnet (1983) or Mainnet (1990) and real-value financial custody remain **STRICTLY BLOCKED** pending formal third-party smart contract security audit sign-off, production Safe multisig HSM key ceremonies, and legal classification opinions.
+> **FINAL RELEASE GATE VERDICT: P2 DEPLOYMENT GATE VERIFIED — PUBLIC RELEASE BLOCKED**  
+> While all local tests, deployment verification gates, and static checks have passed with zero failures, public deployment to QIE Testnet (1983) or Mainnet (1990) and real-value financial custody remain **STRICTLY BLOCKED** pending formal third-party smart contract security audit sign-off, production Safe multisig HSM key ceremonies, and legal classification opinions.
 
 ---
 
@@ -27,7 +27,7 @@ All technical implementation, architecture, research, and verification objective
 - **Passed**: 244
 - **Failed**: 0
 - **Skipped**: 0
-- **Execution Time**: 97.77s (206.63s CPU time)
+- **Execution Time**: ~98s
 - **Breakdown**:
   - `SafeGovernanceTest`: 9/9 tests passed (verifying 3-of-5 threshold enforcement, address sorting, nonce replay defense, 24-hour timelock, and pause interrupt against custom test fixture `Safe3Of5.sol`. Official Safe Global contract integration is **BLOCKED**).
   - `OraklInvariantTest`: 16/16 formal invariants verified across 8,192 calls and 128 runs with 0 reverts (solvency conservation, no double claims, payout bounds, fee isolation, bond isolation, etc.).
@@ -37,13 +37,15 @@ All technical implementation, architecture, research, and verification objective
 
 ### 2.2 Backend Vitest Test Suite
 - **Command**: `npm --prefix backend test`
-- **Test Files**: 9 passed (9)
-- **Total Tests Executed**: 139
-- **Passed**: 139
+- **Test Files**: 11 passed (11)
+- **Total Tests Executed**: 158
+- **Passed**: 158
 - **Failed**: 0
-- **Duration**: ~17s
+- **Duration**: ~19s
 - **Breakdown**:
-  - `deployment-trust.test.ts`: 16/16 tests passed (10-layer deployment validation pipeline, codehash verification, cached deployment with freshness TTL and invalidation, fail-closed database outage handling, forged manifest rejection, and strict isolation of `TRUSTED_FACTORY`).
+  - `deployment-trust.test.ts`: 20/20 tests passed (10-layer deployment validation pipeline, independent trust anchor enforcement, codehash verification, cached deployment with freshness TTL and invalidation, fail-closed database outage handling, forged manifest rejection, and strict isolation of `TRUSTED_FACTORY`).
+  - `deployment-verification.test.ts`: 7/7 tests passed (testing `scripts/p2/verify-deployment.mjs` modes: `artifact-only` reporting `ONCHAIN_UNVERIFIED` and `onchain-required` failing closed on offline RPC, wrong chain ID, empty bytecode, codehash mismatch, linkage mismatch, unapproved ABI).
+  - `opcode-probes.test.ts`: 8/8 tests passed (testing `scripts/p2/probe-qie-evm.mjs` distinct classifications: transport error, malformed response, unsupported method, execution revert, invalid opcode, and avoiding full Shanghai hardfork claims).
   - `publication-auth.test.ts`: 16/16 tests passed (EIP-712 / EIP-191 replay protection, atomic nonce consumption).
   - `indexer.test.ts`: 15/15 tests passed (PostgreSQL event ingestion, canonical reorg fork rollback & replay).
   - `api.test.ts`: 35/35 tests passed (Fastify API endpoints, query filters, pagination).
@@ -84,19 +86,23 @@ All technical implementation, architecture, research, and verification objective
 
 ## 3. QIE Blockchain EVM & Infrastructure Findings
 
-1. **Opcode Profile (Shanghai Hardfork Level)**:
+1. **Opcode Profile & Hardfork Classification**:
    - `PUSH0` (`0x5f`): **SUPPORTED** on QIE Mainnet (1990) and QIE Testnet (1983). Verified via live reproducible `eth_call` probe using bytecode `0x60425f5360015ff3`, returning `0x42`. Raw request/response logged in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json).
    - `TSTORE`/`TLOAD` (`0x5d`/`0x5c`): **UNSUPPORTED** on QIE Mainnet and Testnet. Verified via live reproducible `eth_call` probe using bytecode `0x604260005d60005c60005360016000f3`, returning error `invalid opcode: opcode 0x5d not defined`.
-   - ORAKL contracts compiled targeting `paris` are **100% compatible** and avoid transient storage opcodes.
+   - **Hardfork Scope Boundary**: Opcode probes alone do not establish full Shanghai hardfork compliance (initcode metering, warm coinbase, withdrawals remain unverified at the RPC level). Full Shanghai hardfork compliance is recorded as **UNVERIFIED**.
+   - ORAKL contracts compiled targeting `paris` are **100% compatible** and avoid transient storage opcodes regardless of upstream EVM ceiling.
 2. **Bytecode Size Limits (EIP-170)**:
    - `SelectedMarketFactory`: 19,084 B runtime code (margin: 5,492 B < 24,576 B cap).
    - `ProtocolConfig`: 8,508 B runtime code (margin: 16,068 B < 24,576 B cap).
-3. **RPC Infrastructure**:
-   - `https://rpc1testnet.qie.digital/`: Port 443 refused connection (Documented in Risk Register).
+3. **RPC Infrastructure & Error Separation**:
+   - Transport errors, malformed responses, and method errors are strictly distinguished from opcode incompatibility in [`scripts/p2/probe-qie-evm.mjs`](file:///home/pupulion/orakl/scripts/p2/probe-qie-evm.mjs).
+   - `https://rpc1testnet.qie.digital/`: Port 443 refused connection (classified as `TRANSPORT_ERROR`).
    - `https://rpc2testnet.qie.digital/`: Active and responsive (Block ~9.5M, gasPrice 7 wei).
    - `https://rpc1mainnet.qie.digital/` & `rpc2mainnet.qie.digital`: Active and responsive (Block ~11.6M, gasPrice ~1.125 Gwei).
 4. **On-Chain & Local Artifact Verification**:
-   - Executed [`scripts/p2/verify-deployment.mjs`](file:///home/pupulion/orakl/scripts/p2/verify-deployment.mjs): verified local compiled Foundry artifact ABI sha256 hashes against deployment manifest, verified immutable linkage, and confirmed fail-closed execution.
+   - Executed [`scripts/p2/verify-deployment.mjs`](file:///home/pupulion/orakl/scripts/p2/verify-deployment.mjs) with explicit modes:
+     - `artifact-only`: validates local Foundry artifacts and outputs `ONCHAIN_UNVERIFIED`.
+     - `onchain-required`: requires live RPC connectivity, verifies chain ID, nonempty bytecode, runtime codehashes, and mutual linkage calls. Fails closed with non-zero exit code if offline or invalid.
 5. **Multi-Sig Governance Scope**:
-   - `Safe3Of5.sol` is a custom test fixture simulating 3-of-5 threshold mechanics.
+   - `Safe3Of5.sol` is a custom test double simulating 3-of-5 threshold mechanics with actual EIP-712 domain `EIP712Domain(uint256 chainId,address verifyingContract)` and custom errors (`InvalidSignatures()`, `Unauthorized()`, `DuplicateOrUnorderedOwner()`, `InvalidThreshold()`, `SetupFailed()`, `ExecutionFailed(bytes)`).
    - Official Safe Global contract integration into local test suite is **BLOCKED** due to external dependency pinning constraints. Real Safe integration is **NOT** claimed.

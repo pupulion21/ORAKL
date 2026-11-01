@@ -8,7 +8,7 @@ import { resolve } from 'node:path';
 
 const REPO_ROOT = resolve(import.meta.dirname, '../..');
 
-async function rpcCall(endpoint, method, params = []) {
+export async function rpcCall(endpoint, method, params = []) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
@@ -27,60 +27,195 @@ async function rpcCall(endpoint, method, params = []) {
   }
 }
 
-async function probeOpcodes(activeEp) {
-  const push0Bytecode = '0x60425f5360015ff3'; // PUSH1 0x42, PUSH0, MSTORE8, PUSH1 0x01, PUSH0, RETURN
-  const tstoreBytecode = '0x604260005d60005c60005360016000f3'; // TSTORE & TLOAD sequence
+/**
+ * Probes a single opcode byte vector and classifies the response with strict failure separation.
+ * Transport errors, malformed responses, and method errors are NEVER classified as opcode incompatibility.
+ */
+export async function probeSingleOpcode(endpoint, name, bytecode, expectedReturn = '0x42') {
+  const req = {
+    jsonrpc: '2.0',
+    id: 100 + Math.floor(Math.random() * 899),
+    method: 'eth_call',
+    params: [{ data: bytecode }, 'latest'],
+  };
 
-  const push0Req = { jsonrpc: '2.0', id: 101, method: 'eth_call', params: [{ data: push0Bytecode }, 'latest'] };
-  const tstoreReq = { jsonrpc: '2.0', id: 102, method: 'eth_call', params: [{ data: tstoreBytecode }, 'latest'] };
+  let rawRes = null;
+  let fetchError = null;
 
-  let push0Res = null;
-  let tstoreRes = null;
-
+  let res;
   try {
-    const res = await fetch(activeEp, {
+    res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(push0Req),
+      body: JSON.stringify(req),
     });
-    push0Res = await res.json();
   } catch (err) {
-    push0Res = { error: { message: err.message } };
+    return {
+      name,
+      bytecode,
+      classification: 'TRANSPORT_ERROR',
+      status: 'ERROR',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: null,
+      errorDetail: err.message,
+    };
   }
 
+  if (!res.ok) {
+    return {
+      name,
+      bytecode,
+      classification: 'TRANSPORT_ERROR',
+      status: 'ERROR',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: null,
+      errorDetail: `HTTP ${res.status} ${res.statusText}`,
+    };
+  }
+
+  let text = '';
   try {
-    const res = await fetch(activeEp, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tstoreReq),
-    });
-    tstoreRes = await res.json();
+    text = await res.text();
+    rawRes = JSON.parse(text);
   } catch (err) {
-    tstoreRes = { error: { message: err.message } };
+    return {
+      name,
+      bytecode,
+      classification: 'MALFORMED_RESPONSE',
+      status: 'ERROR',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: text,
+      errorDetail: `Malformed JSON response: ${err.message}`,
+    };
   }
 
-  const push0Supported = push0Res?.result === '0x42';
-  const tstoreSupported = tstoreRes?.result === '0x42';
+  // Validate JSON-RPC structure
+  if (!rawRes || typeof rawRes !== 'object' || (rawRes.result === undefined && rawRes.error === undefined)) {
+    return {
+      name,
+      bytecode,
+      classification: 'MALFORMED_RESPONSE',
+      status: 'ERROR',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: rawRes,
+      errorDetail: 'RPC response is not valid JSON-RPC 2.0',
+    };
+  }
 
+  // Check for successful execution
+  if (rawRes.result === expectedReturn) {
+    return {
+      name,
+      bytecode,
+      classification: 'SUPPORTED',
+      status: 'SUPPORTED',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: rawRes,
+      errorDetail: null,
+    };
+  }
+
+  // Handle JSON-RPC Error with explicit categorization
+  if (rawRes.error) {
+    const code = rawRes.error.code;
+    const msg = String(rawRes.error.message || '');
+    const data = typeof rawRes.error.data === 'string' ? rawRes.error.data : JSON.stringify(rawRes.error.data || '');
+    const fullErr = `${msg} ${data}`.toLowerCase();
+
+    // 1. Method Not Found / Unsupported Method
+    if (code === -32601 || /method.*not (found|supported)|unsupported method/i.test(msg)) {
+      return {
+        name,
+        bytecode,
+        classification: 'METHOD_NOT_SUPPORTED',
+        status: 'ERROR',
+        isOpcodeUnsupported: false,
+        rawRequest: req,
+        rawResponse: rawRes,
+        errorDetail: msg,
+      };
+    }
+
+    // 2. Explicit Invalid Opcode error
+    // Only report opcode unsupported when evidence specifically establishes invalid opcode behavior
+    const isInvalidOpcode =
+      /invalid opcode|opcode 0x[0-9a-f]+ not defined|bad opcode|instruction not supported|invalid instruction/i.test(
+        fullErr,
+      );
+
+    if (isInvalidOpcode) {
+      return {
+        name,
+        bytecode,
+        classification: 'INVALID_OPCODE',
+        status: 'UNSUPPORTED',
+        isOpcodeUnsupported: true,
+        rawRequest: req,
+        rawResponse: rawRes,
+        errorDetail: msg,
+      };
+    }
+
+    // 3. Other EVM execution failures / reverts (NOT opcode incompatibility)
+    return {
+      name,
+      bytecode,
+      classification: 'EXECUTION_REVERT',
+      status: 'EXECUTION_REVERT',
+      isOpcodeUnsupported: false,
+      rawRequest: req,
+      rawResponse: rawRes,
+      errorDetail: msg,
+    };
+  }
+
+  // Returned unexpected result
   return {
-    push0: {
-      status: push0Supported ? 'SUPPORTED' : 'UNSUPPORTED',
-      bytecode: push0Bytecode,
-      rawRequest: push0Req,
-      rawResponse: push0Res,
-    },
-    tstore: {
-      status: tstoreSupported ? 'SUPPORTED' : 'UNSUPPORTED',
-      bytecode: tstoreBytecode,
-      rawRequest: tstoreReq,
-      rawResponse: tstoreRes,
-      errorDetail: tstoreRes?.error?.message || null,
-    },
-    evmHardforkObservation: push0Supported && !tstoreSupported ? 'Shanghai' : push0Supported && tstoreSupported ? 'Cancun' : 'Paris or Earlier',
+    name,
+    bytecode,
+    classification: 'EXECUTION_REVERT',
+    status: 'UNEXPECTED_RESULT',
+    isOpcodeUnsupported: false,
+    rawRequest: req,
+    rawResponse: rawRes,
+    errorDetail: `Observed ${rawRes.result}, expected ${expectedReturn}`,
   };
 }
 
-async function probeNetwork(name, expectedChainId, endpoints) {
+export async function probeOpcodes(activeEp) {
+  const push0Bytecode = '0x60425f5360015ff3'; // PUSH1 0x42, PUSH0, MSTORE8, PUSH1 0x01, PUSH0, RETURN
+  const tstoreBytecode = '0x604260005d60005c60005360016000f3'; // TSTORE & TLOAD sequence
+
+  const push0 = await probeSingleOpcode(activeEp, 'push0', push0Bytecode, '0x42');
+  const tstore = await probeSingleOpcode(activeEp, 'tstore', tstoreBytecode, '0x42');
+
+  let opcodeObservation = '';
+  if (push0.classification === 'SUPPORTED' && tstore.classification === 'INVALID_OPCODE') {
+    opcodeObservation =
+      'PUSH0 (0x5f) supported; TSTORE (0x5d) confirmed invalid opcode. Opcode-level observation only; does not establish full Shanghai hardfork compliance.';
+  } else if (push0.classification === 'SUPPORTED' && tstore.classification === 'SUPPORTED') {
+    opcodeObservation =
+      'PUSH0 (0x5f) and TSTORE (0x5d) both supported. Opcode-level observation only; does not establish full Cancun hardfork compliance.';
+  } else if (tstore.classification === 'TRANSPORT_ERROR') {
+    opcodeObservation = `PUSH0 ${push0.status}; TSTORE probe inconclusive due to transport error (${tstore.errorDetail}).`;
+  } else {
+    opcodeObservation = `Opcode observations: PUSH0=${push0.classification}, TSTORE=${tstore.classification}.`;
+  }
+
+  return {
+    push0,
+    tstore,
+    fullHardforkClaim: 'UNVERIFIED',
+    opcodeObservation,
+  };
+}
+
+export async function probeNetwork(name, expectedChainId, endpoints) {
   const result = {
     network: name,
     expectedChainId,
@@ -192,7 +327,7 @@ async function probeNetwork(name, expectedChainId, endpoints) {
   return result;
 }
 
-async function main() {
+export async function runProbeCLI() {
   console.log('--- Probing QIE Public Networks (Read-Only) ---');
 
   const testnet = await probeNetwork('qie-testnet', 1983, [
@@ -222,7 +357,9 @@ async function main() {
   console.log(`Saved RPC verification results to ${outPath}`);
 }
 
-main().catch((err) => {
-  console.error('Probe failed:', err);
-  process.exit(1);
-});
+if (process.argv[1]?.endsWith('probe-qie-evm.mjs')) {
+  runProbeCLI().catch((err) => {
+    console.error('Probe failed:', err);
+    process.exit(1);
+  });
+}

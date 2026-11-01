@@ -21,9 +21,10 @@ Live read-only RPC probing conducted on 2026-11-01 confirmed:
    - `https://rpc1mainnet.qie.digital/`: **ONLINE / HEALTHY** (Latency: ~204ms).
    - `https://rpc2mainnet.qie.digital/`: **ONLINE / HEALTHY** (Latency: ~317ms).
 3. **EVM Opcode Profile**:
-   - **Shanghai EIP-3855 (`PUSH0`)**: **SUPPORTED** (empirically verified on Mainnet and Testnet via reproducible `eth_call` probe with initcode `0x60425f5360015ff3` returning `0x42`; raw JSON-RPC request and response preserved in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json)).
-   - **Cancun EIP-1153 (`TSTORE`/`TLOAD`)**: **UNSUPPORTED** (empirically verified on Mainnet and Testnet via reproducible `eth_call` probe with initcode `0x604260005d60005c60005360016000f3` returning error `invalid opcode: opcode 0x5d not defined`; raw JSON-RPC request and response preserved in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json)).
-   - **ORAKL Compiler Target (`evm_version = "paris"`)**: **100% COMPATIBLE**. Paris emits neither `PUSH0` nor Cancun transient storage opcodes, ensuring strict bytecode execution compatibility.
+   - **`PUSH0` (`0x5f`)**: **SUPPORTED** (empirically verified on Mainnet and Testnet via reproducible `eth_call` probe with initcode `0x60425f5360015ff3` returning `0x42`; raw JSON-RPC request and response preserved in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json)).
+   - **`TSTORE`/`TLOAD` (`0x5d`/`0x5c`)**: **UNSUPPORTED** (empirically verified on Mainnet and Testnet via reproducible `eth_call` probe with initcode `0x604260005d60005c60005360016000f3` returning error `invalid opcode: opcode 0x5d not defined`; raw JSON-RPC request and response preserved in [`RPC_VERIFICATION_RESULTS.json`](file:///home/pupulion/orakl/docs/p2/RPC_VERIFICATION_RESULTS.json)).
+   - **Hardfork Scope Boundary**: PUSH0 and TSTORE probes alone do **not** establish full Shanghai hardfork compatibility (features such as initcode metering, warm coinbase, and withdrawals remain unverified at the RPC level). P2 records full Shanghai hardfork compliance as **UNVERIFIED**.
+   - **ORAKL Compiler Target (`evm_version = "paris"`)**: **100% COMPATIBLE**. Paris emits neither `PUSH0` nor Cancun transient storage opcodes, ensuring strict bytecode execution compatibility regardless of upstream hardfork ceiling.
 4. **Transaction & Gas Model**: Both networks support `eth_feeHistory` and EIP-1559 base fee accounting, with block gas limits set to `4,294,967,295` (uint32 max).
 5. **Block Progression**: Average block generation intervals observed at ~3.75s on Mainnet and ~4.50s on Testnet.
 

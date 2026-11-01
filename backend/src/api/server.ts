@@ -31,7 +31,7 @@
 // error = { error: { code, message }, statusCode }. All uint256 values are
 // serialized as exact base-10 strings — never JS floating point.
 import { Buffer } from "node:buffer";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 import FastifyFactory, { type FastifyInstance, type FastifyReply, type FastifyRequest } from "fastify";
@@ -41,6 +41,7 @@ import type { PrismaClient } from "@prisma/client";
 import { loadConfig, type BackendConfig } from "../config.js";
 import { serialize, sanitizeText, redactSecrets, HttpError, parsePagination, requireBigintParam, requireAddressParam } from "../lib/format.js";
 import { parseStrictJson } from "../evidence/strict-json.js";
+import { getTrustAnchor, validateManifestAgainstTrustAnchor, type TrustAnchor } from "../evidence/trust-anchor.js";
 import {
   EVIDENCE_KINDS,
   validateEvidenceManifest,
@@ -1216,6 +1217,7 @@ export type TrustedDeployment = {
 type DeploymentCacheEntry = {
   data: TrustedDeployment;
   expiresAt: number;
+  mtimeMs?: number;
 };
 
 const deploymentCache = new Map<string, DeploymentCacheEntry>();
@@ -1231,13 +1233,6 @@ export async function resolveTrustedDeployment(
 ): Promise<TrustedDeployment> {
   const cacheKey = `${config.chainId}:${config.deploymentManifestPath ?? "default"}:${config.trustedFactory ?? "none"}:${config.expectedFactoryCodehash ?? "none"}`;
   const now = Date.now();
-
-  if (!options?.forceRefresh) {
-    const cached = deploymentCache.get(cacheKey);
-    if (cached && cached.expiresAt > now) {
-      return cached.data;
-    }
-  }
 
   // 1. Explicit config override (STRICTLY ISOLATED TO TESTS)
   if (config.trustedFactory) {
@@ -1275,6 +1270,13 @@ export async function resolveTrustedDeployment(
       else manifestPath = candidate1;
     } catch {
       manifestPath = candidate1;
+    }
+  }
+
+  if (!options?.forceRefresh) {
+    const cached = deploymentCache.get(cacheKey);
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
     }
   }
 
@@ -1351,6 +1353,29 @@ export async function resolveTrustedDeployment(
         `factory runtime bytecode codehash mismatch: expected ${config.expectedFactoryCodehash}, observed ${runtimeCodeKeccak256}`,
       );
     }
+  }
+
+  // Layer 7b: Independent Trust Anchor Enforcement
+  // Manifest content must not itself establish the trusted runtime codehash or ABI identity!
+  let anchor: TrustAnchor;
+  try {
+    const customAnchor: Partial<TrustAnchor> = {
+      ...(config.trustAnchor ?? {}),
+      ...(config.approvedFactoryAbiSha256 ? { approvedFactoryAbiSha256: config.approvedFactoryAbiSha256 } : {}),
+      ...(config.expectedFactoryCodehash ? { expectedFactoryCodehash: config.expectedFactoryCodehash } : {}),
+    };
+    anchor = getTrustAnchor(config.chainId, Object.keys(customAnchor).length > 0 ? customAnchor : undefined);
+  } catch (err: any) {
+    throw new HttpError(503, "DEPLOYMENT_UNAVAILABLE", `trust anchor resolution failed: ${err.message}`);
+  }
+
+  const anchorCheck = validateManifestAgainstTrustAnchor(manifest, anchor);
+  if (!anchorCheck.valid) {
+    throw new HttpError(
+      503,
+      "DEPLOYMENT_UNAVAILABLE",
+      `manifest failed trust anchor validation: ${anchorCheck.errors.join("; ")}`,
+    );
   }
 
   // Layer 9: Database Deployment Identity Consistency (FAIL CLOSED)

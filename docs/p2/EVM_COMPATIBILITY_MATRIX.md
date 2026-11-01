@@ -14,7 +14,7 @@
 | **Berlin** | EIP-2929, EIP-2930 (Access lists) | **SUPPORTED** | Base EVM gas schedule | Fully compatible |
 | **London** | EIP-1559 (Base fee dynamic burn) | **SUPPORTED** | `eth_feeHistory` returns baseFeePerGas | Fully compatible; Type 2 transactions supported |
 | **Paris (The Merge)** | EIP-3675, EIP-4399 (PREVRANDAO replacing DIFFICULTY) | **SUPPORTED** | Block header inspection | ORAKL pinned target is `paris` |
-| **Shanghai** | EIP-3855 (`PUSH0`), EIP-3651, EIP-3860 | **SUPPORTED** | `eth_call` with opcode `0x5f` executed successfully | Fully compatible; PUSH0 works |
+| **Shanghai** | EIP-3855 (`PUSH0`), EIP-3651, EIP-3860 | **PARTIALLY VERIFIED (PUSH0 only)** | `eth_call` with opcode `0x5f` executed successfully; full Shanghai hardfork compliance remains **UNVERIFIED** | PUSH0 works; ORAKL stays safely pinned to `paris` |
 | **Cancun** | EIP-1153 (`TSTORE`/`TLOAD`), EIP-4844 (Blobs), EIP-5656 (`MCOPY`), EIP-6780 | **UNSUPPORTED** | `eth_call` with `0x5d` returned `invalid opcode: opcode 0x5d not defined` | **BLOCKER FOR CANCUN TARGET**: Compiler target must NOT be `cancun` |
 | **Prague / Electra** | Future hardforks | **UNSUPPORTED** | Not implemented on QIE | N/A |
 

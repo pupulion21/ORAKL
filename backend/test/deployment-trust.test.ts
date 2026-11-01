@@ -319,4 +319,92 @@ describe("P2-04: Trusted Deployment 10-Layer Hardening & Caching", () => {
     const trusted = await resolveTrustedDeployment(config);
     expect(trusted.factory).toBe("0x2222222222222222222222222222222222222222");
   });
+
+  it("Trust Anchor: rejects forged manifest with unapproved abiSha256 even if self-consistent", async () => {
+    const manifestPath = path.join(TMP_DIR, "forged-abi.json");
+    const manifest = createMockManifest();
+    // Forged ABI sha256
+    manifest.contracts.selectedMarketFactory.abiSha256 =
+      "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    writeFileSync(manifestPath, JSON.stringify(manifest), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+    });
+
+    await expect(resolveTrustedDeployment(config)).rejects.toThrow(
+      "manifest failed trust anchor validation: manifest factory abiSha256",
+    );
+  });
+
+  it("Trust Anchor: rejects forged manifest with spoofed factory runtime codehash", async () => {
+    const manifestPath = path.join(TMP_DIR, "spoofed-codehash.json");
+    const manifest = createMockManifest();
+    // Spoofed codehash
+    manifest.contracts.selectedMarketFactory.runtimeCodeKeccak256 =
+      "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    writeFileSync(manifestPath, JSON.stringify(manifest), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+    });
+
+    await expect(resolveTrustedDeployment(config)).rejects.toThrow(
+      "manifest failed trust anchor validation: manifest factory runtimeCodeKeccak256",
+    );
+  });
+
+  it("Deployment Cache: refreshes after deployment identity changes via forceRefresh or TTL expiry", async () => {
+    const manifestPath = path.join(TMP_DIR, "cache-identity-change.json");
+    const manifest1 = createMockManifest();
+    writeFileSync(manifestPath, JSON.stringify(manifest1), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+      DEPLOYMENT_CACHE_TTL_MS: "50",
+    });
+
+    const first = await resolveTrustedDeployment(config);
+    expect(first.factory).toBe("0xdc64a140aa3e981100a9beca4e685f962f0cf6c9");
+
+    // Identity changes on disk (e.g. forged manifest with unapproved ABI)
+    const manifest2 = createMockManifest();
+    manifest2.contracts.selectedMarketFactory.abiSha256 =
+      "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+    writeFileSync(manifestPath, JSON.stringify(manifest2), "utf8");
+
+    // Immediate forceRefresh detects the changed identity and fails closed
+    await expect(
+      resolveTrustedDeployment(config, undefined, { forceRefresh: true }),
+    ).rejects.toThrow("manifest failed trust anchor validation");
+
+    // Wait for TTL to expire: normal resolveTrustedDeployment now refreshes and rejects
+    await new Promise((r) => setTimeout(r, 60));
+    await expect(resolveTrustedDeployment(config)).rejects.toThrow(
+      "manifest failed trust anchor validation",
+    );
+  });
+
+  it("Deployment Cache: forceRefresh bypasses cache and re-validates identity", async () => {
+    const manifestPath = path.join(TMP_DIR, "cache-forcerefresh-test.json");
+    const manifest = createMockManifest();
+    writeFileSync(manifestPath, JSON.stringify(manifest), "utf8");
+
+    const config = loadConfig({
+      LOCAL_CHAIN_ID: "31337",
+      DEPLOYMENT_MANIFEST: manifestPath,
+      DEPLOYMENT_CACHE_TTL_MS: "60000",
+    });
+
+    const first = await resolveTrustedDeployment(config);
+    expect(first.factory).toBe("0xdc64a140aa3e981100a9beca4e685f962f0cf6c9");
+
+    // Call with forceRefresh
+    const refreshed = await resolveTrustedDeployment(config, undefined, { forceRefresh: true });
+    expect(refreshed.factory).toBe(first.factory);
+    expect(refreshed.verifiedAt).toBeGreaterThanOrEqual(first.verifiedAt);
+  });
 });
