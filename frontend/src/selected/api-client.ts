@@ -245,6 +245,18 @@ export interface PublishEvidenceResult {
   externalPinning: string;
 }
 
+export interface PublishMetadataPayload {
+  metadata: unknown;
+  auth?: PublicationAuth;
+  signature?: string;
+}
+
+export interface PublishMetadataResult {
+  commitment: string;
+  uri: string;
+  deduped: boolean;
+}
+
 export interface PortfolioPosition {
   id: string;
   marketId: string;
@@ -336,6 +348,7 @@ export interface ApiClient {
   getMarketChallenges(id: bigint | number | string, signal?: AbortSignal): Promise<ApiResponse<MarketChallengesResult>>;
   getEvidence(commitment: string, signal?: AbortSignal): Promise<ApiResponse<EvidenceArtifactDetail>>;
   publishEvidence(payload: PublishEvidencePayload, signal?: AbortSignal): Promise<ApiResponse<PublishEvidenceResult>>;
+  publishMetadata(payload: PublishMetadataPayload, signal?: AbortSignal): Promise<ApiResponse<PublishMetadataResult>>;
   getIndexerStatus(signal?: AbortSignal): Promise<ApiResponse<IndexerStatus>>;
   getExposure(signal?: AbortSignal): Promise<ApiResponse<ExposureSummary>>;
   getPortfolio(address: string, signal?: AbortSignal): Promise<ApiResponse<PortfolioDetail>>;
@@ -446,6 +459,16 @@ export function createApiClient(config: ApiClientConfig = {}): ApiClient {
     },
     async publishEvidence(payload: PublishEvidencePayload, signal?: AbortSignal): Promise<ApiResponse<PublishEvidenceResult>> {
       return request<PublishEvidenceResult>('/api/v1/evidence', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal,
+      });
+    },
+    async publishMetadata(payload: PublishMetadataPayload, signal?: AbortSignal): Promise<ApiResponse<PublishMetadataResult>> {
+      return request<PublishMetadataResult>('/api/v1/markets/metadata', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

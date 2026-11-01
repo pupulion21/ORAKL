@@ -5,6 +5,14 @@ import {
   stateTone,
   calculatePoolShares,
   isArbitratorOwner,
+  calculateMinimumMaxResolutionTime,
+  validateMarketCreationInput,
+  formatResolutionCriteriaBlob,
+  canonicalizeMarketMetadata,
+  GOLD_BENCHMARK_PRESET,
+  VALID_MARKET_CATEGORIES,
+  type MarketMetadataManifest,
+  type CreateMarketFormValues,
 } from '../src/local/navigation.ts';
 import {
   MARKET_STATE_LABELS,
@@ -245,6 +253,156 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
       const formatted = shortAddress(ADDR_CREATOR);
       assert.match(formatted, /^0xf39f…2266$/);
       assert.equal(shortAddress('0x' + '0'.repeat(40) as Address), '0x0000…0000');
+    });
+  });
+
+  describe('H. Institutional Market Creation Wizard & Parameter Validation', () => {
+    const CHALLENGE_PERIOD = 48 * 3600; // 48h
+    const ARBITRATION_PERIOD = 96 * 3600; // 96h
+    const BASE_TIME = 1700000000n;
+    const CLOSE_TIME = BASE_TIME + 86400n;
+    const RES_TIME = CLOSE_TIME;
+    const MIN_MAX_TIME = RES_TIME + BigInt(CHALLENGE_PERIOD + ARBITRATION_PERIOD + 48 * 3600); // +192h
+
+    it('enforces protocol 192-hour minimum deadline floor calculation', () => {
+      const calculated = calculateMinimumMaxResolutionTime(RES_TIME, CHALLENGE_PERIOD, ARBITRATION_PERIOD);
+      assert.equal(calculated, MIN_MAX_TIME);
+      // Verify exact 192 hours = 691,200 seconds
+      assert.equal(calculated - RES_TIME, 192n * 3600n);
+
+      // Verify category list
+      assert.equal(VALID_MARKET_CATEGORIES.length, 5);
+      assert.deepEqual(VALID_MARKET_CATEGORIES.map(c => c.slug), ['crypto', 'finance', 'tech', 'geopolitics', 'governance']);
+    });
+
+    it('validates a completely valid market creation input', () => {
+      const input: CreateMarketFormValues = {
+        question: 'Will Ethereum achieve 100,000 TPS on Layer 2 before 2027?',
+        category: 'crypto',
+        description: 'Aggregate rollup throughput measured via L2Beat.',
+        primarySource: 'https://l2beat.com/scaling/activity',
+        fallbackSource: 'https://etherscan.io',
+        yesCriteria: 'Aggregate L2 TPS exceeds 100,000 on or before December 31, 2026.',
+        noCriteria: 'Aggregate L2 TPS remains strictly below 100,000 through December 31, 2026.',
+        invalidCriteria: 'L2Beat data is corrupted or permanently offline. Full 1:1 neutral refund.',
+        closeTimeSec: CLOSE_TIME,
+        resolutionTimeSec: RES_TIME,
+        maxResolutionTimeSec: MIN_MAX_TIME + 3600n,
+        nowSec: BASE_TIME,
+        challengePeriodSec: CHALLENGE_PERIOD,
+        arbitrationPeriodSec: ARBITRATION_PERIOD,
+      };
+
+      const result = validateMarketCreationInput(input);
+      assert.equal(result.ok, true);
+      assert.equal(result.errors.length, 0);
+    });
+
+    it('rejects questions without a trailing question mark or shorter than 15 characters', () => {
+      const input: CreateMarketFormValues = {
+        question: 'Gold price 3000',
+        category: 'finance',
+        description: '',
+        primarySource: 'https://lbma.org.uk',
+        fallbackSource: '',
+        yesCriteria: 'Gold price >= 3000 USD.',
+        noCriteria: 'Gold price < 3000 USD.',
+        invalidCriteria: 'Market disrupted. 100% refund.',
+        closeTimeSec: CLOSE_TIME,
+        resolutionTimeSec: RES_TIME,
+        maxResolutionTimeSec: MIN_MAX_TIME + 3600n,
+        nowSec: BASE_TIME,
+        challengePeriodSec: CHALLENGE_PERIOD,
+        arbitrationPeriodSec: ARBITRATION_PERIOD,
+      };
+
+      const result = validateMarketCreationInput(input);
+      assert.equal(result.ok, false);
+      assert.ok(result.errors.some((e) => e.includes('question mark (?)')));
+    });
+
+    it('rejects maxResolutionTime that violates the 192h protocol floor', () => {
+      const input: CreateMarketFormValues = {
+        question: 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?',
+        category: 'finance',
+        description: 'LBMA PM benchmark',
+        primarySource: 'https://www.lbma.org.uk',
+        fallbackSource: '',
+        yesCriteria: 'LBMA PM >= 2800.00',
+        noCriteria: 'LBMA PM < 2800.00',
+        invalidCriteria: 'Data unavailable. Full neutral refund.',
+        closeTimeSec: CLOSE_TIME,
+        resolutionTimeSec: RES_TIME,
+        maxResolutionTimeSec: RES_TIME + 10000n, // Violates 192h floor (only ~2.7 hours)
+        nowSec: BASE_TIME,
+        challengePeriodSec: CHALLENGE_PERIOD,
+        arbitrationPeriodSec: ARBITRATION_PERIOD,
+      };
+
+      const result = validateMarketCreationInput(input);
+      assert.equal(result.ok, false);
+      assert.ok(result.errors.some((e) => e.includes('Max resolution time must be at least 192 hours')));
+    });
+
+    it('validates LBMA Gold Price PM benchmark preset satisfies all requirements', () => {
+      const input: CreateMarketFormValues = {
+        question: GOLD_BENCHMARK_PRESET.question,
+        category: GOLD_BENCHMARK_PRESET.category,
+        description: GOLD_BENCHMARK_PRESET.description,
+        primarySource: GOLD_BENCHMARK_PRESET.primarySource,
+        fallbackSource: GOLD_BENCHMARK_PRESET.fallbackSource,
+        yesCriteria: GOLD_BENCHMARK_PRESET.yesCriteria,
+        noCriteria: GOLD_BENCHMARK_PRESET.noCriteria,
+        invalidCriteria: GOLD_BENCHMARK_PRESET.invalidCriteria,
+        closeTimeSec: CLOSE_TIME,
+        resolutionTimeSec: RES_TIME,
+        maxResolutionTimeSec: MIN_MAX_TIME + 3600n,
+        nowSec: BASE_TIME,
+        challengePeriodSec: CHALLENGE_PERIOD,
+        arbitrationPeriodSec: ARBITRATION_PERIOD,
+      };
+
+      const result = validateMarketCreationInput(input);
+      assert.equal(result.ok, true);
+      assert.equal(result.errors.length, 0);
+    });
+
+    it('formats structured resolution criteria blob cleanly', () => {
+      const blob = formatResolutionCriteriaBlob({
+        yes: 'Condition YES',
+        no: 'Condition NO',
+        invalid: 'Neutral refund 100%',
+        fallback: 'https://fallback.source',
+      });
+      assert.ok(blob.includes('[YES OUTCOME CRITERIA]\nCondition YES'));
+      assert.ok(blob.includes('[NO OUTCOME CRITERIA]\nCondition NO'));
+      assert.ok(blob.includes('[INVALID / NEUTRAL REFUND RULES]\nNeutral refund 100%'));
+      assert.ok(blob.includes('[FALLBACK DATA SOURCES]\nhttps://fallback.source'));
+    });
+
+    it('generates deterministic RFC 8785 canonical metadata JSON string', () => {
+      const manifest: MarketMetadataManifest = {
+        schema: 'orakl-market-metadata-v1',
+        chainId: '31337',
+        factory: '0xdc64a140aa3e981100a9beca4e685f962f0cf6c9',
+        question: 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?',
+        description: 'LBMA PM benchmark',
+        category: 'finance',
+        resolutionCriteria: 'YES if >= 2800, NO if < 2800, INVALID otherwise.',
+        sources: ['https://www.lbma.org.uk'],
+        creator: ADDR_CREATOR,
+        createdAt: '1700000000',
+      };
+
+      const canonical = canonicalizeMarketMetadata(manifest);
+      assert.ok(typeof canonical === 'string');
+      const parsed = JSON.parse(canonical);
+      // Verify keys are in lexicographical order
+      const keys = Object.keys(parsed);
+      const sortedKeys = [...keys].sort();
+      assert.deepEqual(keys, sortedKeys);
+      assert.equal(keys[0], 'category');
+      assert.equal(keys[keys.length - 1], 'sources');
     });
   });
 });

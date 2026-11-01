@@ -72,3 +72,174 @@ export function isArbitratorOwner(account: string | null | undefined, owners: re
   const normalized = account.toLowerCase();
   return owners.some((owner) => owner.toLowerCase() === normalized);
 }
+
+// ---------------------------------------------------------------------- Create Market
+
+export const VALID_MARKET_CATEGORIES = [
+  {slug: 'crypto', label: 'Crypto'},
+  {slug: 'finance', label: 'Macro / Finance'},
+  {slug: 'tech', label: 'Science / Technology'},
+  {slug: 'geopolitics', label: 'Geopolitics'},
+  {slug: 'governance', label: 'Protocol Governance'},
+] as const;
+
+export type MarketCategorySlug = (typeof VALID_MARKET_CATEGORIES)[number]['slug'];
+
+export interface CreateMarketFormValues {
+  question: string;
+  category: string;
+  description: string;
+  primarySource: string;
+  fallbackSource: string;
+  yesCriteria: string;
+  noCriteria: string;
+  invalidCriteria: string;
+  closeTimeSec: bigint;
+  resolutionTimeSec: bigint;
+  maxResolutionTimeSec: bigint;
+  nowSec: bigint;
+  challengePeriodSec: number;
+  arbitrationPeriodSec: number;
+}
+
+export const GOLD_BENCHMARK_PRESET = {
+  question: 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?',
+  category: 'finance',
+  description: 'London Bullion Market Association (LBMA) Gold Price PM benchmark settlement for December 31, 2026.',
+  primarySource: 'https://www.lbma.org.uk/prices-and-data/precious-metal-prices',
+  fallbackSource: 'https://www.bloomberg.com/quote/GOLD:CUR',
+  yesCriteria: 'LBMA Gold Price PM (XAU/USD) is strictly greater than or equal to $2,800.00 USD on December 31, 2026.',
+  noCriteria: 'LBMA Gold Price PM (XAU/USD) is strictly less than $2,800.00 USD on December 31, 2026.',
+  invalidCriteria: 'LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or trading is permanently disrupted. All positions are refunded 100% (1:1 neutral refund) with zero protocol fee deducted.',
+};
+
+/**
+ * Calculates the protocol-enforced minimum maxResolutionTime floor:
+ * maxTime >= resolutionTime + challengePeriod + arbitrationPeriod + 48h buffer
+ */
+export function calculateMinimumMaxResolutionTime(
+  resolutionTimeSec: bigint,
+  challengePeriodSec: number,
+  arbitrationPeriodSec: number,
+): bigint {
+  const safetyBufferSec = 48n * 3600n;
+  return resolutionTimeSec + BigInt(challengePeriodSec) + BigInt(arbitrationPeriodSec) + safetyBufferSec;
+}
+
+/** Validates inputs for the ORAKL v1 institutional market creation wizard. */
+export function validateMarketCreationInput(values: CreateMarketFormValues): {
+  ok: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  const trimmedQuestion = values.question.trim();
+  if (trimmedQuestion.length < 15) {
+    errors.push('Question must be at least 15 characters long.');
+  }
+  if (!trimmedQuestion.endsWith('?')) {
+    errors.push('Question must end with a question mark (?).');
+  }
+
+  const validSlugs = VALID_MARKET_CATEGORIES.map((c) => c.slug);
+  if (!validSlugs.includes(values.category as MarketCategorySlug)) {
+    errors.push(`Category must be one of: ${validSlugs.join(', ')}.`);
+  }
+
+  const trimmedPrimary = values.primarySource.trim();
+  if (!trimmedPrimary) {
+    errors.push('Primary resolution source URL is required.');
+  } else if (!/^(https?:\/\/|ipfs:\/\/|ar:\/\/)/.test(trimmedPrimary)) {
+    errors.push('Primary resolution source must begin with https://, http://, ipfs://, or ar://.');
+  }
+
+  if (values.fallbackSource.trim() && !/^(https?:\/\/|ipfs:\/\/|ar:\/\/)/.test(values.fallbackSource.trim())) {
+    errors.push('Fallback resolution source must begin with https://, http://, ipfs://, or ar://.');
+  }
+
+  if (values.yesCriteria.trim().length < 10) {
+    errors.push('YES outcome resolution criteria must be at least 10 characters.');
+  }
+
+  if (values.noCriteria.trim().length < 10) {
+    errors.push('NO outcome resolution criteria must be at least 10 characters.');
+  }
+
+  if (values.invalidCriteria.trim().length < 10) {
+    errors.push('INVALID outcome resolution criteria must be at least 10 characters.');
+  }
+
+  if (values.closeTimeSec <= values.nowSec) {
+    errors.push('Market close time must be in the future relative to the local blockchain clock.');
+  }
+
+  if (values.resolutionTimeSec < values.closeTimeSec) {
+    errors.push('Resolution start time must be at or after the market close time.');
+  }
+
+  const minMax = calculateMinimumMaxResolutionTime(
+    values.resolutionTimeSec,
+    values.challengePeriodSec,
+    values.arbitrationPeriodSec,
+  );
+  if (values.maxResolutionTimeSec < minMax) {
+    const totalRequiredHours = (values.challengePeriodSec + values.arbitrationPeriodSec) / 3600 + 48;
+    errors.push(
+      `Max resolution time must be at least ${totalRequiredHours} hours (${minMax}s) after resolution start time to accommodate challenge (${values.challengePeriodSec / 3600}h), arbitration (${values.arbitrationPeriodSec / 3600}h), and safety buffer (48h).`,
+    );
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}
+
+export interface MarketMetadataManifest {
+  schema: 'orakl-market-metadata-v1';
+  chainId: string;
+  factory: string;
+  question: string;
+  description: string;
+  category: string;
+  resolutionCriteria: string;
+  sources: string[];
+  creator: string;
+  createdAt: string;
+}
+
+/** Formats structured resolution criteria into a single standardized text blob. */
+export function formatResolutionCriteriaBlob(params: {
+  yes: string;
+  no: string;
+  invalid: string;
+  fallback?: string;
+}): string {
+  const parts = [
+    `[YES OUTCOME CRITERIA]\n${params.yes.trim()}`,
+    `[NO OUTCOME CRITERIA]\n${params.no.trim()}`,
+    `[INVALID / NEUTRAL REFUND RULES]\n${params.invalid.trim()}`,
+  ];
+  if (params.fallback?.trim()) {
+    parts.push(`[FALLBACK DATA SOURCES]\n${params.fallback.trim()}`);
+  }
+  return parts.join('\n\n');
+}
+
+/** Canonicalizes a MarketMetadataManifest according to RFC 8785 (JCS lexicographical key order). */
+export function canonicalizeMarketMetadata(manifest: MarketMetadataManifest): string {
+  // Alphabetical sort: category, chainId, createdAt, creator, description, factory, question, resolutionCriteria, schema, sources
+  const sorted: Record<string, unknown> = {
+    category: manifest.category,
+    chainId: manifest.chainId,
+    createdAt: manifest.createdAt,
+    creator: manifest.creator.toLowerCase(),
+    description: manifest.description,
+    factory: manifest.factory.toLowerCase(),
+    question: manifest.question,
+    resolutionCriteria: manifest.resolutionCriteria,
+    schema: manifest.schema,
+    sources: manifest.sources,
+  };
+  return JSON.stringify(sorted);
+}
