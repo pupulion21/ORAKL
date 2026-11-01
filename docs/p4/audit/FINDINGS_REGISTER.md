@@ -57,7 +57,7 @@ This register documents all security findings identified, remediated, and intern
 
 ### ORAKL-SEC-04: Negative Test Assertion Hardening
 - **Issue**: Previous negative test scenarios caught generic exceptions (`try { ... } catch { pass(); }`), allowing irrelevant errors (e.g. out-of-gas, RPC timeout, malformed ABI) to pass as security assertions.
-- **Remediation Implemented**: Replaced all broad catch blocks with strict error matching enforcing exact 4-byte custom error selectors (`Unauthorized` `0x82b42900`, `InvalidMultisig` `0x2e0bb1b4`, `ControlChanged` `0xe1eb243c`, `NotApproved` `0xc19f17a9`, `InvalidTimelock` `0xf8d10e82`) or Safe error codes (`GS020`, `GS026`, `GS013`). Safe nonces are asserted before and after every negative test to confirm state immutability.
+- **Remediation Implemented**: Replaced all broad catch blocks with strict error matching enforcing exact 4-byte custom error selectors (`Unauthorized` `0x82b42900`, `InvalidMultisig` `0x07de2154`, `ControlChanged` `0xe1eb243c`, `NotApproved` `0xc19f17a9`, `InvalidTimelock` `0xf8d10e82`) or Safe error codes (`GS020`, `GS026`, `GS013`). Safe nonces are asserted before and after every negative test to confirm state immutability.
 - **Regression Verified**: Scenarios 3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 18, 21, 23 in `scripts/p3/test-real-safe.mjs`.
 - **Pending Independent Verification**: External auditors must verify that custom error selectors match compiled ABI specifications across all compiler optimization profiles.
 - **Open Risk**: EVM client version differences in revert data framing.
