@@ -1,6 +1,7 @@
 # ORAKL Protocol — Audit Scope Specification
 
 > **Repository Baseline Commit**: `c8cda059275cf2efc77e46b3133a967fd10335fb`
+> **Finalized Source Commit**: `cfa52b9b20ec9576e871a00f9d691cb68bc86047`
 > **Target Branch**: `feature/orakl-p4-audit-readiness`
 > **Toolchain Compiler Profiles**:
 > - **ORAKL Protocol Core**: Solidity `0.8.37`, EVM `paris`, `via_ir: false`, optimizer `runs: 50`
