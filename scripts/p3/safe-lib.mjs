@@ -174,6 +174,20 @@ export async function deployRoleSafe(walletClient, publicClient, {
  */
 export async function verifySafeInstance(publicClient, proxyAddress, expectedOwners, expectedThreshold, options = {}) {
   const proxy = getAddress(proxyAddress);
+
+  // Read and verify mastercopy implementation slot (slot 0) first, before attempting proxy contract calls
+  const masterCopyStorage = await publicClient.getStorageAt({
+    address: proxy,
+    slot: '0x0000000000000000000000000000000000000000000000000000000000000000',
+  });
+  const boundMasterCopy = `0x${masterCopyStorage?.slice(-40)}`.toLowerCase();
+  if (options.expectedSingletonAddress) {
+    const expMaster = getAddress(options.expectedSingletonAddress).toLowerCase();
+    if (boundMasterCopy !== expMaster) {
+      throw new Error(`Safe proxy mastercopy mismatch: expected ${expMaster}, got ${boundMasterCopy}`);
+    }
+  }
+
   const owners = await publicClient.readContract({
     address: proxy,
     abi: SAFE_SINGLETON_ARTIFACT.abi,
@@ -205,19 +219,6 @@ export async function verifySafeInstance(publicClient, proxyAddress, expectedOwn
   const thresholdMatch = BigInt(threshold) === BigInt(expectedThreshold);
   if (!thresholdMatch) {
     throw new Error(`Safe proxy threshold mismatch: expected ${expectedThreshold}, got ${threshold}`);
-  }
-
-  // Read mastercopy implementation slot (slot 0)
-  const masterCopyStorage = await publicClient.getStorageAt({
-    address: proxy,
-    slot: '0x0000000000000000000000000000000000000000000000000000000000000000',
-  });
-  const boundMasterCopy = `0x${masterCopyStorage?.slice(-40)}`.toLowerCase();
-  if (options.expectedSingletonAddress) {
-    const expMaster = getAddress(options.expectedSingletonAddress).toLowerCase();
-    if (boundMasterCopy !== expMaster) {
-      throw new Error(`Safe proxy mastercopy mismatch: expected ${expMaster}, got ${boundMasterCopy}`);
-    }
   }
 
   // Verify unexpected modules (must be empty array)

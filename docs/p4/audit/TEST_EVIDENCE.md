@@ -8,7 +8,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Foundry Contract Regression** | `forge test --root contracts` | 244 | 244 | 0 | **PASS** |
 | **Safe v1.4.1 Governance** | `node scripts/p3/test-real-safe.mjs` | 28 | 28 | 0 | **PASS** |
-| **Security Mutation Defense** | `node scripts/p4/test-security-mutations.mjs` | 12 | 12 | 0 | **100% DETECTED** |
+| **Security Mutation Defense** | `node scripts/p4/test-security-mutations.mjs` | 12 | 12 | 0 | **12/12 DETECTED** |
 | **Artifact & Deployment Gate** | `node scripts/p2/verify-deployment.mjs --mode artifact-only` | 8 checks | 8 | 0 | **PASS** |
 | **Evidence Manifest Integrity** | `node scripts/p1/verify-evidence-manifest.mjs` | 13 artifacts | 13 | 0 | **PASS** |
 | **Backend Vitest & Indexer** | `npm --prefix backend test` | 167 | 167 | 0 | **PASS** |

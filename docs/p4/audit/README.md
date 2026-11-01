@@ -2,9 +2,12 @@
 
 > **VERDICT**: `P4 INTERNAL AUDIT HANDOFF READY — EXTERNAL AUDIT NOT PERFORMED — PUBLIC RELEASE BLOCKED`
 >
-> **Target Branch**: `feature/orakl-p4-audit-readiness`  
-> **Approved Baseline Commit**: `b0f692d7933b67cf3f8f49e2697e7f9346eccf4d`  
-> **Target Network**: Local Isolated Anvil Chain ID 31337 (Public QIE Testnet/Mainnet BLOCKED)  
+> **Repository Baseline Commit**: `c8cda059275cf2efc77e46b3133a967fd10335fb`
+> **Target Branch**: `feature/orakl-p4-audit-readiness`
+> **Target Network**: Local Isolated Anvil Chain ID 31337 (Public QIE Testnet/Mainnet BLOCKED)
+> **Compiler Profiles**:
+> - **ORAKL Protocol Core**: Solidity `0.8.37`, EVM `paris`, `via_ir: false`, optimizer `runs: 50`
+> - **Official Safe Upstream**: Solidity `0.7.6`, default EVM (`berlin`/`istanbul`), optimizer `runs: 200`
 > **Primary Security Standard**: Genuine, Unmodified Safe Global v1.4.1 Multisig Control + Fail-Closed ProtocolConfig Enforcement
 
 ---
@@ -25,55 +28,56 @@ ORAKL is an EVM-compatible decentralized prediction market protocol designed for
 
 | Document | Description | Key Focus Areas |
 | :--- | :--- | :--- |
-| [SCOPE.md](file:///home/pupulion/orakl/docs/p4/audit/SCOPE.md) | In-scope contracts, out-of-scope files, SLOC, compiler settings | Protocol contracts, interfaces, libraries, Solc 0.8.28 settings |
-| [REPRODUCIBILITY.md](file:///home/pupulion/orakl/docs/p4/audit/REPRODUCIBILITY.md) | Exact commands and environments to reproduce all test suites | Foundry, Anvil, Vitest, Playwright, mutation testing |
-| [THREAT_MODEL.md](file:///home/pupulion/orakl/docs/p4/audit/THREAT_MODEL.md) | Comprehensive threat model, trust assumptions, actor profiles | Multi-sig collusion, flash loans, front-running, timelock bypass |
-| [FINDINGS_REGISTER.md](file:///home/pupulion/orakl/docs/p4/audit/FINDINGS_REGISTER.md) | Internal security findings register (P0–P4) with verification proofs | Historical findings, mitigations, regression test IDs |
-| [TEST_EVIDENCE.md](file:///home/pupulion/orakl/docs/p4/audit/TEST_EVIDENCE.md) | Empirical test results across smart contracts, backend, frontend | 244 Foundry tests, 28 Safe scenarios, 12 security mutations |
-| [DEPENDENCY_PROVENANCE.md](file:///home/pupulion/orakl/docs/p4/audit/DEPENDENCY_PROVENANCE.md) | Pinned SHAs, submodules, Safe Global upstream code parity | Safe v1.4.1 bytecodes, OpenZeppelin contracts, integrity hashes |
-| [RELEASE_BLOCKERS.md](file:///home/pupulion/orakl/docs/p4/audit/RELEASE_BLOCKERS.md) | Explicit statement of why public release is strictly BLOCKED | Pending independent audit, key ceremonies, legal signoff |
+| [SCOPE.md](./SCOPE.md) | In-scope contracts, out-of-scope files, SLOC, compiler settings | Protocol contracts, interfaces, libraries, Solc 0.8.37 (Paris) settings |
+| [REPRODUCIBILITY.md](./REPRODUCIBILITY.md) | Exact commands and environments to reproduce all test suites | Frozen lockfile installation (`npm ci`), Foundry builds, manifest generation |
+| [THREAT_MODEL.md](./THREAT_MODEL.md) | Comprehensive threat model, trust assumptions, actor profiles | Multi-sig collusion, flash loans, front-running, timelock bypass |
+| [FINDINGS_REGISTER.md](./FINDINGS_REGISTER.md) | Internal security findings register (P0–P4) with verification proofs | Remediation implemented, regression verified, pending external audit |
+| [TEST_EVIDENCE.md](./TEST_EVIDENCE.md) | Empirical test results across smart contracts, backend, frontend | 244 Foundry tests, 28 Safe scenarios, 12 security mutations |
+| [DEPENDENCY_PROVENANCE.md](./DEPENDENCY_PROVENANCE.md) | Pinned SHAs, upstream package details, Safe Global parity | Safe v1.4.1 runtime codehashes, OpenZeppelin contracts |
+| [RELEASE_BLOCKERS.md](./RELEASE_BLOCKERS.md) | Explicit statement of why public release is strictly BLOCKED | Pending independent audit, key ceremonies, legal signoff |
 
 ---
 
 ## 3. Architecture Overview
 
 ```
-                      +-----------------------------+
-                      |   Official Safe v1.4.1      |
-                      |   Mastercopy (0x41622798...) |
-                      +--------------+--------------+
-                                     | (Delegatecall)
-      +------------------------------+------------------------------+
-      |                              |                              |
-+-----v---------------+      +-------v-------------+      +---------v-----------+
-|   Governance Safe   |      |   Compliance Safe   |      |  Arbitration Safe   |
-|   (3-of-5 Multisig) |      |   (3-of-5 Multisig) |      |  (3-of-5 Multisig)  |
-+----------+----------+      +----------+----------+      +----------+----------+
-           |                            |                            |
-           | bindFactory / setParams    | approveRelease             | settleDispute
-           | unpause / activateFinance  | (Release Tag)              | (Market ID)
-           v                            v                            v
-+-------------------------------------------------------------------------------+
-|                             ProtocolConfig.sol                                |
-|  - Manages immutable role bindings and disjoint owner validation              |
-|  - Enforces 24-hour timelock delay on finance activation                     |
-|  - Role-drift monitoring via requireArbitrator()                             |
-|  - Immediate emergency pause via Guardian EOA                                |
-+---------------------------------------+---------------------------------------+
-                                        |
-                                        v
-+-------------------------------------------------------------------------------+
-|                          SelectedMarketFactory.sol                            |
-|  - Creates and manages prediction markets with fixed pilot caps              |
-|  - Implements immutable exposure accounting (global & per-arbitrator)        |
-|  - Transitions markets: OPEN -> CLOSED -> PROPOSED -> DISPUTED -> FINALIZED   |
-+-------------------------------------------------------------------------------+
+                      +-----------------------------------------+
+                      |       Official Safe v1.4.1 Singleton     |
+                      | Canonical Address: 0x41675C099...      |
+                      | Codehash: 0x1fe2df852ba3299...         |
+                      +--------------------+--------------------+
+                                           | (Delegatecall via SafeProxy)
+       +-----------------------------------+-----------------------------------+
+       |                                   |                                   |
++------v----------------+          +-------v---------------+          +--------v--------------+
+|   Governance Safe     |          |    Compliance Safe    |          |   Arbitration Safe    |
+|   (3-of-5 Multisig)   |          |   (3-of-5 Multisig)   |          |   (3-of-5 Multisig)   |
++-----------+-----------+          +-----------+-----------+          +-----------+-----------+
+            |                                  |                                  |
+            | bindFactory / setParams          | approveRelease                   | settleDispute
+            | unpause / activateFinance        | (Release Tag)                    | (Market ID)
+            v                                  v                                  v
++---------------------------------------------------------------------------------------------+
+|                                     ProtocolConfig.sol                                      |
+|  - Manages immutable role bindings and disjoint owner validation                            |
+|  - Enforces 24-hour timelock delay on finance activation                                   |
+|  - Role-drift monitoring via requireArbitrator()                                           |
+|  - Immediate emergency pause via Guardian EOA                                              |
++----------------------------------------------+----------------------------------------------+
+                                               |
+                                               v
++---------------------------------------------------------------------------------------------+
+|                                  SelectedMarketFactory.sol                                  |
+|  - Creates and manages prediction markets with fixed pilot caps                             |
+|  - Implements immutable exposure accounting (global: 300 ETH, arbitrator: 200 ETH)         |
+|  - Transitions markets: OPEN -> CLOSED -> PROPOSED -> DISPUTED -> FINALIZED                 |
++---------------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 4. Primary Auditor Contacts & Boundaries
+## 4. Primary Auditor Boundaries & Operational Constraints
 
 - **Testing Environment**: Strictly isolated local Anvil (`chainId 31337`).
 - **Forbidden Actions**: No transactions to public QIE testnet or mainnet. No real cryptographic keys or live funds.
-- **Audit Objective**: Verify contract math, state transitions, reentrancy guards, access controls, timelock mechanics, and Safe multisig event emission integrity.
+- **Audit Scope Boundary**: Upstream Safe v1.4.1 contracts are audited separately by tier-1 firms. The primary subject of this audit handoff is ORAKL core protocol contracts, timelock and permission boundaries, dispute settlement mechanics, and the Safe multi-sig integration layer.

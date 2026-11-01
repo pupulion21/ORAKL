@@ -1,8 +1,10 @@
 # ORAKL Protocol — Audit Scope Specification
 
-> **Repository Baseline Commit**: `b0f692d7933b67cf3f8f49e2697e7f9346eccf4d`  
-> **Target Branch**: `feature/orakl-p4-audit-readiness`  
-> **Toolchain Compiler Profile**: Solc `0.8.37`, EVM `paris`, `via_ir: false`, optimizer `runs: 50` for ORAKL roots.
+> **Repository Baseline Commit**: `c8cda059275cf2efc77e46b3133a967fd10335fb`
+> **Target Branch**: `feature/orakl-p4-audit-readiness`
+> **Toolchain Compiler Profiles**:
+> - **ORAKL Protocol Core**: Solidity `0.8.37`, EVM `paris`, `via_ir: false`, optimizer `runs: 50`
+> - **Official Safe Upstream**: Solidity `0.7.6`, default EVM (`berlin`/`istanbul`), optimizer `runs: 200`
 
 ---
 
@@ -35,7 +37,7 @@ The following contracts and files are explicitly **OUT OF SCOPE** for this audit
    - Does not interact with `ProtocolConfig` or `SelectedMarketFactory`.
 2. **`contracts/p3-safe/src/*`**:
    - Genuine, unmodified Safe Global v1.4.1 upstream contracts (`Safe.sol`, `SafeProxyFactory.sol`, `OwnerManager.sol`, etc.).
-   - Audited independently by Safe Global / Ackee / Runtime Verification. Pinned commit and bytecode hashes documented in `DEPENDENCY_PROVENANCE.md`.
+   - Audited independently by Safe Global / Ackee Blockchain / Certora / Runtime Verification. Pinned commit and bytecode hashes documented in [DEPENDENCY_PROVENANCE.md](./DEPENDENCY_PROVENANCE.md).
 3. **`contracts/test/*`**:
    - Foundry test suites, unit tests, mock contracts, and invariant harnesses.
 4. **`frontend/*` & `backend/*`**:
