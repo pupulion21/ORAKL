@@ -30,6 +30,8 @@ interface Vm {
 
     function addr(uint256 privateKey) external returns (address keyAddr);
 
+    function sign(uint256 privateKey, bytes32 digest) external returns (uint8 v, bytes32 r, bytes32 s);
+
     function snapshot() external returns (uint256 stateSnapshot);
 
     function revertTo(uint256 stateSnapshot) external returns (bool supported);
