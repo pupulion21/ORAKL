@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-01T03:22:11.294Z",
+  "generatedAt": "2026-11-01T04:18:15.129Z",
   "totalFiles": 13,
   "artifacts": [
     {
@@ -20,8 +20,8 @@
     },
     {
       "file": "browser-e2e-scenarios.json",
-      "sha256": "9c3059ae173b1af6cf56f9c4576dc995712e40fb9de6e447f6f9823cb881b231",
-      "bytes": 14609
+      "sha256": "1c7b4397c1002462ed66dfcbbed36c0215a17fbfa4218db6fa9fe14d3eeeaad0",
+      "bytes": 22199
     },
     {
       "file": "local-deployment-verification.json",
@@ -35,18 +35,18 @@
     },
     {
       "file": "screenshots/02-market-detail.png",
-      "sha256": "6e1bf7c2668d7937d8b5ddd82d3b2edec1afc697565508985ca28dfa64eda3cb",
-      "bytes": 224226
+      "sha256": "ebe37319fa6b40818b176af3fda07d7be813d963b193fe11584582998dcdb7cf",
+      "bytes": 222359
     },
     {
       "file": "screenshots/03-evidence-lab.png",
-      "sha256": "90c355067af02a1b39ebb76ceac2e6079921ce017e597ec44da33a65cf5e8d31",
-      "bytes": 131811
+      "sha256": "80e28989bcbc04b841714400c979995ac224316301aaf463e7a8bda3894b0987",
+      "bytes": 86212
     },
     {
       "file": "screenshots/04-protocol-status.png",
-      "sha256": "1aa3fa67987e6e63c6ae8a65836139da03361464427175007fd94554acf53c23",
-      "bytes": 79292
+      "sha256": "ca3c4f943abd6886550742c59eb07d740ba1eb61eea1ccba55a799cffb9addba",
+      "bytes": 39644
     },
     {
       "file": "screenshots/05-scenario-a-settled.png",
@@ -55,18 +55,18 @@
     },
     {
       "file": "screenshots/06-scenario-b-invalid.png",
-      "sha256": "a820e92d538dc0dd6d24fec2739c7ff70e9c37ab526fda590e19979aa06d8886",
-      "bytes": 224481
+      "sha256": "8567049a5286dc49f26dd5d80cbce528616396a0743a51d1f32eb70bc497b1e4",
+      "bytes": 225946
     },
     {
       "file": "screenshots/07-scenario-c-cancelled.png",
-      "sha256": "e373b6eda1940196fdb5c93b35700fe345a2f60e50595e71710aec49d12aefc4",
-      "bytes": 161397
+      "sha256": "c07199bd6a73a161de9375b17a69f77c8c939098e32d99a0a6fe08334821a713",
+      "bytes": 162285
     },
     {
       "file": "screenshots/08-scenario-d-reorg.png",
-      "sha256": "2d0784fbe3a3a3395ddc54bf379b535b97e9eeb7156821550857a8709ebaf3d9",
-      "bytes": 154938
+      "sha256": "0011d7993c3c41311734ed95bd809b524a896f11760029bfa4f488b02898f688",
+      "bytes": 95207
     }
   ]
 }

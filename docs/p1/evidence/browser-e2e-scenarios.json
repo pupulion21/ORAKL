@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-01T03:22:11.292Z",
+  "timestamp": "2026-11-01T04:18:15.125Z",
   "chainId": 31337,
   "contracts": {
     "factory": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
@@ -13,11 +13,16 @@
       "status": "VERIFIED",
       "marketId": "0",
       "totalTransactions": 12,
+      "browserUiTransactions": 12,
+      "fixtureAdminTransactions": 0,
       "transactions": [
         {
           "step": 1,
           "action": "Creator deploys market with 1 ETH bond via UI",
-          "txHash": "0xe07ef5e8ef07482122312584c3f74a491d79ddc765d00e1a9d0ac01640de07b8",
+          "category": "BROWSER_UI_TRANSACTION",
+          "txHash": "0xf2eb9e1a68bdc7889e94386fc395c1aab93d2f2fe0e22f017ddfb6369d9fc6c7",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 13,
           "gasUsed": "502699",
           "status": "success",
@@ -26,7 +31,10 @@
         {
           "step": 2,
           "action": "Alice deposits 10 ETH on YES via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x5403fb2833c73342553f2f47c89203bf59765aea272e995a1b6f01e654d9c371",
+          "from": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 14,
           "gasUsed": "241013",
           "status": "success"
@@ -34,7 +42,10 @@
         {
           "step": 3,
           "action": "Bob deposits 20 ETH on NO via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x3da2db0df6e6956d8db377150aee68640b85ec8e9c668106d34dbe968e6663c8",
+          "from": "0x5b83f39285145284524b5a49d952616823253d3f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 15,
           "gasUsed": "155679",
           "status": "success"
@@ -42,7 +53,10 @@
         {
           "step": 4,
           "action": "Proposer submits YES proposal with 10 ETH bond via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x6a058061e3143d26c9bfc17a0a8fa390cc04e473901e157d7cc5068bd8d54634",
+          "from": "0x689c5601518080d1c9d1395480f9e9df7315473b",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 17,
           "gasUsed": "231943",
           "status": "success"
@@ -50,7 +64,10 @@
         {
           "step": 5,
           "action": "Challenger A stakes 1 ETH bond via UI (Tranche 1)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x24335a23d2aad1bf715126cfb0749475447d5805e221035276e1203a584a2baf",
+          "from": "0x31ee73d637b619de33079010a658558a6e81d7d8",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 18,
           "gasUsed": "156480",
           "status": "success"
@@ -58,7 +75,10 @@
         {
           "step": 6,
           "action": "Challenger B stakes 1 ETH bond via UI (Tranche 2)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x7d707da22d0d567d5764766471d5304765abd77fed3e2ee6e45656c4034cee38",
+          "from": "0x8328cfc17479f3247d695219084b49e4a989738f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 19,
           "gasUsed": "109906",
           "status": "success"
@@ -66,7 +86,10 @@
         {
           "step": 7,
           "action": "Arbitrator Owner 1 confirms NO settlement via UI (1 of 2)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xab1d41a5528eba19fc683fa4ac4d7607b4d55aa5ba63f8305267b7ab542d0e0d",
+          "from": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
+          "to": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
           "blockNumber": 21,
           "gasUsed": "63606",
           "status": "success"
@@ -74,7 +97,10 @@
         {
           "step": 8,
           "action": "Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xaf3d6f53b0344df3aec31cb20c84f145e24c03a47828820478315557c31e0cf0",
+          "from": "0x976ea74026e726554db657fa54763abd0c3a0aa9",
+          "to": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
           "blockNumber": 22,
           "gasUsed": "315823",
           "status": "success"
@@ -82,7 +108,10 @@
         {
           "step": 9,
           "action": "Bob claims winning payout via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x75ab06eb8cd7e4b0bf21494330ebb0d1106c9fefac50f023d00a561a99eb3f8a",
+          "from": "0x5b83f39285145284524b5a49d952616823253d3f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 23,
           "gasUsed": "114705",
           "status": "success"
@@ -90,7 +119,10 @@
         {
           "step": 10,
           "action": "Creator claims creation bond via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x0f9e68ae353520d29be2aa77f83d35152f4843fe13182e2a2dc3f161ad7c36aa",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 24,
           "gasUsed": "79320",
           "status": "success"
@@ -98,7 +130,10 @@
         {
           "step": 11,
           "action": "Challenger A claims challenge bond entitlement via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x8fa74491cf9d4c01c34250c94607096f8a0525c1f8c4912bccb2e12ed2ed7329",
+          "from": "0x31ee73d637b619de33079010a658558a6e81d7d8",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 25,
           "gasUsed": "84320",
           "status": "success"
@@ -106,36 +141,44 @@
         {
           "step": 12,
           "action": "Challenger B claims challenge bond entitlement via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xac7733eb02a7e59cabc3c3e365aba3bc56894ce919ff8b9b008ae310c2e9b13d",
+          "from": "0x8328cfc17479f3247d695219084b49e4a989738f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 26,
           "gasUsed": "79520",
           "status": "success"
         }
       ],
       "steps": [
-        "Step 1: Creator deploys market with 1 ETH bond via UI (success)",
-        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
-        "Step 3: Bob deposits 20 ETH on NO via UI (success)",
-        "Step 4: Proposer submits YES proposal with 10 ETH bond via UI (success)",
-        "Step 5: Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
-        "Step 6: Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
-        "Step 7: Arbitrator Owner 1 confirms NO settlement via UI (1 of 2) (success)",
-        "Step 8: Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed) (success)",
-        "Step 9: Bob claims winning payout via UI (success)",
-        "Step 10: Creator claims creation bond via UI (success)",
-        "Step 11: Challenger A claims challenge bond entitlement via UI (success)",
-        "Step 12: Challenger B claims challenge bond entitlement via UI (success)"
+        "Step 1: [BROWSER_UI_TRANSACTION] Creator deploys market with 1 ETH bond via UI (success)",
+        "Step 2: [BROWSER_UI_TRANSACTION] Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: [BROWSER_UI_TRANSACTION] Bob deposits 20 ETH on NO via UI (success)",
+        "Step 4: [BROWSER_UI_TRANSACTION] Proposer submits YES proposal with 10 ETH bond via UI (success)",
+        "Step 5: [BROWSER_UI_TRANSACTION] Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
+        "Step 6: [BROWSER_UI_TRANSACTION] Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
+        "Step 7: [BROWSER_UI_TRANSACTION] Arbitrator Owner 1 confirms NO settlement via UI (1 of 2) (success)",
+        "Step 8: [BROWSER_UI_TRANSACTION] Arbitrator Owner 2 confirms NO settlement via UI (2 of 2, executed) (success)",
+        "Step 9: [BROWSER_UI_TRANSACTION] Bob claims winning payout via UI (success)",
+        "Step 10: [BROWSER_UI_TRANSACTION] Creator claims creation bond via UI (success)",
+        "Step 11: [BROWSER_UI_TRANSACTION] Challenger A claims challenge bond entitlement via UI (success)",
+        "Step 12: [BROWSER_UI_TRANSACTION] Challenger B claims challenge bond entitlement via UI (success)"
       ]
     },
     "scenarioB": {
       "status": "VERIFIED",
       "marketId": "1",
       "totalTransactions": 14,
+      "browserUiTransactions": 14,
+      "fixtureAdminTransactions": 0,
       "transactions": [
         {
           "step": 1,
           "action": "Creator deploys Market #1 with 1 ETH bond via UI",
-          "txHash": "0x3e14419b8a60466c5af83012cfd65251d6b7b1e8c180bc6c56297cca80bf88b8",
+          "category": "BROWSER_UI_TRANSACTION",
+          "txHash": "0x3de92403076c5393211fc3681497043f40cb30f7e73273a2fb1c318177bae50a",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 27,
           "gasUsed": "468511",
           "status": "success",
@@ -144,7 +187,10 @@
         {
           "step": 2,
           "action": "Alice deposits 10 ETH on YES via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x98635a7fac78accd3895db08a6438939ae4f18eab9ffe326bb0f9eb650315fc1",
+          "from": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 28,
           "gasUsed": "223925",
           "status": "success"
@@ -152,7 +198,10 @@
         {
           "step": 3,
           "action": "Bob deposits 10 ETH on NO via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xf4776074526b418a84ddd123051239845d0d0acd7b24289af58a83959bf48928",
+          "from": "0x5b83f39285145284524b5a49d952616823253d3f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 29,
           "gasUsed": "155691",
           "status": "success"
@@ -160,7 +209,10 @@
         {
           "step": 4,
           "action": "Proposer submits YES proposal with 10 ETH bond via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xf9abae8b1e936b11820445c60790615162292a728389158f909befed7c24b330",
+          "from": "0x689c5601518080d1c9d1395480f9e9df7315473b",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 31,
           "gasUsed": "231955",
           "status": "success"
@@ -168,7 +220,10 @@
         {
           "step": 5,
           "action": "Challenger A stakes 1 ETH bond via UI (Tranche 1)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xfff3400b83e0187e387ebb4c496482b63f96d7adeab1b97daa444a66ba795a8d",
+          "from": "0x31ee73d637b619de33079010a658558a6e81d7d8",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 32,
           "gasUsed": "156492",
           "status": "success"
@@ -176,7 +231,10 @@
         {
           "step": 6,
           "action": "Challenger B stakes 1 ETH bond via UI (Tranche 2)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x5881467e4232e9cead37cb27dd674906ab55a2a72e0143b34c63bcfc733b0e9e",
+          "from": "0x8328cfc17479f3247d695219084b49e4a989738f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 33,
           "gasUsed": "109918",
           "status": "success"
@@ -184,7 +242,10 @@
         {
           "step": 7,
           "action": "Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xe89be8a50625174e860ef23f7673224ea32c73bb5d77b7a29134c7a4e1a91a5b",
+          "from": "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
+          "to": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
           "blockNumber": 35,
           "gasUsed": "63618",
           "status": "success"
@@ -192,7 +253,10 @@
         {
           "step": 8,
           "action": "Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed)",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x6cd722dfbd75b10dcf15830d0f7381234afa055a25da36d525f7ac5506a78f76",
+          "from": "0x976ea74026e726554db657fa54763abd0c3a0aa9",
+          "to": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
           "blockNumber": 36,
           "gasUsed": "200185",
           "status": "success"
@@ -200,7 +264,10 @@
         {
           "step": 9,
           "action": "Alice claims 100% principal refund (10 ETH) via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xd75f58c01e1df8ad99a353fec7b75de5d3a2b6272f06bf19baaedf14c88695eb",
+          "from": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 37,
           "gasUsed": "97324",
           "status": "success"
@@ -208,7 +275,10 @@
         {
           "step": 10,
           "action": "Bob claims 100% principal refund (10 ETH) via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x970515ac6e99b78f21e9dac9d3531fbccbce1a4f22e20d125d8fee9276f3549a",
+          "from": "0x5b83f39285145284524b5a49d952616823253d3f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 38,
           "gasUsed": "75424",
           "status": "success"
@@ -216,7 +286,10 @@
         {
           "step": 11,
           "action": "Creator claims creation bond via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x15e4774addb7ada1a2cd2af3f5374371d4a67424c14fec10da6977800614feaa",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 39,
           "gasUsed": "62528",
           "status": "success"
@@ -224,7 +297,10 @@
         {
           "step": 12,
           "action": "Proposer claims returned proposal bond (10 ETH) via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xa13a0e362af35615548e5524b7241c8444f1aeacc699522098a5dfca7b569248",
+          "from": "0x689c5601518080d1c9d1395480f9e9df7315473b",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 40,
           "gasUsed": "62577",
           "status": "success"
@@ -232,7 +308,10 @@
         {
           "step": 13,
           "action": "Challenger A claims returned challenge bond (1 ETH) via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x8f3a4d9bd8bbefe5536bb770f9bd214c51d4bb410c56108d05150a85ae51f8ec",
+          "from": "0x31ee73d637b619de33079010a658558a6e81d7d8",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 41,
           "gasUsed": "79439",
           "status": "success"
@@ -240,38 +319,46 @@
         {
           "step": 14,
           "action": "Challenger B claims returned challenge bond (1 ETH) via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x30386355c119eb3af18f546cafc6157c21a56a59e210190e197f787daffe280e",
+          "from": "0x8328cfc17479f3247d695219084b49e4a989738f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 42,
           "gasUsed": "74639",
           "status": "success"
         }
       ],
       "steps": [
-        "Step 1: Creator deploys Market #1 with 1 ETH bond via UI (success)",
-        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
-        "Step 3: Bob deposits 10 ETH on NO via UI (success)",
-        "Step 4: Proposer submits YES proposal with 10 ETH bond via UI (success)",
-        "Step 5: Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
-        "Step 6: Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
-        "Step 7: Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2) (success)",
-        "Step 8: Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed) (success)",
-        "Step 9: Alice claims 100% principal refund (10 ETH) via UI (success)",
-        "Step 10: Bob claims 100% principal refund (10 ETH) via UI (success)",
-        "Step 11: Creator claims creation bond via UI (success)",
-        "Step 12: Proposer claims returned proposal bond (10 ETH) via UI (success)",
-        "Step 13: Challenger A claims returned challenge bond (1 ETH) via UI (success)",
-        "Step 14: Challenger B claims returned challenge bond (1 ETH) via UI (success)"
+        "Step 1: [BROWSER_UI_TRANSACTION] Creator deploys Market #1 with 1 ETH bond via UI (success)",
+        "Step 2: [BROWSER_UI_TRANSACTION] Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: [BROWSER_UI_TRANSACTION] Bob deposits 10 ETH on NO via UI (success)",
+        "Step 4: [BROWSER_UI_TRANSACTION] Proposer submits YES proposal with 10 ETH bond via UI (success)",
+        "Step 5: [BROWSER_UI_TRANSACTION] Challenger A stakes 1 ETH bond via UI (Tranche 1) (success)",
+        "Step 6: [BROWSER_UI_TRANSACTION] Challenger B stakes 1 ETH bond via UI (Tranche 2) (success)",
+        "Step 7: [BROWSER_UI_TRANSACTION] Arbitrator Owner 1 confirms INVALID settlement via UI (1 of 2) (success)",
+        "Step 8: [BROWSER_UI_TRANSACTION] Arbitrator Owner 2 confirms INVALID settlement via UI (2 of 2, executed) (success)",
+        "Step 9: [BROWSER_UI_TRANSACTION] Alice claims 100% principal refund (10 ETH) via UI (success)",
+        "Step 10: [BROWSER_UI_TRANSACTION] Bob claims 100% principal refund (10 ETH) via UI (success)",
+        "Step 11: [BROWSER_UI_TRANSACTION] Creator claims creation bond via UI (success)",
+        "Step 12: [BROWSER_UI_TRANSACTION] Proposer claims returned proposal bond (10 ETH) via UI (success)",
+        "Step 13: [BROWSER_UI_TRANSACTION] Challenger A claims returned challenge bond (1 ETH) via UI (success)",
+        "Step 14: [BROWSER_UI_TRANSACTION] Challenger B claims returned challenge bond (1 ETH) via UI (success)"
       ]
     },
     "scenarioC": {
       "status": "VERIFIED",
       "marketId": "2",
       "totalTransactions": 8,
+      "browserUiTransactions": 4,
+      "fixtureAdminTransactions": 4,
       "transactions": [
         {
           "step": 1,
           "action": "Creator deploys Market #2 with 1 ETH bond via UI",
-          "txHash": "0xf8f02d58c07b0c45f5ff828377015ba1c3d347168e19c4d505ba6eceafcd7031",
+          "category": "BROWSER_UI_TRANSACTION",
+          "txHash": "0x83143687bfadad8369a42fbd4b84c6648294714cb85f089058b29a64204c10bd",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 43,
           "gasUsed": "468511",
           "status": "success",
@@ -280,7 +367,10 @@
         {
           "step": 2,
           "action": "Alice deposits 10 ETH on YES via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0x820a59e5b64ca470dd7d784b047264f151b5016fd40a666a6be05dd3155f6ce8",
+          "from": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 44,
           "gasUsed": "223925",
           "status": "success"
@@ -288,7 +378,10 @@
         {
           "step": 3,
           "action": "Guardian pauses ProtocolConfig",
+          "category": "LOCAL_FIXTURE_ADMIN_TRANSACTION",
           "txHash": "0xeb54086ce33517659624d73abf5c61b36cd830700e56a12d90b882ad090e0f49",
+          "from": "0x14dc79964da2c08b23698b3d3cc7ca32193d9955",
+          "to": "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
           "blockNumber": 45,
           "gasUsed": "59070",
           "status": "success"
@@ -296,7 +389,10 @@
         {
           "step": 4,
           "action": "Cancel expired market via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xdbd537c7dc7cc4cd7598b6dc05dd3dc89e8ecf2e1c311a0eb7da51f9e7334c26",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 47,
           "gasUsed": "113273",
           "status": "success"
@@ -304,7 +400,10 @@
         {
           "step": 5,
           "action": "Alice claims neutral refund via UI",
+          "category": "BROWSER_UI_TRANSACTION",
           "txHash": "0xd38d772c87421ac2c8416ae32d3997d0927bc67805655b17e115cc36b76962c6",
+          "from": "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 48,
           "gasUsed": "92524",
           "status": "success"
@@ -312,7 +411,10 @@
         {
           "step": 6,
           "action": "Compliance approves release for unpause",
+          "category": "LOCAL_FIXTURE_ADMIN_TRANSACTION",
           "txHash": "0xe004a8713e6853bebc7253d4032aa187df372e5ead70b4e39a4ddd7e9db11281",
+          "from": "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65",
+          "to": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
           "blockNumber": 50,
           "gasUsed": "223693",
           "status": "success"
@@ -320,7 +422,10 @@
         {
           "step": 7,
           "action": "Governance unpauses ProtocolConfig",
+          "category": "LOCAL_FIXTURE_ADMIN_TRANSACTION",
           "txHash": "0x2a2fceedcb900936fe35d1061b0a1a1a59e5f92a736eb0ab18ba80a578e96c2c",
+          "from": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+          "to": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
           "blockNumber": 53,
           "gasUsed": "119589",
           "status": "success"
@@ -328,32 +433,40 @@
         {
           "step": 8,
           "action": "Governance reactivates finance",
+          "category": "LOCAL_FIXTURE_ADMIN_TRANSACTION",
           "txHash": "0x8b3b949f0fdb8f6812ac43e6ca7cc0d9f19b728146db4813367a0ed85e857895",
+          "from": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+          "to": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
           "blockNumber": 55,
           "gasUsed": "124685",
           "status": "success"
         }
       ],
       "steps": [
-        "Step 1: Creator deploys Market #2 with 1 ETH bond via UI (success)",
-        "Step 2: Alice deposits 10 ETH on YES via UI (success)",
-        "Step 3: Guardian pauses ProtocolConfig (success)",
-        "Step 4: Cancel expired market via UI (success)",
-        "Step 5: Alice claims neutral refund via UI (success)",
-        "Step 6: Compliance approves release for unpause (success)",
-        "Step 7: Governance unpauses ProtocolConfig (success)",
-        "Step 8: Governance reactivates finance (success)"
+        "Step 1: [BROWSER_UI_TRANSACTION] Creator deploys Market #2 with 1 ETH bond via UI (success)",
+        "Step 2: [BROWSER_UI_TRANSACTION] Alice deposits 10 ETH on YES via UI (success)",
+        "Step 3: [LOCAL_FIXTURE_ADMIN_TRANSACTION] Guardian pauses ProtocolConfig (success)",
+        "Step 4: [BROWSER_UI_TRANSACTION] Cancel expired market via UI (success)",
+        "Step 5: [BROWSER_UI_TRANSACTION] Alice claims neutral refund via UI (success)",
+        "Step 6: [LOCAL_FIXTURE_ADMIN_TRANSACTION] Compliance approves release for unpause (success)",
+        "Step 7: [LOCAL_FIXTURE_ADMIN_TRANSACTION] Governance unpauses ProtocolConfig (success)",
+        "Step 8: [LOCAL_FIXTURE_ADMIN_TRANSACTION] Governance reactivates finance (success)"
       ]
     },
     "scenarioD": {
       "status": "VERIFIED",
       "marketId": "3",
       "totalTransactions": 2,
+      "browserUiTransactions": 2,
+      "fixtureAdminTransactions": 0,
       "transactions": [
         {
           "step": 1,
           "action": "Creator deploys Market D1 on Branch 1 via UI",
-          "txHash": "0x5900f908129627d7a51b5b8d9ab6047dfade02f197a5dd955147cb458d375c90",
+          "category": "BROWSER_UI_TRANSACTION",
+          "txHash": "0x8086b1b5b2776d27518661d6c53a021539f7d25f5d361f2e3a57bf298aea9b06",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 56,
           "gasUsed": "471299",
           "status": "success"
@@ -361,15 +474,18 @@
         {
           "step": 2,
           "action": "Creator deploys Market D2 on Canonical Branch 2 via UI",
-          "txHash": "0xa505ec04183e802ddc9535761e7547dca74762f91f60ccd1dd76472140dced14",
+          "category": "BROWSER_UI_TRANSACTION",
+          "txHash": "0xf2c5400514bed3b85bcf1d478fca5074d7c5291de9ed167fc408a5d9eea800de",
+          "from": "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+          "to": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
           "blockNumber": 57,
           "gasUsed": "471311",
           "status": "success"
         }
       ],
       "steps": [
-        "Step 1: Creator deploys Market D1 on Branch 1 via UI (success)",
-        "Step 2: Creator deploys Market D2 on Canonical Branch 2 via UI (success)"
+        "Step 1: [BROWSER_UI_TRANSACTION] Creator deploys Market D1 on Branch 1 via UI (success)",
+        "Step 2: [BROWSER_UI_TRANSACTION] Creator deploys Market D2 on Canonical Branch 2 via UI (success)"
       ]
     }
   },
@@ -382,7 +498,9 @@
       "D"
     ],
     "totalTransactions": 36,
-    "executedAt": "2026-11-01T03:22:11.292Z",
+    "browserUiTransactions": 32,
+    "fixtureAdminTransactions": 4,
+    "executedAt": "2026-11-01T04:18:15.126Z",
     "verifier": "playwright-browser-e2e"
   }
 }

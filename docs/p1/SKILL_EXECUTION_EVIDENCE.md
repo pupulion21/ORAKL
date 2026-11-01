@@ -76,24 +76,82 @@ During P1 browser E2E development, several non-trivial issues were diagnosed and
 - **Smallest Correct Fix**: Switched block number reads to direct JSON-RPC `eth_blockNumber` via `request('eth_blockNumber', [])` with zero client-side caching.
 - **Verification**: Snapshot and revert confirmed cleanly at exact block 55.
 
+#### Defect 6: SPA Hash Routing DOM Cache During Reorg Rollback
+- **Symptom**: In Scenario D, after Anvil rollback and canonical branch indexing, Playwright assertion `UI must display exact canonical Branch 2 market question` failed because the browser still rendered stale DOM for Market #3.
+- **Root Cause Analysis**: The frontend is a single-page app utilizing `location.hash` (`#/market/3`). Navigating to `page.goto('...#/market/3')` when already at `#/market/3` does not trigger a `hashchange` event, preventing fresh API fetches.
+- **Smallest Correct Fix**: Added `await page.reload({ waitUntil: 'networkidle' })` in D.6 before inspecting the DOM, forcing fresh API hydration.
+- **Verification**: Browser DOM reloads, fetches canonical Market #3, displays canonical question, and confirms absence of orphaned question.
+
+#### Defect 7: EIP-55 Address Checksum Sensitivity in Viem Contract Calls
+- **Symptom**: Viem's `simulateContract` threw `InvalidAddressError: Address must match its checksum counterpart`.
+- **Root Cause Analysis**: Viem accepts pure lowercase addresses as unchecksummed, but mixed-case addresses are strictly required to match their EIP-55 checksum.
+- **Smallest Correct Fix**: Sanitized test address constants to uniform lowercase or wrapped with `getAddress()`.
+- **Verification**: Double-claim simulation and bond claim calls execute cleanly without checksum rejection.
+
+#### Defect 8: Frontend Session Provider Call Encapsulation
+- **Symptom**: `tsc --noEmit` failed with TS2339: `Property 'provider' does not exist on type 'WalletSession'`.
+- **Root Cause Analysis**: `WalletSession` in `frontend/src/wallet.ts` encapsulates the EIP-1193 provider and exposes `request<T>(method, params)` directly on the session instance.
+- **Smallest Correct Fix**: Changed `state.session.provider.request` to `state.session.request<string>('personal_sign', [msgHex, publisher])`.
+- **Verification**: `npm --prefix frontend run typecheck` and `npm --prefix frontend run build` pass with 0 errors.
+
 ---
 
 ### 2.2 Test-Driven Development (TDD) Evidence
 
 All new features and remediations were developed test-first:
 
-1. **Signed Publication Replay Protection (P1-02)**:
-   - **Red**: Created `backend/test/publication-auth.test.ts` (10 tests) testing domain-separated signature verification, wrong-chain rejection, wrong-factory rejection, expired deadline rejection, and duplicate nonce rejection (`409 REUSED_NONCE`). Initially failed (routes lacked signature verification).
+1. **Trusted Factory Validation (P1-FINAL-01)**:
+   - **Red**: Created failing tests in `backend/test/publication-auth.test.ts` where a rogue factory signed with a valid signature was submitted, and where deployment manifest had tampered chain ID or was missing. Initially failed (routes passed client-supplied factory to auth verifier).
+   - **Green**: Implemented server-side `resolveTrustedDeployment(config, prisma)` in `backend/src/api/server.ts` checking disk manifest / configuration integrity, binding chain ID, factory, and ProtocolConfig. Rogue factories now reject with `400 WRONG_FACTORY`; missing/tampered manifests fail closed with `503 DEPLOYMENT_UNAVAILABLE`.
+   - **Refactor**: Added `trustedFactory` and `deploymentManifestPath` to `BackendConfig` in `backend/src/config.ts`. All 16 tests in `publication-auth.test.ts` pass green.
+
+2. **Atomic Nonce Consumption & Publication (P1-FINAL-02)**:
+   - **Red**: Created failing integration tests verifying that invalid content payloads do NOT consume the nonce (nonce remains usable on retry), and that database failures during artifact persistence trigger complete rollback of the nonce consumption.
+   - **Green**: Decoupled `verifyPublicationAuth` (pure cryptographic checks) from `consumePublicationAuthNonce` (database insert) in `backend/src/evidence/auth.ts`. Content validation executes deterministically before touching the database. Nonce consumption and artifact persistence execute atomically within `deps.prisma.$transaction`.
+   - **Refactor**: Wrapped rollback test with real database transactions. Nonce rollback confirmed by querying `prisma.authNonce.findUnique`.
+
+3. **Hardened Browser Financial E2E (P1-FINAL-03)**:
+   - **Red**: Previous browser runner relied on `blk.transactions[0]` heuristics and lacked client defense verification.
+   - **Green**: Enhanced `window.__oraklTestWallet` to intercept all sent transactions and expose `sentTransactions` and `lastTxHash`. Implemented `waitBrowserTx(actionName, expected)` correlating exact transaction hashes, senders, and destinations. Added negative test suite:
+     - `NEG.1`: Wrong chain rejection.
+     - `NEG.2`: User cancellation (code 4001) handled without UI hang.
+     - `NEG.3`: Dynamic account switch detection.
+     - `NEG.4`: Duplicate submit button locked while busy.
+   - Added double-claim rejection tests verifying `AlreadyClaimed` contract revert in Scenarios A and B. Added strict canonical reorg assertions in Scenario D.
+
+4. **Signed Publication Replay Protection (P1-02)**:
+   - **Red**: Created `backend/test/publication-auth.test.ts` testing domain-separated signature verification, wrong-chain rejection, wrong-factory rejection, expired deadline rejection, and duplicate nonce rejection (`409 REUSED_NONCE`).
    - **Green**: Implemented `backend/src/evidence/auth.ts`, `AuthNonce` PostgreSQL model with unique index, and integrated signature validation into `/api/v1/evidence` and `/api/v1/markets/metadata`.
-   - **Refactor**: Created `frontend/src/selected/auth.ts` sharing exact typed structures with the backend. All 10 tests passed green.
+   - **Refactor**: Created `frontend/src/selected/auth.ts` sharing exact typed structures with the backend.
 
-2. **Frontend Financial Controls (P1-03)**:
-   - **Red**: Created `frontend/test/frontend-controls.test.ts` (9 tests) verifying side selector encoding, exact BigInt wei stake parsing, multi-bond claims (`claimBond`) for CREATION (0), PROPOSAL (1), and CHALLENGE (2) with recipient redirection, and portfolio API reads.
-   - **Green**: Implemented controls in `frontend/src/local/main.ts`, adding `#predict-side`, `#claim-bond-recipient-0/1/2`, and `renderPortfolioView`.
-   - **Refactor**: Wired `createWalletSession`'s `onChange` callback to re-render the active route immediately upon account changes. All 9 tests passed green.
+5. **Frontend Financial Controls (P1-03)**:
+   - Verified side selector encoding, exact BigInt wei stake parsing, multi-bond claims (`claimBond`) for CREATION (0), PROPOSAL (1), and CHALLENGE (2) with recipient redirection, and portfolio API reads. All 91 frontend Node tests pass green.
 
-3. **Evidence Manifest Verification (P1-04)**:
-   - Built `scripts/p1/verify-evidence-manifest.mjs` failing if any artifact is missing, has mismatched byte length, or mismatched SHA-256 hash. Tested against tampered files (failed exit code 1) and exact files (passed exit code 0).
+6. **Evidence Manifest Verification (P1-04)**:
+   - Built `scripts/p1/verify-evidence-manifest.mjs` auditing existence, byte count, and SHA-256 checksum of every artifact in `docs/p1/evidence/MANIFEST.json` and `CHECKSUMS.txt`. 13/13 artifacts verified.
+
+---
+
+### 2.3 Matt Pocock Dual-Axis Code-Review Evidence
+
+In accordance with [`code-review`](file:///home/pupulion/.gemini/config/skills/code-review/SKILL.md), the final diff was audited along two independent axes:
+
+#### Axis 1: Standards
+- **Fowler Smells Audit**:
+  - *Mysterious Name*: All identifiers reveal exact semantics (`resolveTrustedDeployment`, `verifyPublicationAuth`, `consumePublicationAuthNonce`, `waitBrowserTx`).
+  - *Duplicated Code*: Common EIP-1193 RPC mocking and transaction correlation logic consolidated in `scripts/p1/run-browser-e2e.mjs`.
+  - *Feature Envy*: Session method `request` invoked directly on `state.session` rather than reaching into its private provider internals.
+  - *Data Clumps*: Publication auth params bundled into typed `PublicationAuth` interfaces across frontend and backend.
+  - *Primitive Obsession*: Amounts parsed as native BigInt wei rather than arbitrary floats or numbers.
+- **Repository Rules & Style**:
+  - Legacy contracts (`QiePredictionMarket.sol`, `deployments/qie-testnet.json`) strictly preserved untouched.
+  - No public network broadcast, no unauthorized mainnet activation.
+  - Fastify error envelopes comply with ADR-0012.
+
+#### Axis 2: Spec Alignment
+- **P1-FINAL-01**: Server-side trusted factory validation implemented; fails closed on missing/tampered manifest with 503; rejects rogue factories with 400.
+- **P1-FINAL-02**: Decoupled cryptographic auth verification from nonce consumption; atomic transaction rollback on DB error; content validation before DB writes.
+- **P1-FINAL-03**: Browser E2E correlates exact transaction receipts via `sentTransactions`; negative tests (NEG.1-4) verified; double-claims rejected with `AlreadyClaimed`; fee=0 on INVALID; strict Scenario D reorg assertions verified.
 
 ---
 
@@ -129,14 +187,14 @@ All new features and remediations were developed test-first:
 ====================================================================================================
  Test Suite                     Tests Run    Passed    Failed    Duration
 ----------------------------------------------------------------------------------------------------
- Smart Contracts (Foundry)      235          235       0         96.59s
- Backend Vitest                 117          117       0         16.77s
- Frontend Node Test             91           91        0         0.87s
+ Smart Contracts (Foundry)      235          235       0         101.97s
+ Backend Vitest                 123          123       0         17.69s
+ Frontend Node Test             91           91        0         0.79s
  Real Browser Financial E2E     4 Scenarios  36 Txs    0         95.2s
  Evidence Manifest Verification 13 Artifacts 13        0         0.08s
 ----------------------------------------------------------------------------------------------------
- Total Automated Checks         456          456       0         ~210s
+ Total Automated Checks         462          462       0         ~215s
 ====================================================================================================
 ```
 
-**Final Verdict**: `P1 BROWSER E2E VERIFIED — PUBLIC RELEASE BLOCKED`
+**Final Verdict**: `P1 FINAL HARDENING VERIFIED — PUBLIC RELEASE BLOCKED`
