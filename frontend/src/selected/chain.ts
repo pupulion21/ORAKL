@@ -388,6 +388,20 @@ export async function readBondEntitlement(
   return read<bigint>(client, factory, FACTORY_ABI, 'getBondEntitlement', [id, bondType, account]);
 }
 
+export async function readBond(
+  client: PublicClient,
+  factory: Address,
+  id: bigint,
+  kind: BondType,
+): Promise<{owner: Address; amount: bigint; claimed: boolean}> {
+  return (await client.readContract({
+    address: factory,
+    abi: FACTORY_ABI,
+    functionName: 'getBond',
+    args: [id, kind],
+  })) as {owner: Address; amount: bigint; claimed: boolean};
+}
+
 export interface GlobalAccounting {
   marketCount: bigint;
   totalContributions: bigint;

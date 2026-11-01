@@ -46,6 +46,9 @@ import {
   marketIdFromReceipt,
   readAccounting,
   readBlockTimestamp,
+  readBond,
+  readBondEntitlement,
+  readChallengeStake,
   readClaimable,
   readMarket,
   readMarkets,
@@ -66,6 +69,7 @@ import {
   type EvidenceKind,
   type EvidenceManifest,
 } from '../selected/evidence.ts';
+import { createPublicationAuth, publicationAuthMessage } from '../selected/auth.ts';
 import {MANIFEST_URL, NETWORK_LABEL, LOCAL_CHAIN_ID, LOCAL_RPC_URL, LOCAL_API_URL, publicClient} from './config.ts';
 import {walletErrorTextLocal} from './wallet-text.ts';
 import {
@@ -77,6 +81,7 @@ import {
   type MarketListParams,
   type SyncStatus,
   type MarketChallengesResult,
+  type PortfolioDetail,
 } from '../selected/api-client.ts';
 
 // ---------------------------------------------------------------------- state
@@ -86,7 +91,8 @@ type Route =
   | {name: 'market'; id: bigint}
   | {name: 'create'}
   | {name: 'evidence'}
-  | {name: 'status'};
+  | {name: 'status'}
+  | {name: 'portfolio'};
 
 export interface MarketViewItem {
   id: bigint;
@@ -211,6 +217,7 @@ function parseRoute(): Route {
   if (hash === '/create') return {name: 'create'};
   if (hash === '/evidence') return {name: 'evidence'};
   if (hash === '/status') return {name: 'status'};
+  if (hash === '/portfolio') return {name: 'portfolio'};
   return {name: 'list'};
 }
 
@@ -281,7 +288,9 @@ function apiItemToView(item: MarketListItem): MarketViewItem {
 }
 
 function rpcRecordToView(m: MarketRecord): MarketViewItem {
-  const label = MARKET_STATE_LABELS[m.storedState] ?? 'UNKNOWN';
+  const now = chainNow();
+  const effectiveState = (m.storedState === 0 && now >= Number(m.closeTime)) ? 1 : m.storedState;
+  const label = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
   return {
     id: m.id,
     title: m.metadataURI,
@@ -289,7 +298,7 @@ function rpcRecordToView(m: MarketRecord): MarketViewItem {
     category: null,
     metadataURI: m.metadataURI,
     statusText: label,
-    statusTone: stateTone(m.storedState),
+    statusTone: stateTone(effectiveState),
     yesPool: m.yesPool,
     noPool: m.noPool,
     closeTime: m.closeTime,
@@ -360,8 +369,7 @@ async function connectWallet(uuid: string): Promise<void> {
   state.session?.dispose();
   state.session = createWalletSession(info, LOCAL_CHAIN_ID, (snapshot) => {
     state.snapshot = snapshot;
-    renderWallet();
-    renderHeader();
+    render();
   });
   await state.session.connect(info, LOCAL_CHAIN_ID);
   renderWallet();
@@ -601,11 +609,12 @@ async function actClaimRefund(id: bigint): Promise<void> {
   });
 }
 
-async function actClaimBond(id: bigint, bondType: 0 | 1 | 2): Promise<void> {
+async function actClaimBond(id: bigint, bondType: 0 | 1 | 2, recipient?: Address): Promise<void> {
   const account = connectedAccount();
   if (!account) return;
-  await sendWrite(`Claim ${BOND_LABELS[bondType]} bond on market #${id}`, encodeClaimBond(id, bondType, account), 0n, async () => {
-    flash('ok', `${BOND_LABELS[bondType]} bond returned.`);
+  const targetRecipient = recipient && /^0x[0-9a-fA-F]{40}$/.test(recipient) ? (recipient.toLowerCase() as Address) : account;
+  await sendWrite(`Claim ${BOND_LABELS[bondType]} bond on market #${id}`, encodeClaimBond(id, bondType, targetRecipient), 0n, async () => {
+    flash('ok', `${BOND_LABELS[bondType]} bond claimed.`);
     await refreshAfterWrite();
   });
 }
@@ -618,6 +627,7 @@ async function actCancelExpired(id: bigint): Promise<void> {
 }
 
 async function actCreateMarket(form: HTMLFormElement): Promise<void> {
+  await refreshChainTime();
   const deployment = requireDeployment();
   const account = connectedAccount();
   if (!account) {
@@ -660,8 +670,8 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
     flash('err', 'Closing time must be in the future on the local chain.');
     return;
   }
-  if (resolutionTime <= closeTime) {
-    flash('err', 'Resolution time must be after the closing time.');
+  if (resolutionTime < closeTime) {
+    flash('err', 'Resolution time must be at or after the closing time.');
     return;
   }
   const minMax = resolutionTime + BigInt(deployment.parameters.challengePeriod + deployment.parameters.arbitrationPeriod + 48 * 3600);
@@ -713,6 +723,7 @@ function shellHtml(): string {
       <nav class="sidebar-primary nav" aria-label="Main navigation">
         ${navItem('#/', 'Markets', 'grid', listActive)}
         ${navItem('#/create', 'Create market', 'plus', route.name === 'create')}
+        ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
         ${navItem('#/evidence', 'Evidence lab', 'shield', route.name === 'evidence')}
         ${navItem('#/status', 'Protocol status', 'settings', route.name === 'status')}
       </nav>
@@ -736,6 +747,7 @@ function shellHtml(): string {
     <nav class="mobile-nav" aria-label="Mobile navigation">
       ${navItem('#/', 'Markets', 'grid', listActive)}
       ${navItem('#/create', 'Create', 'plus', route.name === 'create')}
+      ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
       ${navItem('#/evidence', 'Evidence', 'shield', route.name === 'evidence')}
       ${navItem('#/status', 'Status', 'settings', route.name === 'status')}
     </nav>`;
@@ -841,6 +853,9 @@ function renderRoute(): void {
       break;
     case 'status':
       void renderStatusView(view);
+      break;
+    case 'portfolio':
+      void renderPortfolioView(view);
       break;
   }
 }
@@ -1150,6 +1165,7 @@ async function openEvidenceModal(commitment: string): Promise<void> {
 async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const deployment = state.deployment!;
   view.innerHTML = `<div class="card"><span class="spinner"></span> Loading market #${id}…</div>`;
+  await refreshChainTime();
 
   let apiDetail: MarketDetail | null = null;
   try {
@@ -1177,8 +1193,26 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const account = connectedAccount();
   const position = account ? await readPosition(publicClient, deployment.factory, id, account) : null;
   const claimable = account ? await readClaimable(publicClient, deployment.factory, id, account) : null;
+  const [
+    creationBond,
+    creationEntitlement,
+    proposalBond,
+    proposalEntitlement,
+    challengeStake,
+    challengeEntitlement,
+  ] = account
+    ? await Promise.all([
+        readBond(publicClient, deployment.factory, id, 0).catch(() => null),
+        readBondEntitlement(publicClient, deployment.factory, id, 0, account).catch(() => 0n),
+        readBond(publicClient, deployment.factory, id, 1).catch(() => null),
+        readBondEntitlement(publicClient, deployment.factory, id, 1, account).catch(() => 0n),
+        readChallengeStake(publicClient, deployment.factory, id, account).catch(() => null),
+        readBondEntitlement(publicClient, deployment.factory, id, 2, account).catch(() => 0n),
+      ])
+    : [null, 0n, null, 0n, null, 0n];
   const now = chainNow();
-  const stateLabel = MARKET_STATE_LABELS[market.storedState] ?? 'UNKNOWN';
+  const effectiveState = (market.storedState === 0 && now >= Number(market.closeTime)) ? 1 : market.storedState;
+  const stateLabel = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
   const total = market.yesPool + market.noPool;
   const yesPct = total > 0n ? Number((market.yesPool * 10_000n) / total) / 100 : null;
 
@@ -1199,23 +1233,31 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   };
 
   const actions: string[] = [];
-  if (account && market.storedState === 0) {
+  if (account && effectiveState === 0) {
     actions.push(`<div class="card"><h3>Predict</h3><p class="muted">Minimum ${formatQie(deployment.parameters.minContribution)} ETH. A pool share is a contribution distribution, not a guaranteed payout.</p>
       <div class="row"><button class="btn yes" type="button" data-action="predict-yes" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Predict YES · ${formatQie(deployment.parameters.minContribution)}</button>
       <button class="btn no" type="button" data-action="predict-no" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Predict NO · ${formatQie(deployment.parameters.minContribution)}</button></div>
-      <div class="row" style="margin-top:12px"><input id="predict-amount" type="text" inputmode="decimal" placeholder="Custom amount (ETH)" aria-label="Custom prediction amount" /><button class="btn" type="button" data-action="predict-custom" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Send custom stake</button></div></div>`);
+      <div class="row" style="margin-top:12px">
+        <select id="predict-side" class="input-select" aria-label="Prediction side" style="max-width:110px">
+          <option value="0" selected>YES</option>
+          <option value="1">NO</option>
+        </select>
+        <input id="predict-amount" type="text" inputmode="decimal" placeholder="Custom amount (ETH)" aria-label="Custom prediction amount" />
+        <button class="btn" type="button" data-action="predict-custom" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Send custom stake</button>
+      </div></div>`);
   }
-  if (account && (market.storedState === 1 || market.storedState === 2)) {
-    const deadlinePassed = now >= Number(market.challengeDeadline);
+  if (account && effectiveState === 1) {
+    const latest = Number(market.maxResolutionTime) - deployment.parameters.challengePeriod - deployment.parameters.arbitrationPeriod;
+    const proposalClosed = now > latest;
     actions.push(`<div class="card"><h3>Propose result</h3>
-      <p class="muted">Bond ${formatQie(deployment.parameters.proposalBond)} ETH. ${deadlinePassed ? 'The challenge window has passed for proposals.' : `Challenge window closes ${formatDateTime(market.challengeDeadline)}.`}</p>
+      <p class="muted">Bond ${formatQie(deployment.parameters.proposalBond)} ETH. ${proposalClosed ? 'Proposal window has passed.' : `Proposals accepted until ${formatDateTime(BigInt(latest))}.`}</p>
       <div class="row"><input id="propose-evidence" type="text" placeholder="Evidence hash (0x…64) or manifest text" aria-label="Proposal evidence" />
-      <button class="btn" type="button" data-action="propose-yes" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose YES</button>
-      <button class="btn" type="button" data-action="propose-no" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose NO</button>
-      <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || deadlinePassed ? 'disabled' : ''}>Propose INVALID</button></div>
+      <button class="btn" type="button" data-action="propose-yes" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose YES</button>
+      <button class="btn" type="button" data-action="propose-no" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose NO</button>
+      <button class="btn" type="button" data-action="propose-invalid" data-id="${market.id}" ${state.busy || proposalClosed ? 'disabled' : ''}>Propose INVALID</button></div>
       <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
   }
-  if (account && (market.storedState === 2 || market.storedState === 3)) {
+  if (account && (effectiveState === 2 || effectiveState === 3)) {
     const challengeOpen = now < Number(market.challengeDeadline);
     actions.push(`<div class="card"><h3>Challenge</h3>
       <p class="muted">Bond ${formatQie(deployment.parameters.challengeBond)} ETH. ${challengeOpen ? `Window closes ${formatDateTime(market.challengeDeadline)}.` : 'The challenge window has closed.'}</p>
@@ -1224,7 +1266,7 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       <button class="btn ghost" type="button" data-action="submit-evidence" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Submit evidence only</button></div>
       <div class="row" style="margin-top:8px"><a class="text-btn" href="#/evidence" style="font-size:12px;">Build manifest in Evidence Lab →</a></div></div>`);
   }
-  if (account && market.storedState === 3) {
+  if (account && effectiveState === 3) {
     const arbitrationOpen = now < Number(market.arbitrationDeadline);
     actions.push(`<div class="card"><h3>Arbitrator decision</h3>
       <p class="muted">The arbitrator is an n-of-m local role mock (threshold 2). Each confirmation is a separate wallet; the call executes on the second distinct confirmation. ${arbitrationOpen ? `Arbitration window closes ${formatDateTime(market.arbitrationDeadline)}.` : 'The arbitration window has closed.'}</p>
@@ -1234,21 +1276,48 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       <button class="btn" type="button" data-action="settle-no" data-id="${market.id}" ${state.busy || !arbitrationOpen ? 'disabled' : ''}>Decide NO</button>
       <button class="btn" type="button" data-action="settle-invalid" data-id="${market.id}" ${state.busy || !arbitrationOpen ? 'disabled' : ''}>Decide INVALID</button></div></div>`);
   }
-  if (account && market.storedState === 2) {
+  if (account && effectiveState === 2) {
     actions.push(`<div class="card"><h3>Finalize</h3><p class="muted">Available once the challenge window closes without a challenge.</p><button class="btn primary" type="button" data-action="finalize" data-id="${market.id}" ${state.busy || now < Number(market.challengeDeadline) ? 'disabled' : ''}>Finalize result</button></div>`);
   }
-  if (account && (market.storedState === 4 || market.storedState === 5)) {
+  if (account && (effectiveState === 4 || effectiveState === 5)) {
     const claimText = claimable
       ? `Claimable now: reward ${formatQie(claimable.reward)} ETH · refund ${formatQie(claimable.refund)} ETH.`
       : '';
     actions.push(`<div class="card"><h3>Settlement</h3><p class="muted">${claimText}</p><div class="row">
       <button class="btn primary" type="button" data-action="claim" data-id="${market.id}" ${state.busy || !claimable || claimable.reward === 0n ? 'disabled' : ''}>Claim reward</button>
       <button class="btn" type="button" data-action="claim-refund" data-id="${market.id}" ${state.busy || !claimable || claimable.refund === 0n ? 'disabled' : ''}>Claim refund</button></div></div>`);
-    if (addressEq(account, market.creator)) {
-      actions.push(`<div class="card"><h3>Creator bond</h3><p class="muted">Return the creation bond once the market reached a terminal state.</p><button class="btn" type="button" data-action="claim-bond-creation" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Claim creation bond</button></div>`);
+    if (addressEq(account, market.creator) || (creationBond && addressEq(account, creationBond.owner))) {
+      const isClaimed = creationBond?.claimed ?? false;
+      const canClaim = !isClaimed && creationEntitlement > 0n;
+      actions.push(`<div class="card"><h3>Creation bond</h3>
+        <p class="muted">Deposit: ${formatQie(creationBond ? creationBond.amount : deployment.parameters.creationBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (creationEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(creationEntitlement)} ETH</span>` : '<span class="pill err">No entitlement</span>')}</p>
+        <div class="row" style="margin-top:8px">
+          <input id="claim-bond-recipient-0" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Creation bond recipient" />
+          <button class="btn" type="button" data-action="claim-bond-creation" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim creation bond'}</button>
+        </div></div>`);
+    }
+    if (addressEq(account, market.proposer) || (proposalBond && addressEq(account, proposalBond.owner))) {
+      const isClaimed = proposalBond?.claimed ?? false;
+      const canClaim = !isClaimed && proposalEntitlement > 0n;
+      actions.push(`<div class="card"><h3>Proposal bond</h3>
+        <p class="muted">Deposit: ${formatQie(proposalBond ? proposalBond.amount : deployment.parameters.proposalBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (proposalEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(proposalEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</p>
+        <div class="row" style="margin-top:8px">
+          <input id="claim-bond-recipient-1" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Proposal bond recipient" />
+          <button class="btn" type="button" data-action="claim-bond-proposal" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim proposal bond'}</button>
+        </div></div>`);
+    }
+    if ((challengeStake && challengeStake.amount > 0n) || challengeEntitlement > 0n) {
+      const isClaimed = challengeStake?.claimed ?? false;
+      const canClaim = !isClaimed && challengeEntitlement > 0n;
+      actions.push(`<div class="card"><h3>Challenge bond</h3>
+        <p class="muted">Deposit: ${formatQie(challengeStake ? challengeStake.amount : deployment.parameters.challengeBond)} ETH. Status: ${isClaimed ? '<span class="pill ok">Claimed</span>' : (challengeEntitlement > 0n ? `<span class="pill ok">Claimable ${formatQie(challengeEntitlement)} ETH</span>` : '<span class="pill err">Forfeited / 0 ETH</span>')}</p>
+        <div class="row" style="margin-top:8px">
+          <input id="claim-bond-recipient-2" type="text" placeholder="Recipient address (optional, default: your wallet)" aria-label="Challenge bond recipient" />
+          <button class="btn" type="button" data-action="claim-bond-challenge" data-id="${market.id}" ${state.busy || !canClaim ? 'disabled' : ''}>${isClaimed ? 'Bond claimed' : 'Claim challenge bond'}</button>
+        </div></div>`);
     }
   }
-  if (account && market.storedState === 1 && now >= Number(market.maxResolutionTime)) {
+  if (account && effectiveState !== 4 && effectiveState !== 5 && now >= Number(market.maxResolutionTime)) {
     actions.push(`<div class="card"><h3>Expired</h3><p class="muted">The market passed its max resolution time unresolved and can be cancelled; stakes become refundable.</p><button class="btn danger" type="button" data-action="cancel-expired" data-id="${market.id}" ${state.busy ? 'disabled' : ''}>Cancel expired market</button></div>`);
   }
 
@@ -1349,7 +1418,7 @@ function renderCreateView(view: HTMLElement): void {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
   const defaultClose = now + 3600;
-  const defaultResolution = defaultClose + params.challengePeriod;
+  const defaultResolution = defaultClose;
   const defaultMax = defaultResolution + params.challengePeriod + params.arbitrationPeriod + 48 * 3600;
   view.innerHTML = `<div class="breadcrumbs"><a href="#/">Markets</a>${icon('chevron', 13)}<span>Create market</span></div>
     <section class="page-head"><div class="eyebrow">LOCAL SELECTED PROTOCOL</div><h1>Create market</h1>
@@ -1431,6 +1500,232 @@ async function renderStatusView(view: HTMLElement): Promise<void> {
     <div class="card"><h3>Safety</h3><p class="warn-text">${escapeHtml(manifest.safety.note)}</p><p class="muted">publicDeployment: false · productionApproval: false · realFunds: false</p></div>`;
 }
 
+async function renderPortfolioView(view: HTMLElement): Promise<void> {
+  const account = connectedAccount();
+  if (!account) {
+    view.innerHTML = `<section class="page-head"><div class="eyebrow">PORTFOLIO</div><h1>Your portfolio</h1></section>
+      <div class="card empty-state"><h2>Wallet disconnected</h2><p class="muted">Connect your wallet to inspect your positions, challenge stakes, and claimable bonds.</p></div>`;
+    return;
+  }
+
+  const deployment = state.deployment;
+  if (!deployment) {
+    view.innerHTML = `<div class="card"><span class="spinner"></span> Loading protocol deployment…</div>`;
+    return;
+  }
+
+  view.innerHTML = `<section class="page-head"><div class="eyebrow">PORTFOLIO</div><h1>Your portfolio</h1><p class="mono">${escapeHtml(account)}</p></section>
+    <div class="card"><span class="spinner"></span> Reading portfolio and on-chain accounting…</div>`;
+
+  let portfolio: PortfolioDetail | null = null;
+  try {
+    const res = await apiClient.getPortfolio(account);
+    portfolio = res.data;
+  } catch {
+    // API portfolio offline or unindexed yet
+  }
+
+  type PositionCardData = {
+    marketId: bigint;
+    status: string;
+    yes: bigint;
+    no: bigint;
+    claimableReward: bigint;
+    claimableRefund: bigint;
+  };
+
+  const positionCards: PositionCardData[] = [];
+  if (portfolio && portfolio.positions) {
+    for (const pos of portfolio.positions) {
+      const mid = BigInt(pos.market.onchainMarketId);
+      try {
+        const onchainPos = await readPosition(publicClient, deployment.factory, mid, account);
+        const claimable = await readClaimable(publicClient, deployment.factory, mid, account);
+        positionCards.push({
+          marketId: mid,
+          status: pos.market.status,
+          yes: onchainPos.yes,
+          no: onchainPos.no,
+          claimableReward: claimable.reward,
+          claimableRefund: claimable.refund,
+        });
+      } catch {
+        // Skip unreadable
+      }
+    }
+  }
+
+  type StakeCardData = {
+    marketId: bigint;
+    amount: bigint;
+    prefixBefore: bigint;
+    claimed: boolean;
+    entitlement: bigint;
+  };
+  const stakeCards: StakeCardData[] = [];
+  if (portfolio && portfolio.challengeStakes) {
+    for (const stake of portfolio.challengeStakes) {
+      const mid = BigInt(stake.market.onchainMarketId);
+      try {
+        const onchainStake = await readChallengeStake(publicClient, deployment.factory, mid, account);
+        const entitlement = await readBondEntitlement(publicClient, deployment.factory, mid, 2, account);
+        stakeCards.push({
+          marketId: mid,
+          amount: onchainStake.amount,
+          prefixBefore: onchainStake.prefixBefore,
+          claimed: onchainStake.claimed,
+          entitlement,
+        });
+      } catch {
+        // Skip unreadable
+      }
+    }
+  }
+
+  type BondCardData = {
+    marketId: bigint;
+    bondType: 0 | 1 | 2;
+    bondTypeName: string;
+    amount: bigint;
+    claimed: boolean;
+    entitlement: bigint;
+  };
+  const bondCards: BondCardData[] = [];
+  if (portfolio && portfolio.bonds) {
+    for (const b of portfolio.bonds) {
+      const mid = BigInt(b.market.onchainMarketId);
+      const bType: 0 | 1 | 2 = b.bondType === 'CREATION' ? 0 : b.bondType === 'PROPOSAL' ? 1 : 2;
+      try {
+        const onchainBond = await readBond(publicClient, deployment.factory, mid, bType);
+        const entitlement = await readBondEntitlement(publicClient, deployment.factory, mid, bType, account);
+        bondCards.push({
+          marketId: mid,
+          bondType: bType,
+          bondTypeName: b.bondType,
+          amount: onchainBond.amount,
+          claimed: onchainBond.claimed,
+          entitlement,
+        });
+      } catch {
+        // Skip unreadable
+      }
+    }
+  }
+
+  const openRisk = portfolio ? BigInt(portfolio.openRisk) : 0n;
+  const totalClaimed = portfolio ? BigInt(portfolio.totalClaimed) : 0n;
+
+  let positionsHtml = '';
+  if (positionCards.length === 0) {
+    positionsHtml = `<p class="muted">No market positions recorded.</p>`;
+  } else {
+    positionsHtml = `<div class="grid-2">${positionCards.map(p => `
+      <div class="card">
+        <div class="row space">
+          <span class="mono"><strong>Market #${p.marketId}</strong></span>
+          <span class="pill">${escapeHtml(p.status)}</span>
+        </div>
+        <div class="row space" style="margin:8px 0">
+          <span>YES: ${formatQie(p.yes)} ETH</span>
+          <span>NO: ${formatQie(p.no)} ETH</span>
+        </div>
+        ${p.claimableReward > 0n || p.claimableRefund > 0n ? `
+          <div class="row" style="margin-top:8px">
+            ${p.claimableReward > 0n ? `<button class="btn primary" type="button" data-action="claim" data-id="${p.marketId}">Claim reward (${formatQie(p.claimableReward)} ETH)</button>` : ''}
+            ${p.claimableRefund > 0n ? `<button class="btn" type="button" data-action="claim-refund" data-id="${p.marketId}">Claim refund (${formatQie(p.claimableRefund)} ETH)</button>` : ''}
+          </div>
+        ` : '<span class="muted" style="font-size:13px">No rewards or refunds claimable</span>'}
+        <div style="margin-top:8px"><a class="text-btn" href="#/market/${p.marketId}" style="font-size:12px">View market details →</a></div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  let stakesHtml = '';
+  if (stakeCards.length === 0) {
+    stakesHtml = `<p class="muted">No challenge stakes recorded.</p>`;
+  } else {
+    stakesHtml = `<div class="grid-2">${stakeCards.map(s => `
+      <div class="card">
+        <div class="row space">
+          <span class="mono"><strong>Market #${s.marketId} (Challenge)</strong></span>
+          <span class="pill ${s.claimed ? 'ok' : ''}">${s.claimed ? 'Claimed' : 'Active'}</span>
+        </div>
+        <div style="margin:8px 0;font-size:14px">
+          <div>Stake: ${formatQie(s.amount)} ETH</div>
+          <div>Prefix before: ${formatQie(s.prefixBefore)} ETH</div>
+          <div>Entitlement: ${formatQie(s.entitlement)} ETH</div>
+        </div>
+        ${!s.claimed && s.entitlement > 0n ? `
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="button" data-action="claim-bond-challenge" data-id="${s.marketId}">Claim challenge bond (${formatQie(s.entitlement)} ETH)</button>
+          </div>
+        ` : ''}
+        <div style="margin-top:8px"><a class="text-btn" href="#/market/${s.marketId}" style="font-size:12px">View market details →</a></div>
+      </div>
+    `).join('')}</div>`;
+  }
+
+  let bondsHtml = '';
+  if (bondCards.length === 0) {
+    bondsHtml = `<p class="muted">No bonds recorded.</p>`;
+  } else {
+    bondsHtml = `<div class="grid-2">${bondCards.map(b => {
+      const actionName = b.bondType === 0 ? 'claim-bond-creation' : 'claim-bond-proposal';
+      return `
+      <div class="card">
+        <div class="row space">
+          <span class="mono"><strong>Market #${b.marketId} (${b.bondTypeName} Bond)</strong></span>
+          <span class="pill ${b.claimed ? 'ok' : ''}">${b.claimed ? 'Claimed' : 'Active'}</span>
+        </div>
+        <div style="margin:8px 0;font-size:14px">
+          <div>Amount: ${formatQie(b.amount)} ETH</div>
+          <div>Entitlement: ${formatQie(b.entitlement)} ETH</div>
+        </div>
+        ${!b.claimed && b.entitlement > 0n ? `
+          <div class="row" style="margin-top:8px">
+            <button class="btn" type="button" data-action="${actionName}" data-id="${b.marketId}">Claim ${b.bondTypeName} bond (${formatQie(b.entitlement)} ETH)</button>
+          </div>
+        ` : ''}
+        <div style="margin-top:8px"><a class="text-btn" href="#/market/${b.marketId}" style="font-size:12px">View market details →</a></div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  let txHtml = '';
+  if (portfolio && portfolio.recentTransactions && portfolio.recentTransactions.length > 0) {
+    txHtml = `<div class="card"><h3>Recent transactions</h3><div class="table-wrap"><table>
+      <thead><tr><th>Tx</th><th>Block</th><th>Status</th></tr></thead>
+      <tbody>${portfolio.recentTransactions.slice(0, 10).map(tx => `
+        <tr>
+          <td class="mono">${escapeHtml(shortAddress(tx.txHash))}</td>
+          <td>${tx.blockNumber}</td>
+          <td><span class="pill ${tx.status === 'SUCCESS' ? 'ok' : 'err'}">${escapeHtml(tx.status)}</span></td>
+        </tr>
+      `).join('')}</tbody></table></div></div>`;
+  }
+
+  view.innerHTML = `
+    <section class="page-head">
+      <div class="eyebrow">PORTFOLIO</div>
+      <h1>Your portfolio</h1>
+      <p class="mono">${escapeHtml(account)}</p>
+    </section>
+    <div class="summary-grid">
+      <div><span>Open risk</span><b>${formatQie(openRisk)} ETH</b></div>
+      <div><span>Total claimed</span><b>${formatQie(totalClaimed)} ETH</b></div>
+      <div><span>Positions</span><b>${portfolio ? portfolio.totals.positions : positionCards.length}</b></div>
+      <div><span>Bonds & Stakes</span><b>${portfolio ? (portfolio.totals.challengeStakes + portfolio.totals.bonds) : (stakeCards.length + bondCards.length)}</b></div>
+    </div>
+    <div class="section-title" style="margin-top:24px"><h2>Active market positions</h2></div>
+    ${positionsHtml}
+    <div class="section-title" style="margin-top:24px"><h2>Challenge stakes</h2></div>
+    ${stakesHtml}
+    <div class="section-title" style="margin-top:24px"><h2>Bonds</h2></div>
+    ${bondsHtml}
+    ${txHtml}
+  `;
+}
+
 // ------------------------------------------------------------------- events
 
 function evidenceInputToHash(raw: string): Hex | null {
@@ -1507,7 +1802,9 @@ document.addEventListener('click', (event) => {
     case 'predict-custom': {
       if (id === null) break;
       const input = document.getElementById('predict-amount') as HTMLInputElement | null;
-      void actPredictCustom(id, 0, input?.value ?? '');
+      const sideSelect = document.getElementById('predict-side') as HTMLSelectElement | null;
+      const side = (sideSelect && sideSelect.value === '1') ? 1 : 0;
+      void actPredictCustom(id, side as 0 | 1, input?.value ?? '');
       break;
     }
     case 'propose-yes':
@@ -1569,9 +1866,30 @@ document.addEventListener('click', (event) => {
     case 'claim-refund':
       if (id !== null) void actClaimRefund(id);
       break;
-    case 'claim-bond-creation':
-      if (id !== null) void actClaimBond(id, 0);
+    case 'claim-bond-creation': {
+      if (id !== null) {
+        const input = document.getElementById('claim-bond-recipient-0') as HTMLInputElement | null;
+        const recipient = (input?.value?.trim() || undefined) as Address | undefined;
+        void actClaimBond(id, 0, recipient);
+      }
       break;
+    }
+    case 'claim-bond-proposal': {
+      if (id !== null) {
+        const input = document.getElementById('claim-bond-recipient-1') as HTMLInputElement | null;
+        const recipient = (input?.value?.trim() || undefined) as Address | undefined;
+        void actClaimBond(id, 1, recipient);
+      }
+      break;
+    }
+    case 'claim-bond-challenge': {
+      if (id !== null) {
+        const input = document.getElementById('claim-bond-recipient-2') as HTMLInputElement | null;
+        const recipient = (input?.value?.trim() || undefined) as Address | undefined;
+        void actClaimBond(id, 2, recipient);
+      }
+      break;
+    }
     case 'cancel-expired':
       if (id !== null) void actCancelExpired(id);
       break;
@@ -1716,8 +2034,32 @@ async function actPublishEvidenceForm(form: HTMLFormElement): Promise<void> {
   }
 
   try {
+    const commitment = evidenceCommitment(manifest);
+    const auth = createPublicationAuth({
+      action: 'evidence',
+      chainId: LOCAL_CHAIN_ID,
+      factory: deployment.factory,
+      publisher,
+      commitment,
+    });
+    let signature: string | undefined;
+    if (state.session?.provider) {
+      const msg = publicationAuthMessage(auth);
+      const msgHex = `0x${Array.from(new TextEncoder().encode(msg)).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+      try {
+        signature = (await state.session.provider.request({
+          method: 'personal_sign',
+          params: [msgHex, publisher],
+        })) as string;
+      } catch {
+        // Fallback or leave undefined if user cancels
+      }
+    }
+
     const res = await apiClient.publishEvidence({
       manifest,
+      auth,
+      signature,
       content: content || undefined,
     });
     if (resultDiv) {
@@ -1748,8 +2090,15 @@ async function actPublishEvidenceForm(form: HTMLFormElement): Promise<void> {
 window.addEventListener('hashchange', () => {
   state.route = parseRoute();
   state.multisigNotice = null;
-  render();
-  if (state.deployment) void loadMarkets();
+  if (state.deployment) {
+    void (async () => {
+      await refreshChainTime();
+      render();
+      await loadMarkets();
+    })();
+  } else {
+    render();
+  }
 });
 
 state.route = parseRoute();

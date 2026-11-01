@@ -218,8 +218,21 @@ export interface EvidenceArtifactDetail {
   createdAt: string;
 }
 
+export interface PublicationAuth {
+  app: string;
+  version: string;
+  action: 'evidence' | 'metadata';
+  chainId: number;
+  factory: string;
+  publisher: string;
+  commitment: string;
+  nonce: string;
+  deadline: number;
+}
+
 export interface PublishEvidencePayload {
   manifest: unknown;
+  auth?: PublicationAuth;
   signature?: string;
   content?: string;
 }
@@ -230,6 +243,83 @@ export interface PublishEvidenceResult {
   hasContent?: boolean;
   marketLinked?: boolean;
   externalPinning: string;
+}
+
+export interface PortfolioPosition {
+  id: string;
+  marketId: string;
+  walletAddress: string;
+  yesContribution: string;
+  noContribution: string;
+  claimedAmount: string;
+  refundedAmount: string;
+  settled: boolean;
+  market: {
+    onchainMarketId: string;
+    status: string;
+    finalOutcome: string;
+    refundable: boolean;
+    closeTime: string;
+  };
+}
+
+export interface PortfolioChallengeStake {
+  id: string;
+  marketId: string;
+  walletAddress: string;
+  amount: string;
+  prefixBefore: string;
+  claimed: boolean;
+  market: {
+    onchainMarketId: string;
+    status: string;
+    finalOutcome: string;
+    settlement?: {
+      disposition: string;
+    } | null;
+  };
+}
+
+export interface PortfolioBond {
+  id: string;
+  marketId: string;
+  walletAddress: string;
+  bondType: 'CREATION' | 'PROPOSAL' | 'CHALLENGE';
+  amount: string;
+  claimed: boolean;
+  market: {
+    onchainMarketId: string;
+    status: string;
+    finalOutcome: string;
+    settlement?: {
+      disposition: string;
+    } | null;
+  };
+}
+
+export interface PortfolioDetail {
+  address: string;
+  projectionOnly: boolean;
+  note: string;
+  openRisk: string;
+  totalClaimed: string;
+  totals: {
+    positions: number;
+    challengeStakes: number;
+    bonds: number;
+  };
+  positions: PortfolioPosition[];
+  challengeStakes: PortfolioChallengeStake[];
+  bonds: PortfolioBond[];
+  claimsByType: Array<{ claimType: string; _count: { _all: number } }>;
+  recentTransactions: Array<{
+    txHash: string;
+    fromAddress: string;
+    toAddress?: string;
+    blockNumber: string;
+    status: string;
+    createdAt: string;
+  }>;
 }
 
 export interface ApiClientConfig {
@@ -248,6 +338,7 @@ export interface ApiClient {
   publishEvidence(payload: PublishEvidencePayload, signal?: AbortSignal): Promise<ApiResponse<PublishEvidenceResult>>;
   getIndexerStatus(signal?: AbortSignal): Promise<ApiResponse<IndexerStatus>>;
   getExposure(signal?: AbortSignal): Promise<ApiResponse<ExposureSummary>>;
+  getPortfolio(address: string, signal?: AbortSignal): Promise<ApiResponse<PortfolioDetail>>;
 }
 
 // ----------------------------------------------------------------- arithmetic
@@ -368,6 +459,9 @@ export function createApiClient(config: ApiClientConfig = {}): ApiClient {
     },
     async getExposure(signal?: AbortSignal): Promise<ApiResponse<ExposureSummary>> {
       return request<ExposureSummary>('/api/v1/exposure', {signal});
+    },
+    async getPortfolio(address: string, signal?: AbortSignal): Promise<ApiResponse<PortfolioDetail>> {
+      return request<PortfolioDetail>(`/api/v1/portfolio/${encodeURIComponent(address)}`, {signal});
     },
   };
 }
