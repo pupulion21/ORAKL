@@ -196,12 +196,52 @@ async function main() {
   if (presetBtn) await presetBtn.click();
   await page.waitForTimeout(400);
 
+  // Requirement 3 & 5 Regression Check: confirm-immutability must NOT be auto-checked
+  const isAutoChecked = await page.evaluate(() => {
+    const cb = document.getElementById('confirm-immutability');
+    return cb ? cb.checked : false;
+  });
+  if (isAutoChecked) {
+    throw new Error('Requirement 3 & 5 Violation: confirm-immutability was auto-checked by preset loader!');
+  }
+
+  // Requirement 1 & 2 Regression Check: Verify preset chronology and YES/NO criteria
+  const presetFormValues = await page.evaluate(() => {
+    return {
+      close: document.getElementById('input-closeTime')?.value,
+      res: document.getElementById('input-resolutionTime')?.value,
+      max: document.getElementById('input-maxResolutionTime')?.value,
+      yes: document.getElementById('input-yesCriteria')?.value,
+      no: document.getElementById('input-noCriteria')?.value,
+    };
+  });
+
+  if (!presetFormValues.close || !presetFormValues.close.startsWith('2026-12-31')) {
+    throw new Error(`Requirement 1 Violation: closeTime is not in December 2026! Got: ${presetFormValues.close}`);
+  }
+  if (!presetFormValues.res || !presetFormValues.res.startsWith('2026-12-31')) {
+    throw new Error(`Requirement 1 Violation: resolutionTime is not in December 2026! Got: ${presetFormValues.res}`);
+  }
+  if (!presetFormValues.max || !presetFormValues.max.startsWith('2027-01')) {
+    throw new Error(`Requirement 1 Violation: maxResolutionTime does not extend into January 2027! Got: ${presetFormValues.max}`);
+  }
+  if (!presetFormValues.yes || !presetFormValues.yes.includes('strictly greater than $2,800.00')) {
+    throw new Error(`Requirement 2 Violation: YES criteria semantic mismatch! Got: ${presetFormValues.yes}`);
+  }
+  if (presetFormValues.yes.includes('greater than or equal to')) {
+    throw new Error(`Requirement 2 Violation: YES criteria must not say "greater than or equal to"!`);
+  }
+  if (!presetFormValues.no || !presetFormValues.no.includes('less than or equal to $2,800.00')) {
+    throw new Error(`Requirement 2 Violation: NO criteria semantic mismatch! Got: ${presetFormValues.no}`);
+  }
+  console.log('[E2E] Verified preset chronology and semantic consistency in form inputs.');
+
   // Navigate to Step 4 tab
   const step4Tab = await page.$('[data-step="4"]');
   if (step4Tab) await step4Tab.click();
   await page.waitForTimeout(300);
 
-  // Check immutability checkbox
+  // Check immutability checkbox (Deliberate user confirmation)
   await page.evaluate(() => {
     const cb = document.getElementById('confirm-immutability');
     if (cb) cb.checked = true;
@@ -539,6 +579,16 @@ async function main() {
   if (!detailContent.includes('Verified Question')) {
     throw new Error('Fresh session market detail does not render Verified Question badge!');
   }
+
+  // Requirement 4 Regression Check: Primary Observation Source links to verified resolution source, not metadata URI
+  const primaryObsLink = await freshPage.evaluate(() => {
+    const link = document.querySelector('.rules-source-link a');
+    return link ? link.getAttribute('href') : null;
+  });
+  if (primaryObsLink !== 'https://www.lbma.org.uk/prices-and-data/precious-metal-prices') {
+    throw new Error(`Requirement 4 Violation: Primary Observation Source link was "${primaryObsLink}", expected LBMA URL!`);
+  }
+  console.log('[E2E] Verified Primary Observation Source displays verified LBMA primary URL, not metadata URI.');
 
   // Verify that fresh session cached the verified manifest from the complete server artifact
   const cachedAfterVisit = await freshPage.evaluate(() => localStorage.getItem('orakl_local_manifest_cache_v1'));

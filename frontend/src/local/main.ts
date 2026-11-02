@@ -93,6 +93,8 @@ import {
   canonicalizeMarketMetadata,
   GOLD_BENCHMARK_PRESET,
   VALID_MARKET_CATEGORIES,
+  formatUtcToDatetimeLocal,
+  parseDatetimeInputToSeconds,
   type Route,
   type MarketMetadataManifest,
   type CreateMarketFormValues,
@@ -701,9 +703,9 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
     maxResolutionTime: maxInput,
   };
 
-  const closeTime = BigInt(Math.floor(new Date(closeInput).getTime() / 1000));
-  const resolutionTime = BigInt(Math.floor(new Date(resolutionInput).getTime() / 1000));
-  const maxResolutionTime = BigInt(Math.floor(new Date(maxInput).getTime() / 1000));
+  const closeTime = parseDatetimeInputToSeconds(closeInput);
+  const resolutionTime = parseDatetimeInputToSeconds(resolutionInput);
+  const maxResolutionTime = parseDatetimeInputToSeconds(maxInput);
   const now = BigInt(chainNow());
 
   const formValues: CreateMarketFormValues = {
@@ -1909,6 +1911,7 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const step3Class = effectiveState < 2 ? 'pending' : (effectiveState === 2 ? 'active' : 'completed');
   const step4Class = effectiveState === 3 ? 'active' : (effectiveState >= 4 && isDisputed ? 'completed' : 'pending');
   const step5Class = effectiveState >= 4 ? 'completed' : 'pending';
+  const primaryObsSource = verification.sources[0];
 
   view.innerHTML = `
     <div class="breadcrumbs">
@@ -1957,7 +1960,10 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
           </div>
           <div class="rules-source-link">
             <span>Primary Observation Source:</span>
-            <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
+            ${primaryObsSource
+              ? `<a href="${escapeHtml(primaryObsSource)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(primaryObsSource)}</a>`
+              : `<span class="mono" style="color:var(--text-muted);font-size:12px;">Not specified in metadata</span>`
+            }
           </div>
           ${verification.resolutionCriteria ? `
             <div style="margin-top:10px;padding:12px;background:var(--bg-elevated);border-radius:6px;font-size:13px;white-space:pre-wrap;font-family:inherit;line-height:1.5;">${escapeHtml(verification.resolutionCriteria)}</div>
@@ -2485,6 +2491,8 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
     `;
   }
 
+  const primaryObsSource = verification.sources[0];
+
   view.innerHTML = `
     <div class="breadcrumbs">
       <a href="#/arbitration">← Dispute Queue</a>
@@ -2559,7 +2567,10 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
           </div>
           <div class="rules-source-link">
             <span>Primary Reference:</span>
-            <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
+            ${primaryObsSource
+              ? `<a href="${escapeHtml(primaryObsSource)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(primaryObsSource)}</a>`
+              : `<span class="mono" style="color:var(--text-muted);font-size:12px;">Not specified in metadata</span>`
+            }
           </div>
           ${verification.resolutionCriteria ? `
             <div style="margin-top:10px;padding:12px;background:var(--bg-elevated);border-radius:6px;font-size:13px;white-space:pre-wrap;font-family:inherit;line-height:1.5;">${escapeHtml(verification.resolutionCriteria)}</div>
@@ -2577,6 +2588,18 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
             </div>
           ` : ''}
         </div>
+
+        <!-- Technical Details & Metadata Commitment -->
+        <details class="tech-disclosure" style="margin-top:16px;">
+          <summary>Technical Details & Metadata Commitment</summary>
+          <div class="tech-disclosure-body" style="font-size:12px;">
+            <div><span class="muted">Metadata URI:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataURI)}</code></div>
+            <div><span class="muted">On-Chain Commitment:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataHash || '—')}</code></div>
+            ${verification.computedHash ? `<div><span class="muted">Computed Content Hash:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(verification.computedHash)}</code></div>` : ''}
+            <div><span class="muted">Integrity Status:</span> <strong>${escapeHtml(verification.status.toUpperCase())}</strong></div>
+            ${verification.reason ? `<p class="muted" style="margin:4px 0 0;font-size:11px;">${escapeHtml(verification.reason)}</p>` : ''}
+          </div>
+        </details>
         </div>
 
         <!-- Evidence Dossier -->
@@ -2634,11 +2657,6 @@ function renderCreateView(view: HTMLElement): void {
   const params = deployment.parameters;
   const manifest = deployment.manifest;
   const now = chainNow();
-  const toDateInput = (seconds: number) => {
-    const d = new Date(seconds * 1000);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
   const defaultClose = now + 7 * 86400; // 7 days close
   const defaultResolution = defaultClose;
   const defaultMax = defaultResolution + params.challengePeriod + params.arbitrationPeriod + 48 * 3600 + 3600;
@@ -2652,9 +2670,9 @@ function renderCreateView(view: HTMLElement): void {
   const yesVal = fv.yesCriteria || '';
   const noVal = fv.noCriteria || '';
   const invalidVal = fv.invalidCriteria || '';
-  const closeVal = fv.closeTime || toDateInput(defaultClose);
-  const resVal = fv.resolutionTime || toDateInput(defaultResolution);
-  const maxVal = fv.maxResolutionTime || toDateInput(defaultMax);
+  const closeVal = fv.closeTime || formatUtcToDatetimeLocal(defaultClose);
+  const resVal = fv.resolutionTime || formatUtcToDatetimeLocal(defaultResolution);
+  const maxVal = fv.maxResolutionTime || formatUtcToDatetimeLocal(defaultMax);
 
   view.innerHTML = `
     <div class="breadcrumbs">
@@ -2767,13 +2785,13 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>YES Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle YES.</span>
-              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly greater than or equal to $2,800.00 USD on December 31, 2026.">${escapeHtml(yesVal)}</textarea>
+              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).">${escapeHtml(yesVal)}</textarea>
             </label>
 
             <label class="field-label">
               <span>NO Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle NO.</span>
-              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly less than $2,800.00 USD on December 31, 2026.">${escapeHtml(noVal)}</textarea>
+              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).">${escapeHtml(noVal)}</textarea>
             </label>
           </div>
 
@@ -3016,16 +3034,14 @@ function autoSetTimelineFloor(): void {
   const resInput = form.elements.namedItem('resolutionTime') as HTMLInputElement | null;
   const maxInput = form.elements.namedItem('maxResolutionTime') as HTMLInputElement | null;
   if (resInput && maxInput && resInput.value) {
-    const resSec = BigInt(Math.floor(new Date(resInput.value).getTime() / 1000));
+    const resSec = parseDatetimeInputToSeconds(resInput.value);
     const minMaxSec =
       calculateMinimumMaxResolutionTime(
         resSec,
         deployment.parameters.challengePeriod,
         deployment.parameters.arbitrationPeriod,
       ) + 3600n; // +1 hour margin
-    const d = new Date(Number(minMaxSec) * 1000);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    maxInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    maxInput.value = formatUtcToDatetimeLocal(minMaxSec);
     updateCreateFormPreview();
     flash('ok', 'Timeline floor set: Max resolution time extended to meet 192h requirement.');
   }
@@ -3097,8 +3113,8 @@ function updateCreateFormPreview(): void {
   const floorStatusEl = document.getElementById('timeline-floor-status');
   const floorExplainerEl = document.getElementById('timeline-floor-explainer');
   if (resInput && maxInput) {
-    const resSec = BigInt(Math.floor(new Date(resInput).getTime() / 1000));
-    const maxSec = BigInt(Math.floor(new Date(maxInput).getTime() / 1000));
+    const resSec = parseDatetimeInputToSeconds(resInput);
+    const maxSec = parseDatetimeInputToSeconds(maxInput);
     const minMaxSec = calculateMinimumMaxResolutionTime(
       resSec,
       deployment.parameters.challengePeriod,
@@ -3147,26 +3163,21 @@ function fillGoldPreset(): void {
   setVal('noCriteria', GOLD_BENCHMARK_PRESET.noCriteria);
   setVal('invalidCriteria', GOLD_BENCHMARK_PRESET.invalidCriteria);
 
-  const now = chainNow();
-  const defaultClose = now + 7 * 86400; // 7 days close
-  const defaultResolution = defaultClose;
-  const defaultMax = defaultResolution + deployment.parameters.challengePeriod + deployment.parameters.arbitrationPeriod + 48 * 3600 + 3600;
+  // Requirement 1: Chronological alignment with explicit UTC timezone handling
+  // Market close (12:00 UTC) precedes observation (15:00 UTC)
+  // Resolution start (18:00 UTC) starts after outcome is determinable
+  // Max resolution (2027-01-15 18:00 UTC) accommodates fallback deadline (2027-01-02 18:00 UTC) + contract-enforced periods
+  setVal('closeTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.closeTimeSec));
+  setVal('resolutionTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.resolutionTimeSec));
+  setVal('maxResolutionTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.maxResolutionTimeSec));
 
-  const toDateInput = (seconds: number) => {
-    const d = new Date(seconds * 1000);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  };
-
-  setVal('closeTime', toDateInput(defaultClose));
-  setVal('resolutionTime', toDateInput(defaultResolution));
-  setVal('maxResolutionTime', toDateInput(defaultMax));
-
+  // Requirement 3: Do NOT automatically check the immutability confirmation checkbox.
+  // Require deliberate user confirmation.
   const check = form.querySelector<HTMLInputElement>('#confirm-immutability');
-  if (check) check.checked = true;
+  if (check) check.checked = GOLD_BENCHMARK_PRESET.autoConfirmImmutability;
 
   updateCreateFormPreview();
-  flash('ok', 'Loaded LBMA Gold Price PM Benchmark template with verified 192h timeline.');
+  flash('ok', 'Loaded LBMA Gold Price PM Benchmark template with verified December 31, 2026 chronology.');
 }
 
 function validateCreateFormAction(form: HTMLFormElement): void {
@@ -3201,9 +3212,9 @@ function validateCreateFormAction(form: HTMLFormElement): void {
     maxResolutionTime: maxInput,
   };
 
-  const closeTime = BigInt(Math.floor(new Date(closeInput).getTime() / 1000));
-  const resolutionTime = BigInt(Math.floor(new Date(resolutionInput).getTime() / 1000));
-  const maxResolutionTime = BigInt(Math.floor(new Date(maxInput).getTime() / 1000));
+  const closeTime = parseDatetimeInputToSeconds(closeInput);
+  const resolutionTime = parseDatetimeInputToSeconds(resolutionInput);
+  const maxResolutionTime = parseDatetimeInputToSeconds(maxInput);
   const now = BigInt(chainNow());
 
   const formValues: CreateMarketFormValues = {
@@ -3770,8 +3781,8 @@ document.addEventListener('click', (event) => {
       const resInput = (document.getElementById('input-resolutionTime') as HTMLInputElement)?.value;
       const maxInput = (document.getElementById('input-maxResolutionTime') as HTMLInputElement)?.value;
       if (resInput && maxInput && state.deployment) {
-        const resSec = BigInt(Math.floor(new Date(resInput).getTime() / 1000));
-        const maxSec = BigInt(Math.floor(new Date(maxInput).getTime() / 1000));
+        const resSec = parseDatetimeInputToSeconds(resInput);
+        const maxSec = parseDatetimeInputToSeconds(maxInput);
         const minMaxSec = calculateMinimumMaxResolutionTime(
           resSec,
           state.deployment.parameters.challengePeriod,

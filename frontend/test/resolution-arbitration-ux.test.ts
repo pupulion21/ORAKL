@@ -11,6 +11,8 @@ import {
   canonicalizeMarketMetadata,
   GOLD_BENCHMARK_PRESET,
   VALID_MARKET_CATEGORIES,
+  formatUtcToDatetimeLocal,
+  parseDatetimeInputToSeconds,
   type MarketMetadataManifest,
   type CreateMarketFormValues,
 } from '../src/local/navigation.ts';
@@ -403,6 +405,139 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
       assert.deepEqual(keys, sortedKeys);
       assert.equal(keys[0], 'category');
       assert.equal(keys[keys.length - 1], 'sources');
+    });
+
+    it('regression (Requirement 1 & 5): enforces LBMA Gold PM preset chronology and deadline sequencing', () => {
+      // 1. Observation date is December 31, 2026 15:00 UTC
+      assert.equal(GOLD_BENCHMARK_PRESET.observationDate, '2026-12-31');
+      assert.equal(GOLD_BENCHMARK_PRESET.observationTimeUtc, '2026-12-31T15:00:00Z');
+
+      // 2. Market close precedes the observation
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.closeTimeSec < GOLD_BENCHMARK_PRESET.observationTimeSec,
+        `Market close (${GOLD_BENCHMARK_PRESET.closeTimeSec}) must precede observation (${GOLD_BENCHMARK_PRESET.observationTimeSec})`,
+      );
+
+      // 3. Resolution starts strictly after the observation can be determined
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.observationTimeSec < GOLD_BENCHMARK_PRESET.resolutionTimeSec,
+        `Resolution start (${GOLD_BENCHMARK_PRESET.resolutionTimeSec}) must start after observation (${GOLD_BENCHMARK_PRESET.observationTimeSec})`,
+      );
+
+      // 4. Fallback deadline succeeds resolution start
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.resolutionTimeSec < GOLD_BENCHMARK_PRESET.fallbackDeadlineSec,
+        `Fallback deadline must succeed resolution start`,
+      );
+
+      // 5. Relevant observation date is strictly before maxResolutionTime
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.observationTimeSec < GOLD_BENCHMARK_PRESET.maxResolutionTimeSec,
+        `Observation time must be before maxResolutionTime`,
+      );
+
+      // 6. Max resolution time satisfies the protocol-enforced minimum floor (resolutionTime + 192h)
+      const minProtocolFloor = calculateMinimumMaxResolutionTime(
+        GOLD_BENCHMARK_PRESET.resolutionTimeSec,
+        CHALLENGE_PERIOD,
+        ARBITRATION_PERIOD,
+      );
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.maxResolutionTimeSec >= minProtocolFloor,
+        `Max resolution time must satisfy protocol floor >= resolutionTime + 192h`,
+      );
+
+      // 7. Max resolution accommodates the fallback source deadline + 192h contract-enforced periods
+      const minFallbackAccommodated =
+        GOLD_BENCHMARK_PRESET.fallbackDeadlineSec +
+        BigInt(CHALLENGE_PERIOD) +
+        BigInt(ARBITRATION_PERIOD) +
+        48n * 3600n; // 192h total
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.maxResolutionTimeSec >= minFallbackAccommodated,
+        `Max resolution time must accommodate fallback source deadline + 192h challenge/arbitration periods`,
+      );
+    });
+
+    it('regression (Requirement 2 & 5): enforces semantic consistency and mutual exclusivity between question, YES, and NO criteria', () => {
+      // Question: "Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?"
+      // Exceed means strictly greater than (> 2,800.00).
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.question.includes('exceed $2,800.00'),
+        'Question must clearly ask if price exceeds $2,800.00',
+      );
+
+      // YES criteria must be strictly greater than, NOT greater than or equal to
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.yesCriteria.includes('strictly greater than $2,800.00'),
+        'YES criteria must require strictly greater than $2,800.00',
+      );
+      assert.ok(
+        !GOLD_BENCHMARK_PRESET.yesCriteria.includes('greater than or equal to'),
+        'YES criteria must NOT include "greater than or equal to"',
+      );
+
+      // NO criteria must be less than or equal to (<= 2,800.00)
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.noCriteria.includes('less than or equal to $2,800.00'),
+        'NO criteria must require less than or equal to $2,800.00',
+      );
+
+      // Logical test of mutual exclusivity and collective exhaustiveness:
+      const evaluateOutcomes = (price: number) => {
+        const isYes = price > 2800.0;
+        const isNo = price <= 2800.0;
+        return { isYes, isNo };
+      };
+
+      // At exactly $2,800.00 (the boundary):
+      const atBoundary = evaluateOutcomes(2800.0);
+      assert.equal(atBoundary.isYes, false, 'At $2,800.00, it did not exceed: YES must be false');
+      assert.equal(atBoundary.isNo, true, 'At $2,800.00, it did not exceed: NO must be true');
+
+      // Above boundary ($2,800.01):
+      const aboveBoundary = evaluateOutcomes(2800.01);
+      assert.equal(aboveBoundary.isYes, true);
+      assert.equal(aboveBoundary.isNo, false);
+
+      // Below boundary ($2,799.99):
+      const belowBoundary = evaluateOutcomes(2799.99);
+      assert.equal(belowBoundary.isYes, false);
+      assert.equal(belowBoundary.isNo, true);
+    });
+
+    it('regression (Requirement 1 & Timezone Handling): formats and parses explicit UTC datetime strings deterministically', () => {
+      // 1. Formatting UTC seconds to HTML datetime-local format
+      const formattedClose = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.closeTimeSec);
+      assert.equal(formattedClose, '2026-12-31T12:00');
+
+      const formattedRes = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.resolutionTimeSec);
+      assert.equal(formattedRes, '2026-12-31T18:00');
+
+      const formattedMax = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.maxResolutionTimeSec);
+      assert.equal(formattedMax, '2027-01-15T18:00');
+
+      // 2. Parsing naive HTML datetime-local string as explicit UTC seconds
+      const parsedClose = parseDatetimeInputToSeconds('2026-12-31T12:00');
+      assert.equal(parsedClose, GOLD_BENCHMARK_PRESET.closeTimeSec);
+
+      const parsedRes = parseDatetimeInputToSeconds('2026-12-31T18:00');
+      assert.equal(parsedRes, GOLD_BENCHMARK_PRESET.resolutionTimeSec);
+
+      const parsedMax = parseDatetimeInputToSeconds('2027-01-15T18:00');
+      assert.equal(parsedMax, GOLD_BENCHMARK_PRESET.maxResolutionTimeSec);
+
+      // 3. String with explicit Z or offset
+      assert.equal(parseDatetimeInputToSeconds('2026-12-31T12:00:00Z'), GOLD_BENCHMARK_PRESET.closeTimeSec);
+    });
+
+    it('regression (Requirement 3 & 5): proves preset does not auto-confirm immutability and enforces deliberate confirmation', () => {
+      // ORAKL Institutional Invariant: Loading a preset template must NEVER automatically check the immutability acknowledgment.
+      assert.equal(
+        GOLD_BENCHMARK_PRESET.autoConfirmImmutability,
+        false,
+        'Preset must specify autoConfirmImmutability: false so that creator confirmation is strictly manual and deliberate',
+      );
     });
   });
 });

@@ -108,10 +108,53 @@ export const GOLD_BENCHMARK_PRESET = {
   description: 'London Bullion Market Association (LBMA) Gold Price PM benchmark settlement for December 31, 2026.',
   primarySource: 'https://www.lbma.org.uk/prices-and-data/precious-metal-prices',
   fallbackSource: 'https://www.bloomberg.com/quote/GOLD:CUR',
-  yesCriteria: 'LBMA Gold Price PM (XAU/USD) is strictly greater than or equal to $2,800.00 USD on December 31, 2026.',
-  noCriteria: 'LBMA Gold Price PM (XAU/USD) is strictly less than $2,800.00 USD on December 31, 2026.',
+  yesCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).',
+  noCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).',
   invalidCriteria: 'LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or trading is permanently disrupted. All positions are refunded 100% (1:1 neutral refund) with zero protocol fee deducted.',
+  // Explicit UTC chronology & timezone handling
+  observationDate: '2026-12-31',
+  observationTimeUtc: '2026-12-31T15:00:00Z',
+  observationTimeSec: 1798729200n, // 2026-12-31 15:00:00 UTC (LBMA PM auction)
+  closeTimeUtc: '2026-12-31T12:00:00Z',
+  closeTimeSec: 1798718400n, // 2026-12-31 12:00:00 UTC (precedes observation)
+  resolutionTimeUtc: '2026-12-31T18:00:00Z',
+  resolutionTimeSec: 1798740000n, // 2026-12-31 18:00:00 UTC (after outcome is determinable)
+  fallbackDeadlineUtc: '2027-01-02T18:00:00Z',
+  fallbackDeadlineSec: 1798912800n, // 2027-01-02 18:00:00 UTC (48h after resolution start)
+  maxResolutionTimeUtc: '2027-01-15T18:00:00Z',
+  maxResolutionTimeSec: 1800036000n, // 2027-01-15 18:00:00 UTC (accommodates fallback deadline + 72h challenge + 72h arbitration + 48h buffer)
+  // Requirement 3: Do NOT automatically check the immutability confirmation checkbox.
+  // Require deliberate user confirmation.
+  autoConfirmImmutability: false,
 };
+
+/**
+ * Formats a Date or timestamp (seconds) into datetime-local value string in explicit UTC: YYYY-MM-DDTHH:mm
+ */
+export function formatUtcToDatetimeLocal(dateOrSec: Date | number | bigint): string {
+  const d = typeof dateOrSec === 'bigint' || typeof dateOrSec === 'number'
+    ? new Date(Number(dateOrSec) * 1000)
+    : dateOrSec;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+/**
+ * Parses an input string (from datetime-local or ISO string) into UTC timestamp seconds.
+ * Treats naive YYYY-MM-DDTHH:mm as explicit UTC.
+ */
+export function parseDatetimeInputToSeconds(val: string): bigint {
+  const trimmed = val.trim();
+  if (!trimmed) return 0n;
+  const iso = trimmed.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(trimmed)
+    ? trimmed
+    : `${trimmed}:00Z`;
+  const ms = Date.parse(iso);
+  if (isNaN(ms)) {
+    return BigInt(Math.floor(new Date(trimmed).getTime() / 1000));
+  }
+  return BigInt(Math.floor(ms / 1000));
+}
 
 /**
  * Calculates the protocol-enforced minimum maxResolutionTime floor:
