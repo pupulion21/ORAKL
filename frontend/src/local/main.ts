@@ -76,7 +76,6 @@ import {
   createApiClient,
   parsePoolAmount,
   type ApiClient,
-  type MarketListItem,
   type MarketDetail,
   type MarketListParams,
   type SyncStatus,
@@ -100,31 +99,18 @@ import {
 } from './navigation.ts';
 import {
   verifyMetadataIntegrity,
+  verifyMetadataArtifactReadback,
   saveLocalManifest,
   getLocalManifest,
   type MetadataTrustStatus,
+  type MarketViewItem,
+  apiItemToView,
 } from './metadata-trust.ts';
 
-// ---------------------------------------------------------------------- state
+export type { MetadataTrustStatus, MarketViewItem };
+export { apiItemToView };
 
-export interface MarketViewItem {
-  id: bigint;
-  title: string;
-  hasMetadata: boolean;
-  metadataStatus: MetadataTrustStatus;
-  metadataUnavailableReason?: string;
-  metadataHash?: string;
-  description: string | null;
-  category: string | null;
-  metadataURI: string;
-  statusText: string;
-  statusTone: string;
-  yesPool: bigint;
-  noPool: bigint;
-  closeTime: bigint;
-  fromApi: boolean;
-  isTampered?: boolean;
-}
+// ---------------------------------------------------------------------- state
 
 interface FilterState {
   q: string;
@@ -158,6 +144,8 @@ interface AppState {
   multisigNotice: string | null;
   mode: 'api' | 'rpc';
   createWizardStep: number;
+  createFormState: Record<string, string> | null;
+  createFormError: string | null;
 }
 
 const apiClient: ApiClient = createApiClient({
@@ -197,6 +185,8 @@ const state: AppState = {
   multisigNotice: null,
   mode: 'api',
   createWizardStep: 1,
+  createFormState: null,
+  createFormError: null,
 };
 
 
@@ -273,44 +263,6 @@ function chainNow(): number {
   return state.chainTime ? Number(state.chainTime) : nowSec();
 }
 
-export function apiItemToView(item: MarketListItem): MarketViewItem {
-  const tone =
-    item.status === 'OPEN'
-      ? 'open'
-      : item.status === 'CLOSED'
-        ? 'wait'
-        : item.status === 'FINALIZED'
-          ? 'done'
-          : 'expired';
-
-  const cached = getLocalManifest(item.metadataHash) || getLocalManifest(item.metadataURI);
-  const verification = verifyMetadataIntegrity({
-    onchainHash: item.metadataHash,
-    onchainURI: item.metadataURI,
-    apiItem: item,
-    cachedManifest: cached,
-  });
-
-  return {
-    id: BigInt(item.id),
-    title: verification.question,
-    hasMetadata: verification.hasMetadata,
-    metadataStatus: verification.status,
-    metadataUnavailableReason: verification.reason,
-    metadataHash: item.metadataHash,
-    description: verification.description,
-    category: verification.category,
-    metadataURI: item.metadataURI,
-    statusText: item.status,
-    statusTone: tone,
-    yesPool: parsePoolAmount(item.yesPool),
-    noPool: parsePoolAmount(item.noPool),
-    closeTime: BigInt(item.closeTime || '0'),
-    fromApi: true,
-    isTampered: verification.isTampered,
-  };
-}
-
 export function rpcRecordToView(m: MarketRecord): MarketViewItem {
   const now = chainNow();
   const effectiveState = (m.storedState === 0 && now >= Number(m.closeTime)) ? 1 : m.storedState;
@@ -363,7 +315,24 @@ async function loadMarkets(): Promise<void> {
     if (state.filters.status && state.filters.status !== 'all') params.status = state.filters.status;
 
     const res = await apiClient.getMarkets(params);
-    state.markets = res.data.items.map(apiItemToView);
+    const trustedHashes = new Map<string, string>();
+    if (publicClient && deployment.factory) {
+      try {
+        await Promise.all(
+          res.data.items.map(async (it) => {
+            try {
+              const m = await readMarket(publicClient, deployment.factory, BigInt(it.id));
+              trustedHashes.set(it.id.toString(), m.metadataHash);
+            } catch {
+              // RPC read error: item remains unverified without failing whole list
+            }
+          }),
+        );
+      } catch (e) {
+        console.warn('[ORAKL] Failed to read on-chain commitments for verification chain:', e);
+      }
+    }
+    state.markets = res.data.items.map((it) => apiItemToView(it, trustedHashes.get(it.id.toString())));
     state.totalMarkets = res.data.total;
     state.mode = 'api';
     if (res.sync) {
@@ -760,11 +729,9 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
 
   const canonicalString = canonicalizeMarketMetadata(manifest);
   const metadataHash = evidenceContentHash(canonicalString) as Hex;
-  let metadataURI = `ipfs://orakl-local-artifact/${metadataHash.slice(2)}`;
+  let metadataURI = '';
 
-  // Save to local cache immediately to ensure deterministic client-side recovery
-  saveLocalManifest(manifest, metadataHash);
-  saveLocalManifest(manifest, metadataURI);
+  // Local manifest caching is moved to AFTER successful publication & readback verification (Requirement 2)
 
   const auth = createPublicationAuth({
     action: 'metadata',
@@ -788,13 +755,10 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
       }
     } catch (sigErr) {
       state.busy = false;
+      state.createWizardStep = 4;
       const msg = errorMessage(sigErr);
+      state.createFormError = `Signature rejected: ${msg}. On-chain market creation cancelled to prevent unindexed market.`;
       flash('err', `Metadata publication aborted: Signature rejected (${msg}). Market creation cancelled.`);
-      if (statusText) statusText.textContent = 'Aborted: Publication authorization signature rejected.';
-      if (statusDetails) {
-        statusDetails.style.display = 'block';
-        statusDetails.innerHTML = `<span class="err">Signature rejected: ${escapeHtml(msg)}.<br/>Fail-Closed Protection: On-chain market creation cancelled to prevent unindexed market.</span>`;
-      }
       render();
       return;
     }
@@ -820,23 +784,39 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
 
     metadataURI = pubRes.data.uri;
 
-    // Cache verified published manifest locally
+    // -------------------------------------------------------------
+    // Gate 3: Readback Gate (Requirement 4)
+    // Retrieve the persisted artifact from the server, canonicalize its actual content,
+    // and verify its Keccak-256 commitment BEFORE submitting on-chain transaction.
+    // -------------------------------------------------------------
+    if (statusText) {
+      statusText.textContent = 'Verifying persisted metadata via server readback gate...';
+    }
+
+    const readbackRes = await apiClient.getMetadata(metadataHash);
+    if (!readbackRes?.data) {
+      throw new Error(`Server did not return persisted metadata artifact for commitment ${metadataHash}`);
+    }
+
+    const readbackResult = verifyMetadataArtifactReadback(readbackRes.data, metadataHash, manifest);
+    if (!readbackResult.ok) {
+      throw new Error(readbackResult.error || 'Server readback verification failed');
+    }
+
+    // Gate 4: Readback verified! Now and only now cache published manifest locally (Requirement 2)
     saveLocalManifest(manifest, metadataHash);
     saveLocalManifest(manifest, metadataURI);
 
     if (statusDetails) {
       statusDetails.style.display = 'block';
-      statusDetails.innerHTML = `Published & Verified · Commitment: <code class="mono">${escapeHtml(metadataHash)}</code><br/>URI: <code class="mono">${escapeHtml(metadataURI)}</code>`;
+      statusDetails.innerHTML = `Published & Verified (Readback Confirmed) · Commitment: <code class="mono">${escapeHtml(metadataHash)}</code><br/>URI: <code class="mono">${escapeHtml(metadataURI)}</code>`;
     }
   } catch (pubErr) {
     state.busy = false;
+    state.createWizardStep = 4;
     const msg = errorMessage(pubErr);
+    state.createFormError = `Metadata publication/readback failed: ${msg}. On-chain transaction cancelled to prevent orphaned market.`;
     flash('err', `Metadata publication failed: ${msg}. Market creation aborted to prevent unindexed on-chain commitment.`);
-    if (statusText) statusText.textContent = 'Aborted: Node metadata publication failed.';
-    if (statusDetails) {
-      statusDetails.style.display = 'block';
-      statusDetails.innerHTML = `<span class="err">Node publication failed: ${escapeHtml(msg)}.<br/>Fail-Closed Protection: On-chain transaction cancelled to prevent orphaned market.</span>`;
-    }
     render();
     return;
   }
@@ -850,6 +830,9 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
     encodeCreateMarket({metadataHash, metadataURI, closeTime, resolutionTime, maxResolutionTime}),
     deployment.parameters.creationBond,
     async (receipt) => {
+      state.createFormState = null;
+      state.createFormError = null;
+      state.createWizardStep = 1;
       const id = marketIdFromReceipt(receipt, deployment.factory);
       flash('ok', id !== null ? `Market #${id} created with verified metadata.` : 'Market created with verified metadata.');
       await refreshAfterWrite();
@@ -1385,7 +1368,20 @@ async function fetchMarketsForArbitration(): Promise<MarketViewItem[]> {
   if (!deployment) return [];
   try {
     const res = await apiClient.getMarkets({ pageSize: 50, sort: 'id', order: 'desc' });
-    return res.data.items.map(apiItemToView);
+    const trustedHashes = new Map<string, string>();
+    if (publicClient && deployment.factory) {
+      try {
+        await Promise.all(
+          res.data.items.map(async (it) => {
+            try {
+              const m = await readMarket(publicClient, deployment.factory, BigInt(it.id));
+              trustedHashes.set(it.id.toString(), m.metadataHash);
+            } catch {}
+          }),
+        );
+      } catch {}
+    }
+    return res.data.items.map((it) => apiItemToView(it, trustedHashes.get(it.id.toString())));
   } catch {
     try {
       const records = await readMarkets(publicClient, deployment.factory, 0, 50);
@@ -2504,6 +2500,19 @@ function renderCreateView(view: HTMLElement): void {
   const defaultResolution = defaultClose;
   const defaultMax = defaultResolution + params.challengePeriod + params.arbitrationPeriod + 48 * 3600 + 3600;
 
+  const fv = state.createFormState || {};
+  const questionVal = fv.question || '';
+  const categoryVal = fv.category || 'finance';
+  const descVal = fv.description || '';
+  const primaryVal = fv.primarySource || '';
+  const fallbackVal = fv.fallbackSource || '';
+  const yesVal = fv.yesCriteria || '';
+  const noVal = fv.noCriteria || '';
+  const invalidVal = fv.invalidCriteria || '';
+  const closeVal = fv.closeTime || toDateInput(defaultClose);
+  const resVal = fv.resolutionTime || toDateInput(defaultResolution);
+  const maxVal = fv.maxResolutionTime || toDateInput(defaultMax);
+
   view.innerHTML = `
     <div class="breadcrumbs">
       <a href="#/">Markets</a>
@@ -2559,7 +2568,7 @@ function renderCreateView(view: HTMLElement): void {
           <label class="field-label">
             <span>Market Question <span class="required">*</span></span>
             <span class="field-hint">Must end with a question mark (?) and contain at least 15 characters. Avoid ambiguous or subjective wording.</span>
-            <input name="question" id="input-question" type="text" required minlength="15" maxlength="256" placeholder="Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?" />
+            <input name="question" id="input-question" type="text" required minlength="15" maxlength="256" placeholder="Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?" value="${escapeHtml(questionVal)}" />
           </label>
 
           <div class="grid-2">
@@ -2567,14 +2576,14 @@ function renderCreateView(view: HTMLElement): void {
               <span>Category <span class="required">*</span></span>
               <span class="field-hint">Select the primary domain for discovery filtering.</span>
               <select name="category" id="select-category" required>
-                ${VALID_MARKET_CATEGORIES.map((c) => `<option value="${c.slug}">${c.label}</option>`).join('')}
+                ${VALID_MARKET_CATEGORIES.map((c) => `<option value="${c.slug}" ${c.slug === categoryVal ? 'selected' : ''}>${c.label}</option>`).join('')}
               </select>
             </label>
 
             <label class="field-label">
               <span>Description & Context (Optional)</span>
               <span class="field-hint">Provide operational context, price denomination, or market scope.</span>
-              <input name="description" id="input-description" type="text" maxlength="4000" placeholder="LBMA Gold Price PM benchmark settlement for December 31, 2026." />
+              <input name="description" id="input-description" type="text" maxlength="4000" placeholder="LBMA Gold Price PM benchmark settlement for December 31, 2026." value="${escapeHtml(descVal)}" />
             </label>
           </div>
 
@@ -2601,13 +2610,13 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>Primary Resolution Source URL <span class="required">*</span></span>
               <span class="field-hint">Publicly accessible primary reference (https://, ipfs://, or ar://).</span>
-              <input name="primarySource" id="input-primarySource" type="text" required placeholder="https://www.lbma.org.uk/prices-and-data/precious-metal-prices" />
+              <input name="primarySource" id="input-primarySource" type="text" required placeholder="https://www.lbma.org.uk/prices-and-data/precious-metal-prices" value="${escapeHtml(primaryVal)}" />
             </label>
 
             <label class="field-label">
               <span>Fallback Resolution Source URL (Optional)</span>
               <span class="field-hint">Backup source if the primary source is offline, corrupted, or delayed.</span>
-              <input name="fallbackSource" id="input-fallbackSource" type="text" placeholder="https://www.bloomberg.com/quote/GOLD:CUR" />
+              <input name="fallbackSource" id="input-fallbackSource" type="text" placeholder="https://www.bloomberg.com/quote/GOLD:CUR" value="${escapeHtml(fallbackVal)}" />
             </label>
           </div>
 
@@ -2615,20 +2624,20 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>YES Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle YES.</span>
-              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly greater than or equal to $2,800.00 USD on December 31, 2026."></textarea>
+              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly greater than or equal to $2,800.00 USD on December 31, 2026.">${escapeHtml(yesVal)}</textarea>
             </label>
 
             <label class="field-label">
               <span>NO Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle NO.</span>
-              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly less than $2,800.00 USD on December 31, 2026."></textarea>
+              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="LBMA Gold Price PM (XAU/USD) is strictly less than $2,800.00 USD on December 31, 2026.">${escapeHtml(noVal)}</textarea>
             </label>
           </div>
 
           <label class="field-label">
             <span>INVALID Criteria & Neutral Refund Terms <span class="required">*</span></span>
             <span class="field-hint">Protocol Invariant: INVALID returns 100% of all contributions 1:1 with 0% fee deducted.</span>
-            <textarea name="invalidCriteria" id="input-invalidCriteria" rows="3" required placeholder="LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or market trading is interrupted. Neutral refund: 100% of all contributions are refunded 1:1 with zero protocol fee deducted."></textarea>
+            <textarea name="invalidCriteria" id="input-invalidCriteria" rows="3" required placeholder="LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or market trading is interrupted. Neutral refund: 100% of all contributions are refunded 1:1 with zero protocol fee deducted.">${escapeHtml(invalidVal)}</textarea>
           </label>
 
           <div class="rule-callout">
@@ -2662,19 +2671,19 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>Market Close Time <span class="required">*</span></span>
               <span class="field-hint">Contributions halt at this block timestamp.</span>
-              <input name="closeTime" id="input-closeTime" type="datetime-local" required value="${toDateInput(defaultClose)}" />
+              <input name="closeTime" id="input-closeTime" type="datetime-local" required value="${closeVal}" />
             </label>
 
             <label class="field-label">
               <span>Resolution Start Time <span class="required">*</span></span>
               <span class="field-hint">Must be >= Market Close Time.</span>
-              <input name="resolutionTime" id="input-resolutionTime" type="datetime-local" required value="${toDateInput(defaultResolution)}" />
+              <input name="resolutionTime" id="input-resolutionTime" type="datetime-local" required value="${resVal}" />
             </label>
 
             <label class="field-label">
               <span>Max Resolution Deadline <span class="required">*</span></span>
               <span class="field-hint">Must be >= Resolution Time + 192 hours.</span>
-              <input name="maxResolutionTime" id="input-maxResolutionTime" type="datetime-local" required value="${toDateInput(defaultMax)}" />
+              <input name="maxResolutionTime" id="input-maxResolutionTime" type="datetime-local" required value="${maxVal}" />
             </label>
           </div>
 
@@ -2734,6 +2743,18 @@ function renderCreateView(view: HTMLElement): void {
           </div>
         </div>
         <div class="wizard-body">
+          ${state.createFormError ? `
+            <div class="banner err-banner" id="create-error-banner" style="margin-bottom:16px;padding:14px 18px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--text-primary);">
+              <div style="font-weight:700;color:var(--color-err,#ef4444);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+                ${icon('shield', 15)} <span>Market Creation / Publication Failed</span>
+              </div>
+              <p style="margin:4px 0 12px;font-size:13px;line-height:1.5;">${escapeHtml(state.createFormError)}</p>
+              <button class="btn primary small" type="button" data-action="retry-create">
+                ${icon('refresh', 14)} <span>Retry Submission</span>
+              </button>
+            </div>
+          ` : ''}
+
           <div class="preflight-summary-card" id="section-review">
             <div class="preflight-grid">
               <div class="preflight-item">
@@ -2876,6 +2897,7 @@ function updateCreateFormPreview(): void {
   const data = new FormData(form);
   const question = String(data.get('question') ?? '').trim();
   const category = String(data.get('category') ?? '').trim();
+  const description = String(data.get('description') ?? '').trim();
   const primarySource = String(data.get('primarySource') ?? '').trim();
   const fallbackSource = String(data.get('fallbackSource') ?? '').trim();
   const yesCriteria = String(data.get('yesCriteria') ?? '').trim();
@@ -2884,6 +2906,21 @@ function updateCreateFormPreview(): void {
   const closeInput = String(data.get('closeTime') ?? '');
   const resInput = String(data.get('resolutionTime') ?? '');
   const maxInput = String(data.get('maxResolutionTime') ?? '');
+
+  // Preserve form values in state (Requirement 3)
+  state.createFormState = {
+    question,
+    category,
+    description,
+    primarySource,
+    fallbackSource,
+    yesCriteria,
+    noCriteria,
+    invalidCriteria,
+    closeTime: closeInput,
+    resolutionTime: resInput,
+    maxResolutionTime: maxInput,
+  };
 
   const qEl = document.getElementById('review-question');
   if (qEl) qEl.textContent = question || '— (Please enter a question)';
@@ -3768,6 +3805,19 @@ document.addEventListener('click', (event) => {
       if (form) validateCreateFormAction(form);
       break;
     }
+    case 'retry-create': {
+      state.createFormError = null;
+      const form = document.getElementById('create-form') as HTMLFormElement | null;
+      if (form) void actCreateMarket(form);
+      break;
+    }
+  }
+});
+
+document.addEventListener('change', (event) => {
+  const target = event.target as HTMLElement;
+  if (target.closest('#create-form')) {
+    updateCreateFormPreview();
   }
 });
 

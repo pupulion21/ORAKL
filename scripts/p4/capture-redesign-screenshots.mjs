@@ -5,21 +5,21 @@
 
 import { resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { chromium } from '/home/pupulion/.npm/_npx/9833c18b2d85bc59/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const REPO_ROOT = resolve(import.meta.dirname, '../..');
 const OUT_DIR = resolve(REPO_ROOT, 'docs/design/screenshots');
 mkdirSync(OUT_DIR, { recursive: true });
 
-const CHROME_PATH = '/home/pupulion/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome';
 const BASE_URL = 'http://localhost:5176/local.html';
 
 async function run() {
-  console.log('[capture] Launching Chromium from:', CHROME_PATH);
-  const browser = await chromium.launch({
+  const launchOptions = {
     headless: true,
-    executablePath: CHROME_PATH,
-  });
+    ...(process.env.CHROMIUM_EXECUTABLE ? { executablePath: process.env.CHROMIUM_EXECUTABLE } : {}),
+  };
+  console.log('[capture] Launching Chromium (portable configuration)...');
+  const browser = await chromium.launch(launchOptions);
 
   // -------------------------------------------------------------------
   // Desktop Context (1440 x 900)

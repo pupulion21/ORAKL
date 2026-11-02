@@ -37,7 +37,7 @@ export function parseRoute(hashOverride?: string): Route {
 }
 
 /** Maps a numerical stored market state to visual tone. */
-export function stateTone(storedState: number): string {
+export function stateTone(storedState: number): 'open' | 'wait' | 'done' | 'expired' {
   switch (storedState) {
     case 0:
       return 'open';

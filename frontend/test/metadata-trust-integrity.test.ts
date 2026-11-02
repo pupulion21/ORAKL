@@ -5,6 +5,8 @@ import { keccak256, toHex } from 'viem';
 import {
   verifyMetadataCommitment,
   verifyMetadataIntegrity,
+  verifyMetadataArtifactReadback,
+  apiItemToView,
   saveLocalManifest,
   getLocalManifest,
   clearLocalManifestCache,
@@ -240,6 +242,194 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
 
       clearLocalManifestCache();
       assert.equal(getLocalManifest(validHash), null);
+    });
+  });
+
+  describe('5. Negative-Path: API Lies About verifiedMetadata & Independent Chain Verification (Req 1 & 6)', () => {
+    it('detects tampering when API claims verifiedMetadata=true but on-chain contract read hash differs', () => {
+      const contractOnchainHash = validHash;
+      const lyingApiHash = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+
+      const result = verifyMetadataIntegrity({
+        onchainHash: contractOnchainHash,
+        onchainURI: validURI,
+        apiItem: {
+          question: 'Lying question from compromised API',
+          description: null,
+          category: 'crypto',
+          metadataHash: lyingApiHash,
+          metadataURI: validURI,
+          verifiedMetadata: true, // Lying API claims it is verified!
+        },
+      });
+
+      assert.equal(result.status, 'unverified');
+      assert.equal(result.isTampered, true);
+      assert.equal(result.hasMetadata, false);
+      assert.ok(result.reason?.includes('API metadata commitment mismatch'));
+    });
+
+    it('refuses to claim verified when independent verification is unavailable even if API claims verifiedMetadata=true', () => {
+      // Independent on-chain read is null/unavailable!
+      const result = verifyMetadataIntegrity({
+        onchainHash: null,
+        onchainURI: validURI,
+        apiItem: {
+          question: 'Unverified Question Candidate',
+          description: null,
+          category: 'finance',
+          metadataHash: validHash,
+          metadataURI: validURI,
+          verifiedMetadata: true, // API claims true, but no contract proof exists
+        },
+      });
+
+      // Must NOT claim verified!
+      assert.equal(result.status, 'unverified');
+      assert.equal(result.hasMetadata, false);
+      assert.equal(result.isTampered, false);
+      assert.ok(result.reason?.includes('Independent verification unavailable'));
+    });
+
+    it('apiItemToView marks status unverified when trustedOnchainHash is null (no contract read)', () => {
+      const apiItem = {
+        id: '1',
+        chainId: 31337,
+        contractAddress: sampleManifest.factory,
+        creator: sampleManifest.creator,
+        question: sampleManifest.question,
+        description: sampleManifest.description,
+        category: 'finance',
+        metadataHash: validHash,
+        metadataURI: validURI,
+        verifiedMetadata: true,
+        status: 'OPEN' as const,
+        finalOutcome: 'UNRESOLVED' as const,
+        proposer: null,
+        challenger: null,
+        proposedOutcome: null,
+        proposalEvidence: null,
+        challengeEvidence: null,
+        decisionEvidence: null,
+        yesPool: '1000000000000000000',
+        noPool: '2000000000000000000',
+        totalChallengeStake: '0',
+        refundable: null,
+        challengeDeadline: null,
+        closeTime: '1800000000',
+        resolutionTime: '1800000000',
+        maxResolutionTime: '1801000000',
+        createdAtBlock: '1',
+      };
+
+      const viewWithoutOnchainProof = apiItemToView(apiItem, null);
+      assert.equal(viewWithoutOnchainProof.metadataStatus, 'unverified');
+      assert.equal(viewWithoutOnchainProof.hasMetadata, false);
+      assert.ok(viewWithoutOnchainProof.metadataUnavailableReason?.includes('Independent verification unavailable'));
+
+      const viewWithOnchainProof = apiItemToView(apiItem, validHash);
+      assert.equal(viewWithOnchainProof.metadataStatus, 'verified');
+      assert.equal(viewWithOnchainProof.hasMetadata, true);
+
+      const viewWithMismatchedProof = apiItemToView(apiItem, '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+      assert.equal(viewWithMismatchedProof.metadataStatus, 'unverified');
+      assert.equal(viewWithMismatchedProof.isTampered, true);
+    });
+  });
+
+  describe('6. Negative-Path: Mismatched Server Commitment & Altered Content (Req 4 & 6)', () => {
+    it('detects mismatched server commitment during readback verification', () => {
+      const serverArtifact = {
+        commitment: '0x8888888888888888888888888888888888888888888888888888888888888888',
+        uri: validURI,
+        formData: sampleManifest,
+      };
+
+      // We expect validHash, but server returned mismatched commitment
+      const result = verifyMetadataArtifactReadback(serverArtifact, validHash, sampleManifest);
+      assert.equal(result.ok, false);
+      assert.ok(result.error?.toLowerCase().includes('mismatch'));
+    });
+
+    it('detects altered published question in readback artifact', () => {
+      const alteredManifest: MarketMetadataManifest = {
+        ...sampleManifest,
+        question: 'Secret altered question injected by server!',
+      };
+      const serverArtifact = {
+        commitment: validHash,
+        uri: validURI,
+        formData: alteredManifest,
+      };
+
+      const result = verifyMetadataArtifactReadback(serverArtifact, validHash, sampleManifest);
+      assert.equal(result.ok, false);
+      assert.ok(result.error?.includes('Readback hash mismatch') || result.error?.includes('does not match submitted manifest'));
+    });
+
+    it('detects altered resolution criteria in readback artifact', () => {
+      const alteredManifest: MarketMetadataManifest = {
+        ...sampleManifest,
+        resolutionCriteria: 'Altered criteria!',
+      };
+      const serverArtifact = {
+        commitment: validHash,
+        uri: validURI,
+        formData: alteredManifest,
+      };
+
+      const result = verifyMetadataArtifactReadback(serverArtifact, validHash, sampleManifest);
+      assert.equal(result.ok, false);
+    });
+  });
+
+  describe('7. Negative-Path: Wrong Factory & Malformed Readback (Req 6)', () => {
+    it('rejects readback artifact targeting a foreign factory address', () => {
+      const foreignFactoryManifest: MarketMetadataManifest = {
+        ...sampleManifest,
+        factory: '0x1111111111111111111111111111111111111111',
+      };
+      const foreignCanonical = canonicalizeMarketMetadata(foreignFactoryManifest);
+      const foreignHash = keccak256(toHex(foreignCanonical)).toLowerCase();
+
+      const serverArtifact = {
+        commitment: foreignHash,
+        uri: validURI,
+        formData: foreignFactoryManifest,
+      };
+
+      // Even if hash matches foreign manifest, readback rejects because it diverges from expectedManifest.factory!
+      const result = verifyMetadataArtifactReadback(serverArtifact, foreignHash, sampleManifest);
+      assert.equal(result.ok, false);
+      assert.ok(result.error?.includes('factory does not match submitted manifest'));
+    });
+
+    it('rejects null or non-object readback artifacts', () => {
+      const resNull = verifyMetadataArtifactReadback(null, validHash);
+      assert.equal(resNull.ok, false);
+
+      const resString = verifyMetadataArtifactReadback('invalid string response', validHash);
+      assert.equal(resString.ok, false);
+
+      const resEmptyObj = verifyMetadataArtifactReadback({}, validHash);
+      assert.equal(resEmptyObj.ok, false);
+    });
+  });
+
+  describe('8. Negative-Path: Metadata Retrieval Failure & Unavailability (Req 6)', () => {
+    it('handles retrieval failure cleanly, displaying unavailable status without crashing', () => {
+      const result = verifyMetadataIntegrity({
+        onchainHash: validHash,
+        onchainURI: validURI,
+        apiItem: null,
+        cachedManifest: null,
+      });
+
+      assert.equal(result.status, 'unavailable');
+      assert.equal(result.hasMetadata, false);
+      assert.equal(result.isTampered, false);
+      assert.equal(result.question, 'Market metadata unavailable');
+      assert.ok(result.reason?.includes('unavailable via the indexer'));
     });
   });
 });

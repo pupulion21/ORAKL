@@ -257,6 +257,22 @@ export interface PublishMetadataResult {
   deduped: boolean;
 }
 
+export interface MarketMetadataArtifactDetail {
+  id?: string;
+  chainId: number;
+  commitment: string;
+  uriKeccak?: string;
+  uri: string;
+  question: string;
+  description: string | null;
+  categorySlug: string | null;
+  resolutionCriteria: string | null;
+  evidenceSources: string[] | null;
+  formData: Record<string, unknown>;
+  publishedBy: string | null;
+  createdAt?: string;
+}
+
 export interface PortfolioPosition {
   id: string;
   marketId: string;
@@ -349,6 +365,7 @@ export interface ApiClient {
   getEvidence(commitment: string, signal?: AbortSignal): Promise<ApiResponse<EvidenceArtifactDetail>>;
   publishEvidence(payload: PublishEvidencePayload, signal?: AbortSignal): Promise<ApiResponse<PublishEvidenceResult>>;
   publishMetadata(payload: PublishMetadataPayload, signal?: AbortSignal): Promise<ApiResponse<PublishMetadataResult>>;
+  getMetadata(commitment: string, signal?: AbortSignal): Promise<ApiResponse<MarketMetadataArtifactDetail>>;
   getIndexerStatus(signal?: AbortSignal): Promise<ApiResponse<IndexerStatus>>;
   getExposure(signal?: AbortSignal): Promise<ApiResponse<ExposureSummary>>;
   getPortfolio(address: string, signal?: AbortSignal): Promise<ApiResponse<PortfolioDetail>>;
@@ -476,6 +493,9 @@ export function createApiClient(config: ApiClientConfig = {}): ApiClient {
         body: JSON.stringify(payload),
         signal,
       });
+    },
+    async getMetadata(commitment: string, signal?: AbortSignal): Promise<ApiResponse<MarketMetadataArtifactDetail>> {
+      return request<MarketMetadataArtifactDetail>(`/api/v1/metadata/${encodeURIComponent(commitment)}`, {signal});
     },
     async getIndexerStatus(signal?: AbortSignal): Promise<ApiResponse<IndexerStatus>> {
       return request<IndexerStatus>('/api/v1/indexer/status', {signal});

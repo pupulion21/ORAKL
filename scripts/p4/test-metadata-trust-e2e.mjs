@@ -11,13 +11,12 @@
 
 import { resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { chromium } from '/home/pupulion/.npm/_npx/9833c18b2d85bc59/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const REPO_ROOT = resolve(import.meta.dirname, '../..');
 const OUT_DIR = resolve(REPO_ROOT, 'docs/design/screenshots');
 mkdirSync(OUT_DIR, { recursive: true });
 
-const CHROME_PATH = '/home/pupulion/.cache/ms-playwright/chromium-1248/chrome-linux64/chrome';
 const BASE_URL = 'http://localhost:5176/local.html';
 const DEV_ACCOUNT = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
 
@@ -151,10 +150,11 @@ async function main() {
   console.log('[E2E] ORAKL Metadata Trust & Integrity Test Suite');
   console.log('========================================================');
 
-  const browser = await chromium.launch({
+  const launchOptions = {
     headless: true,
-    executablePath: CHROME_PATH,
-  });
+    ...(process.env.CHROMIUM_EXECUTABLE ? { executablePath: process.env.CHROMIUM_EXECUTABLE } : {}),
+  };
+  const browser = await chromium.launch(launchOptions);
 
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -223,7 +223,22 @@ async function main() {
   if (!flashText.includes('Signature rejected')) {
     throw new Error(`Expected signature rejection error in flash notice, got: "${flashText}"`);
   }
-  console.log('[E2E] Negative Path A PASSED: Fail-closed on signature rejection verified (0 on-chain tx sent).');
+
+  // Verify Requirement 3: Form values preserved, Step 4 retained, retry action rendered
+  const preservedQuestionA = await page.evaluate(() => document.getElementById('input-question')?.value);
+  if (!preservedQuestionA || !preservedQuestionA.includes('London Gold Fixing PM')) {
+    throw new Error(`Requirement 3 Violation: Question was lost on signature rejection! Got: "${preservedQuestionA}"`);
+  }
+  const isStep4A = await page.evaluate(() => document.getElementById('step-4-card')?.style.display !== 'none');
+  if (!isStep4A) {
+    throw new Error('Requirement 3 Violation: Step 4 wizard card was not retained on signature rejection!');
+  }
+  const retryBtnA = await page.$('[data-action="retry-create"]');
+  if (!retryBtnA) {
+    throw new Error('Requirement 3 Violation: Working retry action button was not rendered on signature rejection!');
+  }
+
+  console.log('[E2E] Negative Path A PASSED: Fail-closed on signature rejection verified (0 on-chain tx sent, form values preserved, retry ready).');
 
   // -------------------------------------------------------------------
   // Negative Path B: API Node Publication Failure Fail-Closed
@@ -268,7 +283,22 @@ async function main() {
   if (!flashApiErr.includes('Metadata publication failed')) {
     throw new Error(`Expected API publication failure in flash notice, got: "${flashApiErr}"`);
   }
-  console.log('[E2E] Negative Path B PASSED: Fail-closed on API failure verified (0 on-chain tx sent).');
+
+  // Verify Requirement 3: Form values preserved, Step 4 retained, retry action rendered
+  const preservedQuestionB = await page.evaluate(() => document.getElementById('input-question')?.value);
+  if (!preservedQuestionB || !preservedQuestionB.includes('London Gold Fixing PM')) {
+    throw new Error(`Requirement 3 Violation: Question was lost on API failure! Got: "${preservedQuestionB}"`);
+  }
+  const isStep4B = await page.evaluate(() => document.getElementById('step-4-card')?.style.display !== 'none');
+  if (!isStep4B) {
+    throw new Error('Requirement 3 Violation: Step 4 wizard card was not retained on API failure!');
+  }
+  const retryBtnB = await page.$('[data-action="retry-create"]');
+  if (!retryBtnB) {
+    throw new Error('Requirement 3 Violation: Working retry action button was not rendered on API failure!');
+  }
+
+  console.log('[E2E] Negative Path B PASSED: Fail-closed on API failure verified (0 on-chain tx sent, form values preserved, retry ready).');
 
   // Unroute mock
   await page.unroute('**/api/v1/markets/metadata');
