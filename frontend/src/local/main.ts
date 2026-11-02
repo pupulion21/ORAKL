@@ -11,7 +11,7 @@
  */
 
 import '../styles.css';
-import {encodeFunctionData, keccak256, toHex} from 'viem';
+import {encodeFunctionData} from 'viem';
 import {createWalletSession, discoverWallets, type WalletInfo, type WalletSession, type WalletSnapshot} from '../wallet.ts';
 import {createTransactionTracker, type TxRecord} from '../transactions.ts';
 import {
@@ -98,6 +98,12 @@ import {
   type MarketMetadataManifest,
   type CreateMarketFormValues,
 } from './navigation.ts';
+import {
+  verifyMetadataIntegrity,
+  saveLocalManifest,
+  getLocalManifest,
+  type MetadataTrustStatus,
+} from './metadata-trust.ts';
 
 // ---------------------------------------------------------------------- state
 
@@ -105,7 +111,7 @@ export interface MarketViewItem {
   id: bigint;
   title: string;
   hasMetadata: boolean;
-  metadataStatus: 'verified' | 'cached' | 'unavailable';
+  metadataStatus: MetadataTrustStatus;
   metadataUnavailableReason?: string;
   metadataHash?: string;
   description: string | null;
@@ -117,6 +123,7 @@ export interface MarketViewItem {
   noPool: bigint;
   closeTime: bigint;
   fromApi: boolean;
+  isTampered?: boolean;
 }
 
 interface FilterState {
@@ -192,40 +199,6 @@ const state: AppState = {
   createWizardStep: 1,
 };
 
-// ------------------------------------------------------------- manifest cache
-
-const MANIFEST_CACHE_KEY = 'orakl_market_manifests_v1';
-
-export function saveLocalManifest(manifest: MarketMetadataManifest, hashOrUri?: string): void {
-  try {
-    const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
-    const store: Record<string, MarketMetadataManifest> = raw ? JSON.parse(raw) : {};
-    if (hashOrUri) {
-      store[hashOrUri.toLowerCase()] = manifest;
-    }
-    try {
-      const canonical = canonicalizeMarketMetadata(manifest);
-      const computedHash = keccak256(toHex(canonical));
-      store[computedHash.toLowerCase()] = manifest;
-    } catch {}
-    localStorage.setItem(MANIFEST_CACHE_KEY, JSON.stringify(store));
-  } catch (e) {
-    console.warn('[ORAKL] Failed to cache local manifest in localStorage:', e);
-  }
-}
-
-export function getLocalManifest(hashOrUri?: string | null): MarketMetadataManifest | null {
-  if (!hashOrUri) return null;
-  try {
-    const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
-    if (!raw) return null;
-    const store: Record<string, MarketMetadataManifest> = JSON.parse(raw);
-    const key = hashOrUri.toLowerCase();
-    return store[key] || null;
-  } catch {
-    return null;
-  }
-}
 
 const appRoot = document.getElementById('app');
 if (!appRoot) throw new Error('#app root is missing');
@@ -310,40 +283,23 @@ export function apiItemToView(item: MarketListItem): MarketViewItem {
           ? 'done'
           : 'expired';
 
-  const hasApiQuestion = Boolean(item.question && item.question.trim().length > 0);
-  let title = hasApiQuestion ? item.question.trim() : '';
-  let description = item.description || null;
-  let category = item.category || null;
-  let hasMetadata = hasApiQuestion;
-  let metadataStatus: 'verified' | 'cached' | 'unavailable' = hasApiQuestion ? 'verified' : 'unavailable';
-  let metadataUnavailableReason: string | undefined = undefined;
-
-  if (!hasApiQuestion) {
-    const cached = getLocalManifest(item.metadataURI);
-    if (cached) {
-      title = cached.question;
-      description = cached.description || null;
-      category = cached.category || null;
-      hasMetadata = true;
-      metadataStatus = 'cached';
-    } else {
-      title = 'Market metadata unavailable';
-      hasMetadata = false;
-      metadataStatus = 'unavailable';
-      metadataUnavailableReason =
-        'Off-chain question manifest is not available via indexer or local storage for this market. On-chain state and ID are preserved.';
-    }
-  }
+  const cached = getLocalManifest(item.metadataHash) || getLocalManifest(item.metadataURI);
+  const verification = verifyMetadataIntegrity({
+    onchainHash: item.metadataHash,
+    onchainURI: item.metadataURI,
+    apiItem: item,
+    cachedManifest: cached,
+  });
 
   return {
     id: BigInt(item.id),
-    title,
-    hasMetadata,
-    metadataStatus,
-    metadataUnavailableReason,
-    metadataHash: undefined,
-    description,
-    category,
+    title: verification.question,
+    hasMetadata: verification.hasMetadata,
+    metadataStatus: verification.status,
+    metadataUnavailableReason: verification.reason,
+    metadataHash: item.metadataHash,
+    description: verification.description,
+    category: verification.category,
     metadataURI: item.metadataURI,
     statusText: item.status,
     statusTone: tone,
@@ -351,6 +307,7 @@ export function apiItemToView(item: MarketListItem): MarketViewItem {
     noPool: parsePoolAmount(item.noPool),
     closeTime: BigInt(item.closeTime || '0'),
     fromApi: true,
+    isTampered: verification.isTampered,
   };
 }
 
@@ -361,40 +318,21 @@ export function rpcRecordToView(m: MarketRecord): MarketViewItem {
 
   // Check local manifest cache by metadataHash or metadataURI
   const cached = getLocalManifest(m.metadataHash) || getLocalManifest(m.metadataURI);
-  let title = 'Market metadata unavailable';
-  let description: string | null = null;
-  let category: string | null = null;
-  let hasMetadata = false;
-  let metadataStatus: 'verified' | 'cached' | 'unavailable' = 'unavailable';
-  let metadataUnavailableReason: string | undefined =
-    'Direct RPC mode cannot recover off-chain IPFS metadata without an active indexer or local manifest cache.';
-
-  if (cached) {
-    try {
-      const canonical = canonicalizeMarketMetadata(cached);
-      const computedHash = keccak256(toHex(canonical));
-      if (computedHash.toLowerCase() === m.metadataHash.toLowerCase()) {
-        title = cached.question;
-        description = cached.description || null;
-        category = cached.category || null;
-        hasMetadata = true;
-        metadataStatus = 'cached';
-        metadataUnavailableReason = undefined;
-      }
-    } catch {
-      // verification failed
-    }
-  }
+  const verification = verifyMetadataIntegrity({
+    onchainHash: m.metadataHash,
+    onchainURI: m.metadataURI,
+    cachedManifest: cached,
+  });
 
   return {
     id: m.id,
-    title,
-    hasMetadata,
-    metadataStatus,
-    metadataUnavailableReason,
+    title: verification.question,
+    hasMetadata: verification.hasMetadata,
+    metadataStatus: verification.status,
+    metadataUnavailableReason: verification.reason,
     metadataHash: m.metadataHash,
-    description,
-    category,
+    description: verification.description,
+    category: verification.category,
     metadataURI: m.metadataURI,
     statusText: label,
     statusTone: stateTone(effectiveState),
@@ -402,6 +340,7 @@ export function rpcRecordToView(m: MarketRecord): MarketViewItem {
     noPool: m.noPool,
     closeTime: m.closeTime,
     fromApi: false,
+    isTampered: verification.isTampered,
   };
 }
 
@@ -827,47 +766,79 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
   saveLocalManifest(manifest, metadataHash);
   saveLocalManifest(manifest, metadataURI);
 
+  const auth = createPublicationAuth({
+    action: 'metadata',
+    chainId: LOCAL_CHAIN_ID,
+    factory: deployment.factory,
+    publisher: account,
+    commitment: metadataHash,
+  });
+
+  let signature: string | undefined;
+  if (state.session) {
+    if (statusText) {
+      statusText.textContent = 'Requesting authorization signature for off-chain metadata publication...';
+    }
+    const msg = publicationAuthMessage(auth);
+    const msgHex = `0x${Array.from(new TextEncoder().encode(msg)).map((b) => b.toString(16).padStart(2, '0')).join('')}`;
+    try {
+      signature = await state.session.request<string>('personal_sign', [msgHex, account]);
+      if (!signature || !signature.startsWith('0x')) {
+        throw new Error('Invalid signature returned by wallet');
+      }
+    } catch (sigErr) {
+      state.busy = false;
+      const msg = errorMessage(sigErr);
+      flash('err', `Metadata publication aborted: Signature rejected (${msg}). Market creation cancelled.`);
+      if (statusText) statusText.textContent = 'Aborted: Publication authorization signature rejected.';
+      if (statusDetails) {
+        statusDetails.style.display = 'block';
+        statusDetails.innerHTML = `<span class="err">Signature rejected: ${escapeHtml(msg)}.<br/>Fail-Closed Protection: On-chain market creation cancelled to prevent unindexed market.</span>`;
+      }
+      render();
+      return;
+    }
+  }
+
   if (statusText) {
     statusText.textContent = 'Publishing metadata artifact to local node discovery channel...';
   }
 
   try {
-    const auth = createPublicationAuth({
-      action: 'metadata',
-      chainId: LOCAL_CHAIN_ID,
-      factory: deployment.factory,
-      publisher: account,
-      commitment: metadataHash,
-    });
-    let signature: string | undefined;
-    if (state.session) {
-      const msg = publicationAuthMessage(auth);
-      const msgHex = `0x${Array.from(new TextEncoder().encode(msg)).map((b) => b.toString(16).padStart(2, '0')).join('')}`;
-      try {
-        signature = await state.session.request<string>('personal_sign', [msgHex, account]);
-      } catch {
-        // Fallback for local testing
-      }
-    }
     const pubRes = await apiClient.publishMetadata({
       metadata: manifest,
       auth,
       signature,
     });
-    if (pubRes.data.uri) {
-      metadataURI = pubRes.data.uri;
-      saveLocalManifest(manifest, metadataURI);
+
+    if (!pubRes?.data?.uri) {
+      throw new Error('API node returned invalid response: missing published URI');
     }
+    if (pubRes.data.commitment.toLowerCase() !== metadataHash.toLowerCase()) {
+      throw new Error(`Commitment mismatch: API returned ${pubRes.data.commitment}, expected ${metadataHash}`);
+    }
+
+    metadataURI = pubRes.data.uri;
+
+    // Cache verified published manifest locally
+    saveLocalManifest(manifest, metadataHash);
+    saveLocalManifest(manifest, metadataURI);
+
     if (statusDetails) {
       statusDetails.style.display = 'block';
-      statusDetails.innerHTML = `Published to Node · Commitment: <code class="mono">${escapeHtml(metadataHash)}</code><br/>URI: <code class="mono">${escapeHtml(metadataURI)}</code>`;
+      statusDetails.innerHTML = `Published & Verified · Commitment: <code class="mono">${escapeHtml(metadataHash)}</code><br/>URI: <code class="mono">${escapeHtml(metadataURI)}</code>`;
     }
-  } catch (err) {
-    console.warn('Local API node metadata publication offline, using deterministic artifact URI:', err);
+  } catch (pubErr) {
+    state.busy = false;
+    const msg = errorMessage(pubErr);
+    flash('err', `Metadata publication failed: ${msg}. Market creation aborted to prevent unindexed on-chain commitment.`);
+    if (statusText) statusText.textContent = 'Aborted: Node metadata publication failed.';
     if (statusDetails) {
       statusDetails.style.display = 'block';
-      statusDetails.innerHTML = `Local API offline (using verified deterministic hash) · Commitment: <code class="mono">${escapeHtml(metadataHash)}</code><br/>URI: <code class="mono">${escapeHtml(metadataURI)}</code>`;
+      statusDetails.innerHTML = `<span class="err">Node publication failed: ${escapeHtml(msg)}.<br/>Fail-Closed Protection: On-chain transaction cancelled to prevent orphaned market.</span>`;
     }
+    render();
+    return;
   }
 
   if (statusText) {
@@ -880,7 +851,7 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
     deployment.parameters.creationBond,
     async (receipt) => {
       const id = marketIdFromReceipt(receipt, deployment.factory);
-      flash('ok', id !== null ? `Market #${id} created.` : 'Market created.');
+      flash('ok', id !== null ? `Market #${id} created with verified metadata.` : 'Market created with verified metadata.');
       await refreshAfterWrite();
       if (id !== null) location.hash = `#/market/${id}`;
     },
@@ -1078,15 +1049,19 @@ function marketCardHtml(market: MarketViewItem): string {
 
   const metaBadge = market.hasMetadata
     ? (market.metadataStatus === 'verified'
-        ? `<span class="pill ok" style="font-size:10px;">Verified Question</span>`
+        ? `<span class="pill ok" style="font-size:10px;" title="Cryptographically verified against on-chain hash commitment">Verified Question</span>`
         : `<span class="pill" style="font-size:10px;">Cached Question</span>`)
-    : `<span class="pill warn" style="font-size:10px;">Metadata Unavailable</span>`;
+    : (market.metadataStatus === 'unverified'
+        ? `<span class="pill err" style="font-size:10px;" title="Commitment mismatch! On-chain hash does not match off-chain content">Commitment Mismatch</span>`
+        : `<span class="pill warn" style="font-size:10px;" title="Off-chain question manifest is unavailable">Metadata Unavailable</span>`);
 
   const desc = market.description
     ? `<p class="market-card-desc">${escapeHtml(market.description)}</p>`
-    : (market.hasMetadata
-        ? ''
-        : `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Off-chain question manifest is unavailable. ID and on-chain state are preserved.</p>`);
+    : (market.metadataStatus === 'unverified'
+        ? `<p class="market-card-desc err" style="font-size:12px;margin-bottom:8px;color:#ef4444;">Warning: Off-chain metadata does not match on-chain commitment hash.</p>`
+        : (market.hasMetadata
+            ? ''
+            : `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Off-chain question manifest is unavailable. ID and on-chain state are preserved.</p>`));
 
   return `
     <div class="market-card ${!market.hasMetadata ? 'market-card-unindexed' : ''}">
@@ -1101,7 +1076,9 @@ function marketCardHtml(market: MarketViewItem): string {
 
       <h3 class="market-card-title">
         <a href="#/market/${market.id}" class="market-title-link">
-          ${market.hasMetadata ? escapeHtml(market.title) : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>'}
+          ${market.metadataStatus === 'unverified'
+            ? '<span style="color:#ef4444;">⚠️ Market metadata commitment mismatch</span>'
+            : (market.hasMetadata ? escapeHtml(market.title) : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>')}
         </a>
       </h3>
 
@@ -1475,36 +1452,31 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const isDisputed = market.storedState === 3 || !isZeroHash(market.challenger) || !isZeroHash(market.decisionEvidence);
 
   const cached = getLocalManifest(market.metadataHash) || getLocalManifest(market.metadataURI);
-  let title = 'Market metadata unavailable';
-  let descriptionHtml = '';
-  let categoryPill = '';
-  let verifiedBadge = '';
-  let hasMetadata = false;
+  const verification = verifyMetadataIntegrity({
+    onchainHash: market.metadataHash,
+    onchainURI: market.metadataURI,
+    apiItem: apiDetail,
+    cachedManifest: cached,
+  });
 
-  if (apiDetail?.question && apiDetail.question.trim().length > 0) {
-    hasMetadata = true;
-    title = apiDetail.question.trim();
-    if (apiDetail.description) {
-      descriptionHtml = `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(apiDetail.description)}</p>`;
-    }
-    if (apiDetail.category) {
-      categoryPill = `<span class="pill" style="margin-left:8px">${escapeHtml(apiDetail.category)}</span>`;
-    }
-    verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified">Verified Question</span>`;
-  } else if (cached) {
-    hasMetadata = true;
-    title = cached.question;
-    if (cached.description) {
-      descriptionHtml = `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(cached.description)}</p>`;
-    }
-    if (cached.category) {
-      categoryPill = `<span class="pill" style="margin-left:8px">${escapeHtml(cached.category)}</span>`;
-    }
-    verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Commitment hash verified against local cache">Cached Question (Verified)</span>`;
+  const hasMetadata = verification.hasMetadata;
+  const title = verification.question;
+  let descriptionHtml = '';
+  if (verification.description) {
+    descriptionHtml = `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(verification.description)}</p>`;
+  }
+  let categoryPill = '';
+  if (verification.category) {
+    categoryPill = `<span class="pill" style="margin-left:8px">${escapeHtml(verification.category)}</span>`;
+  }
+
+  let verifiedBadge = '';
+  if (verification.status === 'verified') {
+    verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified against on-chain hash commitment">Verified Question</span>`;
+  } else if (verification.status === 'unverified') {
+    verifiedBadge = `<span class="pill err" style="margin-left:8px" title="Commitment mismatch! On-chain hash does not match content">Commitment Mismatch</span>`;
   } else {
-    hasMetadata = false;
-    title = 'Market metadata unavailable';
-    verifiedBadge = `<span class="pill warn" style="margin-left:8px">Metadata Unavailable</span>`;
+    verifiedBadge = `<span class="pill warn" style="margin-left:8px" title="Off-chain question manifest is unavailable">Metadata Unavailable</span>`;
   }
 
   const formatEvidenceField = (hash: string | null | undefined): string => {
@@ -1876,11 +1848,16 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       </div>
       <h1 class="market-title-h1">${escapeHtml(title)}</h1>
       ${descriptionHtml}
-      ${!hasMetadata ? `
+      ${verification.status === 'unverified' ? `
+        <div class="banner err-banner" role="alert" style="margin:12px 0 16px;background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:8px;padding:14px;">
+          <strong style="color:#ef4444;">⚠️ Metadata Commitment Mismatch Detected:</strong>
+          <p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary);">${escapeHtml(verification.reason || 'The off-chain question manifest does not match the on-chain hash commitment.')} The question and rules cannot be authenticated. On-chain market state (ID #${market.id}) and funds remain securely held by the contract.</p>
+        </div>
+      ` : (!hasMetadata ? `
         <div class="banner warn-banner" style="margin:12px 0 16px;">
           <strong>Market Metadata Unavailable:</strong> Off-chain question manifest is not available via the indexer or local storage for this market. On-chain state (ID #${market.id}, ${stateLabel}) is fully preserved. Direct RPC mode cannot recover off-chain IPFS metadata without an active indexer.
         </div>
-      ` : ''}
+      ` : '')}
       <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:6px;">
         <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
         <span>Closes: <strong class="mono">${formatDateTime(market.closeTime)}</strong></span>
@@ -2270,7 +2247,14 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
   const now = chainNow();
   const effectiveState = (market.storedState === 0 && now >= Number(market.closeTime)) ? 1 : market.storedState;
   const stateLabel = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
-  const title = apiDetail?.question || market.metadataURI;
+  const cached = getLocalManifest(market.metadataHash) || getLocalManifest(market.metadataURI);
+  const verification = verifyMetadataIntegrity({
+    onchainHash: market.metadataHash,
+    onchainURI: market.metadataURI,
+    apiItem: apiDetail,
+    cachedManifest: cached,
+  });
+  const title = verification.question;
   const account = connectedAccount();
 
   const arbitratorMock = deployment.manifest.roleMocks.arbitrator;
