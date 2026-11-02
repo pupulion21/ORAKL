@@ -2729,7 +2729,7 @@ function renderCreateView(view: HTMLElement): void {
           <label class="field-label">
             <span>Market Question <span class="required">*</span></span>
             <span class="field-hint">Must end with a question mark (?) and contain at least 15 characters. Avoid ambiguous or subjective wording.</span>
-            <input name="question" id="input-question" type="text" required minlength="15" maxlength="256" placeholder="Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?" value="${escapeHtml(questionVal)}" />
+            <input name="question" id="input-question" type="text" required minlength="15" maxlength="256" placeholder="Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-30?" value="${escapeHtml(questionVal)}" />
           </label>
 
           <div class="grid-2">
@@ -2744,7 +2744,7 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>Description & Context (Optional)</span>
               <span class="field-hint">Provide operational context, price denomination, or market scope.</span>
-              <input name="description" id="input-description" type="text" maxlength="4000" placeholder="LBMA Gold Price PM benchmark settlement for December 31, 2026." value="${escapeHtml(descVal)}" />
+              <input name="description" id="input-description" type="text" maxlength="4000" placeholder="London Bullion Market Association (LBMA) Gold Price PM benchmark settlement for December 30, 2026." value="${escapeHtml(descVal)}" />
             </label>
           </div>
 
@@ -2777,7 +2777,7 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>Fallback Resolution Source URL (Optional)</span>
               <span class="field-hint">Backup source if the primary source is offline, corrupted, or delayed.</span>
-              <input name="fallbackSource" id="input-fallbackSource" type="text" placeholder="https://www.bloomberg.com/quote/GOLD:CUR" value="${escapeHtml(fallbackVal)}" />
+              <input name="fallbackSource" id="input-fallbackSource" type="text" placeholder="https://www.bloomberg.com/quote/GOAULNPM:IND" value="${escapeHtml(fallbackVal)}" />
             </label>
           </div>
 
@@ -2785,20 +2785,20 @@ function renderCreateView(view: HTMLElement): void {
             <label class="field-label">
               <span>YES Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle YES.</span>
-              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).">${escapeHtml(yesVal)}</textarea>
+              <textarea name="yesCriteria" id="input-yesCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 30, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).">${escapeHtml(yesVal)}</textarea>
             </label>
 
             <label class="field-label">
               <span>NO Resolution Criteria <span class="required">*</span></span>
               <span class="field-hint">Exact condition(s) required to settle NO.</span>
-              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).">${escapeHtml(noVal)}</textarea>
+              <textarea name="noCriteria" id="input-noCriteria" rows="3" required placeholder="The official LBMA Gold Price PM (XAU/USD) on December 30, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).">${escapeHtml(noVal)}</textarea>
             </label>
           </div>
 
           <label class="field-label">
             <span>INVALID Criteria & Neutral Refund Terms <span class="required">*</span></span>
             <span class="field-hint">Protocol Invariant: INVALID returns 100% of all contributions 1:1 with 0% fee deducted.</span>
-            <textarea name="invalidCriteria" id="input-invalidCriteria" rows="3" required placeholder="LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or market trading is interrupted. Neutral refund: 100% of all contributions are refunded 1:1 with zero protocol fee deducted.">${escapeHtml(invalidVal)}</textarea>
+            <textarea name="invalidCriteria" id="input-invalidCriteria" rows="3" required placeholder="LBMA does not publish an official PM benchmark price for 2026-12-30 by 2027-01-04 18:00 UTC (including verification via Bloomberg ticker GOAULNPM), or market trading is interrupted. Neutral refund: 100% of all contributions are refunded 1:1 with zero protocol fee deducted.">${escapeHtml(invalidVal)}</textarea>
           </label>
 
           <div class="rule-callout">
@@ -3163,10 +3163,12 @@ function fillGoldPreset(): void {
   setVal('noCriteria', GOLD_BENCHMARK_PRESET.noCriteria);
   setVal('invalidCriteria', GOLD_BENCHMARK_PRESET.invalidCriteria);
 
-  // Requirement 1: Chronological alignment with explicit UTC timezone handling
-  // Market close (12:00 UTC) precedes observation (15:00 UTC)
-  // Resolution start (18:00 UTC) starts after outcome is determinable
-  // Max resolution (2027-01-15 18:00 UTC) accommodates fallback deadline (2027-01-02 18:00 UTC) + contract-enforced periods
+  // Requirement 1 & 2: Chronological alignment with explicit UTC timezone handling (Dec 30, 2026 ICE regular trading date)
+  // Market close: Dec 30, 2026 12:00 UTC (precedes observation)
+  // PM auction observation: Dec 30, 2026 15:00 UTC
+  // Resolution start: Dec 31, 2026 06:00 UTC (after outcome is determinable)
+  // Fallback deadline: Jan 4, 2027 18:00 UTC
+  // Max resolution: Jan 15, 2027 18:00 UTC (accommodates fallback deadline + 72h challenge + 72h arbitration + 48h buffer)
   setVal('closeTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.closeTimeSec));
   setVal('resolutionTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.resolutionTimeSec));
   setVal('maxResolutionTime', formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.maxResolutionTimeSec));
@@ -3177,7 +3179,7 @@ function fillGoldPreset(): void {
   if (check) check.checked = GOLD_BENCHMARK_PRESET.autoConfirmImmutability;
 
   updateCreateFormPreview();
-  flash('ok', 'Loaded LBMA Gold Price PM Benchmark template with verified December 31, 2026 chronology.');
+  flash('ok', 'Loaded LBMA Gold Price PM Benchmark template with verified December 30, 2026 chronology (ICE calendar verified).');
 }
 
 function validateCreateFormAction(form: HTMLFormElement): void {

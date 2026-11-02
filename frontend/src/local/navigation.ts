@@ -103,27 +103,27 @@ export interface CreateMarketFormValues {
 }
 
 export const GOLD_BENCHMARK_PRESET = {
-  question: 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?',
+  question: 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-30?',
   category: 'finance',
-  description: 'London Bullion Market Association (LBMA) Gold Price PM benchmark settlement for December 31, 2026.',
+  description: 'London Bullion Market Association (LBMA) Gold Price PM benchmark settlement for December 30, 2026 (the final scheduled PM auction of 2026 per the official ICE/LBMA holiday calendar).',
   primarySource: 'https://www.lbma.org.uk/prices-and-data/precious-metal-prices',
-  fallbackSource: 'https://www.bloomberg.com/quote/GOLD:CUR',
-  yesCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).',
-  noCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 31, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).',
-  invalidCriteria: 'LBMA does not publish an official PM benchmark price for 2026-12-31 by 2027-01-02 18:00 UTC, or trading is permanently disrupted. All positions are refunded 100% (1:1 neutral refund) with zero protocol fee deducted.',
-  // Explicit UTC chronology & timezone handling
-  observationDate: '2026-12-31',
-  observationTimeUtc: '2026-12-31T15:00:00Z',
-  observationTimeSec: 1798729200n, // 2026-12-31 15:00:00 UTC (LBMA PM auction)
-  closeTimeUtc: '2026-12-31T12:00:00Z',
-  closeTimeSec: 1798718400n, // 2026-12-31 12:00:00 UTC (precedes observation)
-  resolutionTimeUtc: '2026-12-31T18:00:00Z',
-  resolutionTimeSec: 1798740000n, // 2026-12-31 18:00:00 UTC (after outcome is determinable)
-  fallbackDeadlineUtc: '2027-01-02T18:00:00Z',
-  fallbackDeadlineSec: 1798912800n, // 2027-01-02 18:00:00 UTC (48h after resolution start)
+  fallbackSource: 'https://www.bloomberg.com/quote/GOAULNPM:IND',
+  yesCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 30, 2026 is strictly greater than $2,800.00 USD (> $2,800.00 USD).',
+  noCriteria: 'The official LBMA Gold Price PM (XAU/USD) on December 30, 2026 is less than or equal to $2,800.00 USD (<= $2,800.00 USD).',
+  invalidCriteria: 'LBMA does not publish an official PM benchmark price for 2026-12-30 by 2027-01-04 18:00 UTC (including verification via Bloomberg ticker GOAULNPM), or trading is permanently disrupted. All positions are refunded 100% (1:1 neutral refund) with zero protocol fee deducted.',
+  // Explicit UTC chronology & timezone handling (ICE Benchmark Administration LBMA Holiday Calendar 2026)
+  observationDate: '2026-12-30',
+  observationTimeUtc: '2026-12-30T15:00:00Z',
+  observationTimeSec: 1798642800n, // Dec 30, 2026 15:00:00 UTC (LBMA PM auction)
+  closeTimeUtc: '2026-12-30T12:00:00Z',
+  closeTimeSec: 1798632000n, // Dec 30, 2026 12:00:00 UTC (precedes observation)
+  resolutionTimeUtc: '2026-12-31T06:00:00Z',
+  resolutionTimeSec: 1798696800n, // Dec 31, 2026 06:00:00 UTC (after outcome is determinable)
+  fallbackDeadlineUtc: '2027-01-04T18:00:00Z',
+  fallbackDeadlineSec: 1799085600n, // Jan 4, 2027 18:00:00 UTC (fallback deadline)
   maxResolutionTimeUtc: '2027-01-15T18:00:00Z',
-  maxResolutionTimeSec: 1800036000n, // 2027-01-15 18:00:00 UTC (accommodates fallback deadline + 72h challenge + 72h arbitration + 48h buffer)
-  // Requirement 3: Do NOT automatically check the immutability confirmation checkbox.
+  maxResolutionTimeSec: 1800036000n, // Jan 15, 2027 18:00:00 UTC (accommodates fallback deadline + 72h challenge + 72h arbitration + 48h buffer)
+  // Requirement 3 & 5: Do NOT automatically check the immutability confirmation checkbox.
   // Require deliberate user confirmation.
   autoConfirmImmutability: false,
 };

@@ -408,9 +408,19 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
     });
 
     it('regression (Requirement 1 & 5): enforces LBMA Gold PM preset chronology and deadline sequencing', () => {
-      // 1. Observation date is December 31, 2026 15:00 UTC
-      assert.equal(GOLD_BENCHMARK_PRESET.observationDate, '2026-12-31');
-      assert.equal(GOLD_BENCHMARK_PRESET.observationTimeUtc, '2026-12-31T15:00:00Z');
+      // 1. Observation date is December 30, 2026 15:00 UTC (final scheduled PM auction of 2026 per ICE holiday calendar)
+      assert.equal(GOLD_BENCHMARK_PRESET.observationDate, '2026-12-30');
+      assert.equal(GOLD_BENCHMARK_PRESET.observationTimeUtc, '2026-12-30T15:00:00Z');
+      assert.equal(GOLD_BENCHMARK_PRESET.closeTimeUtc, '2026-12-30T12:00:00Z');
+      assert.equal(GOLD_BENCHMARK_PRESET.resolutionTimeUtc, '2026-12-31T06:00:00Z');
+      assert.equal(GOLD_BENCHMARK_PRESET.fallbackDeadlineUtc, '2027-01-04T18:00:00Z');
+      assert.equal(GOLD_BENCHMARK_PRESET.maxResolutionTimeUtc, '2027-01-15T18:00:00Z');
+
+      assert.equal(GOLD_BENCHMARK_PRESET.closeTimeSec, 1798632000n);
+      assert.equal(GOLD_BENCHMARK_PRESET.observationTimeSec, 1798642800n);
+      assert.equal(GOLD_BENCHMARK_PRESET.resolutionTimeSec, 1798696800n);
+      assert.equal(GOLD_BENCHMARK_PRESET.fallbackDeadlineSec, 1799085600n);
+      assert.equal(GOLD_BENCHMARK_PRESET.maxResolutionTimeSec, 1800036000n);
 
       // 2. Market close precedes the observation
       assert.ok(
@@ -460,11 +470,15 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
     });
 
     it('regression (Requirement 2 & 5): enforces semantic consistency and mutual exclusivity between question, YES, and NO criteria', () => {
-      // Question: "Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?"
+      // Question: "Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-30?"
       // Exceed means strictly greater than (> 2,800.00).
       assert.ok(
         GOLD_BENCHMARK_PRESET.question.includes('exceed $2,800.00'),
         'Question must clearly ask if price exceeds $2,800.00',
+      );
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.question.includes('2026-12-30'),
+        'Question must target December 30, 2026',
       );
 
       // YES criteria must be strictly greater than, NOT greater than or equal to
@@ -509,26 +523,26 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
     it('regression (Requirement 1 & Timezone Handling): formats and parses explicit UTC datetime strings deterministically', () => {
       // 1. Formatting UTC seconds to HTML datetime-local format
       const formattedClose = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.closeTimeSec);
-      assert.equal(formattedClose, '2026-12-31T12:00');
+      assert.equal(formattedClose, '2026-12-30T12:00');
 
       const formattedRes = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.resolutionTimeSec);
-      assert.equal(formattedRes, '2026-12-31T18:00');
+      assert.equal(formattedRes, '2026-12-31T06:00');
 
       const formattedMax = formatUtcToDatetimeLocal(GOLD_BENCHMARK_PRESET.maxResolutionTimeSec);
       assert.equal(formattedMax, '2027-01-15T18:00');
 
       // 2. Parsing naive HTML datetime-local string as explicit UTC seconds
-      const parsedClose = parseDatetimeInputToSeconds('2026-12-31T12:00');
+      const parsedClose = parseDatetimeInputToSeconds('2026-12-30T12:00');
       assert.equal(parsedClose, GOLD_BENCHMARK_PRESET.closeTimeSec);
 
-      const parsedRes = parseDatetimeInputToSeconds('2026-12-31T18:00');
+      const parsedRes = parseDatetimeInputToSeconds('2026-12-31T06:00');
       assert.equal(parsedRes, GOLD_BENCHMARK_PRESET.resolutionTimeSec);
 
       const parsedMax = parseDatetimeInputToSeconds('2027-01-15T18:00');
       assert.equal(parsedMax, GOLD_BENCHMARK_PRESET.maxResolutionTimeSec);
 
       // 3. String with explicit Z or offset
-      assert.equal(parseDatetimeInputToSeconds('2026-12-31T12:00:00Z'), GOLD_BENCHMARK_PRESET.closeTimeSec);
+      assert.equal(parseDatetimeInputToSeconds('2026-12-30T12:00:00Z'), GOLD_BENCHMARK_PRESET.closeTimeSec);
     });
 
     it('regression (Requirement 3 & 5): proves preset does not auto-confirm immutability and enforces deliberate confirmation', () => {
@@ -537,6 +551,43 @@ describe('Resolution & Arbitration UX Overhaul (P4-DES)', () => {
         GOLD_BENCHMARK_PRESET.autoConfirmImmutability,
         false,
         'Preset must specify autoConfirmImmutability: false so that creator confirmation is strictly manual and deliberate',
+      );
+    });
+
+    it('regression (Official ICE LBMA Calendar 2026): verifies Dec 30 is final PM auction date and Bloomberg ticker is GOAULNPM', () => {
+      // Per official ICE Benchmark Administration LBMA Gold Price Holiday Calendar 2026:
+      // Dec 31, 2026 (New Year's Eve) has morning auction only; PM auction is cancelled.
+      // Therefore, the final scheduled PM benchmark auction of 2026 is December 30, 2026.
+      assert.equal(GOLD_BENCHMARK_PRESET.observationDate, '2026-12-30');
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.description.includes('final scheduled PM auction of 2026 per the official ICE/LBMA holiday calendar'),
+        'Description must state December 30 is the final scheduled PM auction of 2026 per ICE calendar',
+      );
+      assert.ok(
+        !GOLD_BENCHMARK_PRESET.question.includes('2026-12-31'),
+        'Question must not reference Dec 31 since no PM auction exists on Dec 31',
+      );
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.question.includes('2026-12-30'),
+        'Question must target December 30, 2026',
+      );
+
+      // Fallback source must use official LBMA PM benchmark ticker GOAULNPM, not generic spot (XAU/USD / GOLD:CUR)
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.fallbackSource.includes('GOAULNPM:IND'),
+        'Fallback source must reference Bloomberg benchmark ticker GOAULNPM:IND',
+      );
+      assert.ok(
+        !GOLD_BENCHMARK_PRESET.fallbackSource.includes('XAUUSD:CUR'),
+        'Fallback source must not substitute generic spot ticker',
+      );
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.invalidCriteria.includes('GOAULNPM'),
+        'INVALID criteria must require Bloomberg ticker GOAULNPM verification',
+      );
+      assert.ok(
+        GOLD_BENCHMARK_PRESET.invalidCriteria.includes('2027-01-04 18:00 UTC'),
+        'INVALID criteria must specify the Jan 4, 2027 fallback deadline',
       );
     });
   });

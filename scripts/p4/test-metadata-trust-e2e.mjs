@@ -216,11 +216,11 @@ async function main() {
     };
   });
 
-  if (!presetFormValues.close || !presetFormValues.close.startsWith('2026-12-31')) {
-    throw new Error(`Requirement 1 Violation: closeTime is not in December 2026! Got: ${presetFormValues.close}`);
+  if (!presetFormValues.close || !presetFormValues.close.startsWith('2026-12-30')) {
+    throw new Error(`Requirement 1 Violation: closeTime is not December 30, 2026! Got: ${presetFormValues.close}`);
   }
   if (!presetFormValues.res || !presetFormValues.res.startsWith('2026-12-31')) {
-    throw new Error(`Requirement 1 Violation: resolutionTime is not in December 2026! Got: ${presetFormValues.res}`);
+    throw new Error(`Requirement 1 Violation: resolutionTime is not December 31, 2026! Got: ${presetFormValues.res}`);
   }
   if (!presetFormValues.max || !presetFormValues.max.startsWith('2027-01')) {
     throw new Error(`Requirement 1 Violation: maxResolutionTime does not extend into January 2027! Got: ${presetFormValues.max}`);
@@ -565,7 +565,7 @@ async function main() {
     throw new Error('Fresh context inherited localStorage from creator context!');
   }
 
-  const expectedQuestion = 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-31?';
+  const expectedQuestion = 'Will London Gold Fixing PM (XAU/USD) exceed $2,800.00 on 2026-12-30?';
 
   // Navigate to market detail in fresh session
   console.log(`[E2E] Navigating fresh session to market #${newMarketId} detail...`);
