@@ -100,15 +100,17 @@ import {
 import {
   verifyMetadataIntegrity,
   verifyMetadataArtifactReadback,
+  fetchAndVerifyMarketMetadata,
   saveLocalManifest,
   getLocalManifest,
   type MetadataTrustStatus,
+  type MetadataVerificationResult,
   type MarketViewItem,
   apiItemToView,
 } from './metadata-trust.ts';
 
-export type { MetadataTrustStatus, MarketViewItem };
-export { apiItemToView };
+export type { MetadataTrustStatus, MetadataVerificationResult, MarketViewItem };
+export { apiItemToView, fetchAndVerifyMarketMetadata };
 
 // ---------------------------------------------------------------------- state
 
@@ -263,18 +265,22 @@ function chainNow(): number {
   return state.chainTime ? Number(state.chainTime) : nowSec();
 }
 
-export function rpcRecordToView(m: MarketRecord): MarketViewItem {
+export function rpcRecordToView(
+  m: MarketRecord,
+  verificationResult?: MetadataVerificationResult | null,
+): MarketViewItem {
   const now = chainNow();
   const effectiveState = (m.storedState === 0 && now >= Number(m.closeTime)) ? 1 : m.storedState;
   const label = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
 
-  // Check local manifest cache by metadataHash or metadataURI
-  const cached = getLocalManifest(m.metadataHash) || getLocalManifest(m.metadataURI);
-  const verification = verifyMetadataIntegrity({
-    onchainHash: m.metadataHash,
-    onchainURI: m.metadataURI,
-    cachedManifest: cached,
-  });
+  // Check local manifest cache by metadataHash or metadataURI if verification not pre-supplied
+  const verification =
+    verificationResult ||
+    verifyMetadataIntegrity({
+      onchainHash: m.metadataHash,
+      onchainURI: m.metadataURI,
+      cachedManifest: getLocalManifest(m.metadataHash) || getLocalManifest(m.metadataURI),
+    });
 
   return {
     id: m.id,
@@ -316,6 +322,8 @@ async function loadMarkets(): Promise<void> {
 
     const res = await apiClient.getMarkets(params);
     const trustedHashes = new Map<string, string>();
+    const verifications = new Map<string, MetadataVerificationResult>();
+
     if (publicClient && deployment.factory) {
       try {
         await Promise.all(
@@ -323,6 +331,15 @@ async function loadMarkets(): Promise<void> {
             try {
               const m = await readMarket(publicClient, deployment.factory, BigInt(it.id));
               trustedHashes.set(it.id.toString(), m.metadataHash);
+              const v = await fetchAndVerifyMarketMetadata({
+                apiClient,
+                onchainHash: m.metadataHash,
+                onchainURI: m.metadataURI || it.metadataURI,
+                expectedFactory: deployment.factory,
+                expectedChainId: deployment.manifest.network.chainId,
+                apiItem: it,
+              });
+              verifications.set(it.id.toString(), v);
             } catch {
               // RPC read error: item remains unverified without failing whole list
             }
@@ -332,7 +349,9 @@ async function loadMarkets(): Promise<void> {
         console.warn('[ORAKL] Failed to read on-chain commitments for verification chain:', e);
       }
     }
-    state.markets = res.data.items.map((it) => apiItemToView(it, trustedHashes.get(it.id.toString())));
+    state.markets = res.data.items.map((it) =>
+      apiItemToView(it, trustedHashes.get(it.id.toString()), verifications.get(it.id.toString()))
+    );
     state.totalMarkets = res.data.total;
     state.mode = 'api';
     if (res.sync) {
@@ -344,7 +363,19 @@ async function loadMarkets(): Promise<void> {
     console.warn('[ORAKL] API request failed, falling back to direct RPC:', apiErr);
     try {
       const records = await readMarkets(publicClient, deployment.factory, 0, 24);
-      let views = records.map(rpcRecordToView);
+      const verifiedViews = await Promise.all(
+        records.map(async (m) => {
+          const v = await fetchAndVerifyMarketMetadata({
+            apiClient,
+            onchainHash: m.metadataHash,
+            onchainURI: m.metadataURI,
+            expectedFactory: deployment.factory,
+            expectedChainId: deployment.manifest.network.chainId,
+          });
+          return rpcRecordToView(m, v);
+        }),
+      );
+      let views = verifiedViews;
       if (state.filters.status && state.filters.status !== 'all') {
         views = views.filter((v) => v.statusText.toUpperCase() === state.filters.status.toUpperCase());
       }
@@ -654,6 +685,21 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
   const closeInput = String(data.get('closeTime') ?? '');
   const resolutionInput = String(data.get('resolutionTime') ?? '');
   const maxInput = String(data.get('maxResolutionTime') ?? '');
+
+  // Preserve form values in state immediately (Requirement 3 & Blocker 2)
+  state.createFormState = {
+    question,
+    category,
+    description,
+    primarySource,
+    fallbackSource,
+    yesCriteria,
+    noCriteria,
+    invalidCriteria,
+    closeTime: closeInput,
+    resolutionTime: resolutionInput,
+    maxResolutionTime: maxInput,
+  };
 
   const closeTime = BigInt(Math.floor(new Date(closeInput).getTime() / 1000));
   const resolutionTime = BigInt(Math.floor(new Date(resolutionInput).getTime() / 1000));
@@ -1035,16 +1081,20 @@ function marketCardHtml(market: MarketViewItem): string {
         ? `<span class="pill ok" style="font-size:10px;" title="Cryptographically verified against on-chain hash commitment">Verified Question</span>`
         : `<span class="pill" style="font-size:10px;">Cached Question</span>`)
     : (market.metadataStatus === 'unverified'
-        ? `<span class="pill err" style="font-size:10px;" title="Commitment mismatch! On-chain hash does not match off-chain content">Commitment Mismatch</span>`
+        ? (market.isTampered
+            ? `<span class="pill err" style="font-size:10px;" title="Commitment mismatch! On-chain hash does not match off-chain content">Commitment Mismatch</span>`
+            : `<span class="pill warn" style="font-size:10px;" title="Question content is not cryptographically verified against on-chain commitment">Unverified Question</span>`)
         : `<span class="pill warn" style="font-size:10px;" title="Off-chain question manifest is unavailable">Metadata Unavailable</span>`);
 
   const desc = market.description
     ? `<p class="market-card-desc">${escapeHtml(market.description)}</p>`
-    : (market.metadataStatus === 'unverified'
+    : (market.isTampered
         ? `<p class="market-card-desc err" style="font-size:12px;margin-bottom:8px;color:#ef4444;">Warning: Off-chain metadata does not match on-chain commitment hash.</p>`
-        : (market.hasMetadata
-            ? ''
-            : `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Off-chain question manifest is unavailable. ID and on-chain state are preserved.</p>`));
+        : (market.metadataStatus === 'unverified'
+            ? `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Warning: Question content is unverified against on-chain hash commitment.</p>`
+            : (market.hasMetadata
+                ? ''
+                : `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Off-chain question manifest is unavailable. ID and on-chain state are preserved.</p>`)));
 
   return `
     <div class="market-card ${!market.hasMetadata ? 'market-card-unindexed' : ''}">
@@ -1059,9 +1109,13 @@ function marketCardHtml(market: MarketViewItem): string {
 
       <h3 class="market-card-title">
         <a href="#/market/${market.id}" class="market-title-link">
-          ${market.metadataStatus === 'unverified'
+          ${market.isTampered
             ? '<span style="color:#ef4444;">⚠️ Market metadata commitment mismatch</span>'
-            : (market.hasMetadata ? escapeHtml(market.title) : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>')}
+            : (market.hasMetadata
+                ? escapeHtml(market.title)
+                : (market.metadataStatus === 'unverified' && market.title !== 'Market metadata unavailable'
+                    ? escapeHtml(market.title)
+                    : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>'))}
         </a>
       </h3>
 
@@ -1369,6 +1423,8 @@ async function fetchMarketsForArbitration(): Promise<MarketViewItem[]> {
   try {
     const res = await apiClient.getMarkets({ pageSize: 50, sort: 'id', order: 'desc' });
     const trustedHashes = new Map<string, string>();
+    const verifications = new Map<string, MetadataVerificationResult>();
+
     if (publicClient && deployment.factory) {
       try {
         await Promise.all(
@@ -1376,16 +1432,38 @@ async function fetchMarketsForArbitration(): Promise<MarketViewItem[]> {
             try {
               const m = await readMarket(publicClient, deployment.factory, BigInt(it.id));
               trustedHashes.set(it.id.toString(), m.metadataHash);
+              const v = await fetchAndVerifyMarketMetadata({
+                apiClient,
+                onchainHash: m.metadataHash,
+                onchainURI: m.metadataURI || it.metadataURI,
+                expectedFactory: deployment.factory,
+                expectedChainId: deployment.manifest.network.chainId,
+                apiItem: it,
+              });
+              verifications.set(it.id.toString(), v);
             } catch {}
           }),
         );
       } catch {}
     }
-    return res.data.items.map((it) => apiItemToView(it, trustedHashes.get(it.id.toString())));
+    return res.data.items.map((it) =>
+      apiItemToView(it, trustedHashes.get(it.id.toString()), verifications.get(it.id.toString()))
+    );
   } catch {
     try {
       const records = await readMarkets(publicClient, deployment.factory, 0, 50);
-      return records.map(rpcRecordToView);
+      return await Promise.all(
+        records.map(async (m) => {
+          const v = await fetchAndVerifyMarketMetadata({
+            apiClient,
+            onchainHash: m.metadataHash,
+            onchainURI: m.metadataURI,
+            expectedFactory: deployment.factory,
+            expectedChainId: deployment.manifest.network.chainId,
+          });
+          return rpcRecordToView(m, v);
+        }),
+      );
     } catch {
       return state.markets;
     }
@@ -1447,12 +1525,13 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const { total, yesPct, noPct } = calculatePoolShares(market.yesPool, market.noPool);
   const isDisputed = market.storedState === 3 || !isZeroHash(market.challenger) || !isZeroHash(market.decisionEvidence);
 
-  const cached = getLocalManifest(market.metadataHash) || getLocalManifest(market.metadataURI);
-  const verification = verifyMetadataIntegrity({
+  const verification = await fetchAndVerifyMarketMetadata({
+    apiClient,
     onchainHash: market.metadataHash,
     onchainURI: market.metadataURI,
+    expectedFactory: deployment.factory,
+    expectedChainId: deployment.manifest.network.chainId,
     apiItem: apiDetail,
-    cachedManifest: cached,
   });
 
   const hasMetadata = verification.hasMetadata;
@@ -1470,7 +1549,9 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   if (verification.status === 'verified') {
     verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified against on-chain hash commitment">Verified Question</span>`;
   } else if (verification.status === 'unverified') {
-    verifiedBadge = `<span class="pill err" style="margin-left:8px" title="Commitment mismatch! On-chain hash does not match content">Commitment Mismatch</span>`;
+    verifiedBadge = verification.isTampered
+      ? `<span class="pill err" style="margin-left:8px" title="Commitment mismatch! On-chain hash does not match content">Commitment Mismatch</span>`
+      : `<span class="pill warn" style="margin-left:8px" title="Question content is not cryptographically verified">Unverified Question</span>`;
   } else {
     verifiedBadge = `<span class="pill warn" style="margin-left:8px" title="Off-chain question manifest is unavailable">Metadata Unavailable</span>`;
   }
@@ -1844,16 +1925,20 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       </div>
       <h1 class="market-title-h1">${escapeHtml(title)}</h1>
       ${descriptionHtml}
-      ${verification.status === 'unverified' ? `
+      ${verification.status === 'unverified' && verification.isTampered ? `
         <div class="banner err-banner" role="alert" style="margin:12px 0 16px;background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:8px;padding:14px;">
           <strong style="color:#ef4444;">⚠️ Metadata Commitment Mismatch Detected:</strong>
           <p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary);">${escapeHtml(verification.reason || 'The off-chain question manifest does not match the on-chain hash commitment.')} The question and rules cannot be authenticated. On-chain market state (ID #${market.id}) and funds remain securely held by the contract.</p>
+        </div>
+      ` : (verification.status === 'unverified' && !verification.isTampered ? `
+        <div class="banner warn-banner" style="margin:12px 0 16px;">
+          <strong>Unverified Market Metadata:</strong> ${escapeHtml(verification.reason || 'Question content is not cryptographically verified against the on-chain commitment.')}
         </div>
       ` : (!hasMetadata ? `
         <div class="banner warn-banner" style="margin:12px 0 16px;">
           <strong>Market Metadata Unavailable:</strong> Off-chain question manifest is not available via the indexer or local storage for this market. On-chain state (ID #${market.id}, ${stateLabel}) is fully preserved. Direct RPC mode cannot recover off-chain IPFS metadata without an active indexer.
         </div>
-      ` : '')}
+      ` : ''))}
       <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:6px;">
         <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
         <span>Closes: <strong class="mono">${formatDateTime(market.closeTime)}</strong></span>
@@ -1874,13 +1959,25 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
             <span>Primary Observation Source:</span>
             <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
           </div>
-          <div class="rules-condition">
-            <strong>Outcome Conditions:</strong>
-            <ul style="margin:6px 0 0;padding-left:18px;">
-              <li><strong>YES / NO:</strong> The criteria specified in the market question are verified to have occurred before market close according to the primary source.</li>
-              <li><strong>INVALID (Neutral Refund):</strong> If the underlying event is cancelled, postponed beyond the max resolution window, or facts remain indeterminate, the market resolves to INVALID. All participant stakes are refunded 1:1, creation and challenge bonds are returned.</li>
-            </ul>
-          </div>
+          ${verification.resolutionCriteria ? `
+            <div style="margin-top:10px;padding:12px;background:var(--bg-elevated);border-radius:6px;font-size:13px;white-space:pre-wrap;font-family:inherit;line-height:1.5;">${escapeHtml(verification.resolutionCriteria)}</div>
+          ` : `
+            <div class="rules-condition">
+              <strong>Outcome Conditions:</strong>
+              <ul style="margin:6px 0 0;padding-left:18px;">
+                <li><strong>YES / NO:</strong> The criteria specified in the market question are verified to have occurred before market close according to the primary source.</li>
+                <li><strong>INVALID (Neutral Refund):</strong> If the underlying event is cancelled, postponed beyond the max resolution window, or facts remain indeterminate, the market resolves to INVALID. All participant stakes are refunded 1:1, creation and challenge bonds are returned.</li>
+              </ul>
+            </div>
+          `}
+          ${verification.sources && verification.sources.length > 0 ? `
+            <div style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+              <strong>Observation Sources:</strong>
+              <ul style="margin:4px 0 0;padding-left:18px;">
+                ${verification.sources.map(s => `<li><a href="${escapeHtml(s)}" target="_blank" rel="noopener noreferrer" class="mono" style="word-break:break-all;">${escapeHtml(s)}</a></li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
         </div>
 
         <!-- Pool Contribution Distribution Card -->
@@ -2066,6 +2163,18 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
             <div class="row space"><span class="muted">Min Contribution:</span><strong class="mono font-stat">${formatQie(deployment.parameters.minContribution)} ETH</strong></div>
           </div>
         </div>
+
+        <!-- Technical Details & Metadata Commitment -->
+        <details class="tech-disclosure" style="margin-top:16px;">
+          <summary>Technical Details & Metadata Commitment</summary>
+          <div class="tech-disclosure-body" style="font-size:12px;">
+            <div><span class="muted">Metadata URI:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataURI)}</code></div>
+            <div><span class="muted">On-Chain Commitment:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataHash || '—')}</code></div>
+            ${verification.computedHash ? `<div><span class="muted">Computed Content Hash:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(verification.computedHash)}</code></div>` : ''}
+            <div><span class="muted">Integrity Status:</span> <strong>${escapeHtml(verification.status.toUpperCase())}</strong></div>
+            ${verification.reason ? `<p class="muted" style="margin:4px 0 0;font-size:11px;">${escapeHtml(verification.reason)}</p>` : ''}
+          </div>
+        </details>
       </div>
     </div>
   `;
@@ -2123,9 +2232,21 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
         actionHtml = `<a class="btn small" href="#/market/${c.id}" style="padding:4px 12px;font-size:12px;">View Resolution History →</a>`;
       }
 
-      const titleDisplay = c.hasMetadata
-        ? escapeHtml(c.title)
-        : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>';
+      const titleDisplay = c.isTampered
+        ? '<span style="color:#ef4444;">⚠️ Market metadata commitment mismatch</span>'
+        : (c.hasMetadata
+            ? escapeHtml(c.title)
+            : (c.metadataStatus === 'unverified' && c.title !== 'Market metadata unavailable'
+                ? escapeHtml(c.title)
+                : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>'));
+
+      const metaBadge = c.metadataStatus === 'verified'
+        ? `<span class="pill ok" style="font-size:10px;">Verified</span>`
+        : (c.isTampered
+            ? `<span class="pill err" style="font-size:10px;">Mismatch</span>`
+            : (c.metadataStatus === 'unverified'
+                ? `<span class="pill warn" style="font-size:10px;">Unverified</span>`
+                : `<span class="pill warn" style="font-size:10px;">No Metadata</span>`));
 
       return `
         <tr>
@@ -2136,7 +2257,7 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
             </div>
             <div class="row" style="gap:6px;margin-top:4px;">
               ${c.category ? `<span class="pill" style="font-size:10px;">${escapeHtml(c.category)}</span>` : ''}
-              ${!c.hasMetadata ? `<span class="pill warn" style="font-size:10px;">No Metadata</span>` : ''}
+              ${metaBadge}
             </div>
           </td>
           <td><span class="badge ${c.statusTone}">${escapeHtml(c.statusText)}</span></td>
@@ -2243,12 +2364,13 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
   const now = chainNow();
   const effectiveState = (market.storedState === 0 && now >= Number(market.closeTime)) ? 1 : market.storedState;
   const stateLabel = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
-  const cached = getLocalManifest(market.metadataHash) || getLocalManifest(market.metadataURI);
-  const verification = verifyMetadataIntegrity({
+  const verification = await fetchAndVerifyMarketMetadata({
+    apiClient,
     onchainHash: market.metadataHash,
     onchainURI: market.metadataURI,
+    expectedFactory: deployment.factory,
+    expectedChainId: deployment.manifest.network.chainId,
     apiItem: apiDetail,
-    cachedManifest: cached,
   });
   const title = verification.question;
   const account = connectedAccount();
@@ -2371,9 +2493,17 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
     </div>
 
     <section class="page-head">
-      <div class="eyebrow">DISPUTE ARBITRATION CASE #${market.id} · <span class="badge ${stateTone(effectiveState)}">${stateLabel}</span></div>
+      <div class="eyebrow">
+        DISPUTE ARBITRATION CASE #${market.id} · <span class="badge ${stateTone(effectiveState)}">${stateLabel}</span>
+        ${verification.category ? `<span class="pill" style="margin-left:8px;">${escapeHtml(verification.category)}</span>` : ''}
+        ${verification.status === 'verified'
+          ? `<span class="pill ok" style="margin-left:8px;" title="Cryptographically verified against on-chain hash">Verified Question</span>`
+          : (verification.isTampered
+              ? `<span class="pill err" style="margin-left:8px;">Commitment Mismatch</span>`
+              : `<span class="pill warn" style="margin-left:8px;">Unverified Question</span>`)}
+      </div>
       <h1 class="market-title-h1">${escapeHtml(title)}</h1>
-      ${apiDetail?.description ? `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;">${escapeHtml(apiDetail.description)}</p>` : ''}
+      ${verification.description || apiDetail?.description ? `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;">${escapeHtml(verification.description || apiDetail?.description || '')}</p>` : ''}
       <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);">
         <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
         <span>Resolution Deadline: <strong class="mono">${formatDateTime(market.resolutionTime)}</strong></span>
@@ -2431,9 +2561,22 @@ async function renderArbitrationCaseView(view: HTMLElement, id: bigint): Promise
             <span>Primary Reference:</span>
             <a href="${escapeHtml(market.metadataURI)}" target="_blank" rel="noopener noreferrer" class="mono">${escapeHtml(market.metadataURI)}</a>
           </div>
-          <div class="rules-condition">
-            <strong>Arbitration Duty:</strong> Inspect the submitted evidence manifests against the market specification. A ruling of INVALID triggers 1:1 participant stake refunds and neutral bond returns.
-          </div>
+          ${verification.resolutionCriteria ? `
+            <div style="margin-top:10px;padding:12px;background:var(--bg-elevated);border-radius:6px;font-size:13px;white-space:pre-wrap;font-family:inherit;line-height:1.5;">${escapeHtml(verification.resolutionCriteria)}</div>
+          ` : `
+            <div class="rules-condition">
+              <strong>Arbitration Duty:</strong> Inspect the submitted evidence manifests against the market specification. A ruling of INVALID triggers 1:1 participant stake refunds and neutral bond returns.
+            </div>
+          `}
+          ${verification.sources && verification.sources.length > 0 ? `
+            <div style="margin-top:12px;font-size:12px;color:var(--text-muted);">
+              <strong>Observation Sources:</strong>
+              <ul style="margin:4px 0 0;padding-left:18px;">
+                ${verification.sources.map(s => `<li><a href="${escapeHtml(s)}" target="_blank" rel="noopener noreferrer" class="mono" style="word-break:break-all;">${escapeHtml(s)}</a></li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
         </div>
 
         <!-- Evidence Dossier -->
@@ -3042,6 +3185,21 @@ function validateCreateFormAction(form: HTMLFormElement): void {
   const closeInput = String(data.get('closeTime') ?? '');
   const resolutionInput = String(data.get('resolutionTime') ?? '');
   const maxInput = String(data.get('maxResolutionTime') ?? '');
+
+  // Preserve form values in state immediately (Requirement 3 & Blocker 2)
+  state.createFormState = {
+    question,
+    category,
+    description,
+    primarySource,
+    fallbackSource,
+    yesCriteria,
+    noCriteria,
+    invalidCriteria,
+    closeTime: closeInput,
+    resolutionTime: resolutionInput,
+    maxResolutionTime: maxInput,
+  };
 
   const closeTime = BigInt(Math.floor(new Date(closeInput).getTime() / 1000));
   const resolutionTime = BigInt(Math.floor(new Date(resolutionInput).getTime() / 1000));

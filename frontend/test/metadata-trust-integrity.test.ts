@@ -6,11 +6,14 @@ import {
   verifyMetadataCommitment,
   verifyMetadataIntegrity,
   verifyMetadataArtifactReadback,
+  validateMarketMetadataManifest,
+  fetchAndVerifyMarketMetadata,
   apiItemToView,
   saveLocalManifest,
   getLocalManifest,
   clearLocalManifestCache,
 } from '../src/local/metadata-trust.ts';
+import type { ApiClient } from '../src/selected/api-client.ts';
 
 import {
   canonicalizeMarketMetadata,
@@ -142,7 +145,7 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
       assert.equal(result.category, 'finance');
     });
 
-    it('marks API item with verifiedMetadata=true as "verified"', () => {
+    it('marks API item with verifiedMetadata=true but without manifest as "unverified" (Blocker 1)', () => {
       const result = verifyMetadataIntegrity({
         onchainHash: validHash,
         onchainURI: validURI,
@@ -156,10 +159,13 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
         },
       });
 
-      assert.equal(result.status, 'verified');
-      assert.equal(result.hasMetadata, true);
+      // BLOCKER 1: API's verifiedMetadata flag is only supporting info.
+      // Must NOT claim verified without independent cryptographic manifest verification!
+      assert.equal(result.status, 'unverified');
+      assert.equal(result.hasMetadata, false);
       assert.equal(result.isTampered, false);
       assert.equal(result.question, sampleManifest.question);
+      assert.ok(result.reason?.includes('Content hash not verified'));
     });
 
     it('marks API item with mismatched metadataHash as "unverified" with tampering flag', () => {
@@ -199,7 +205,7 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
       assert.equal(result.status, 'unverified');
       assert.equal(result.hasMetadata, false);
       assert.equal(result.isTampered, false);
-      assert.ok(result.reason?.includes('unverified against on-chain hash commitment'));
+      assert.ok(result.reason?.includes('Content hash not verified'));
     });
 
     it('marks completely missing metadata as "unavailable" without inventing titles', () => {
@@ -327,9 +333,16 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
       assert.equal(viewWithoutOnchainProof.hasMetadata, false);
       assert.ok(viewWithoutOnchainProof.metadataUnavailableReason?.includes('Independent verification unavailable'));
 
-      const viewWithOnchainProof = apiItemToView(apiItem, validHash);
-      assert.equal(viewWithOnchainProof.metadataStatus, 'verified');
-      assert.equal(viewWithOnchainProof.hasMetadata, true);
+      // Without cached or pre-verified manifest, item remains unverified (Blocker 1)
+      const viewWithoutManifest = apiItemToView(apiItem, validHash);
+      assert.equal(viewWithoutManifest.metadataStatus, 'unverified');
+      assert.equal(viewWithoutManifest.hasMetadata, false);
+
+      // Once manifest is cached in localStorage, item is cryptographically verified
+      saveLocalManifest(sampleManifest, validHash);
+      const viewWithCachedManifest = apiItemToView(apiItem, validHash);
+      assert.equal(viewWithCachedManifest.metadataStatus, 'verified');
+      assert.equal(viewWithCachedManifest.hasMetadata, true);
 
       const viewWithMismatchedProof = apiItemToView(apiItem, '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
       assert.equal(viewWithMismatchedProof.metadataStatus, 'unverified');
@@ -430,6 +443,230 @@ describe('ORAKL Metadata Trust & Integrity Engine', () => {
       assert.equal(result.isTampered, false);
       assert.equal(result.question, 'Market metadata unavailable');
       assert.ok(result.reason?.includes('unavailable via the indexer'));
+    });
+  });
+
+  describe('9. Schema, Chain ID & Factory Validation (Blocker 1 & Req 2)', () => {
+    it('validates a compliant manifest structure with matching chain ID and factory', () => {
+      const val = validateMarketMetadataManifest(
+        sampleManifest,
+        sampleManifest.factory,
+        31337,
+      );
+      assert.equal(val.ok, true);
+      assert.ok(val.manifest);
+      assert.equal(val.manifest.question, sampleManifest.question);
+    });
+
+    it('rejects manifest with schema mismatch', () => {
+      const bad = { ...sampleManifest, schema: 'orakl-market-metadata-v2' };
+      const val = validateMarketMetadataManifest(bad, sampleManifest.factory, 31337);
+      assert.equal(val.ok, false);
+      assert.ok(val.error?.includes('Invalid schema'));
+    });
+
+    it('rejects manifest with chain ID mismatch', () => {
+      const bad = { ...sampleManifest, chainId: '1' };
+      const val = validateMarketMetadataManifest(bad, sampleManifest.factory, 31337);
+      assert.equal(val.ok, false);
+      assert.ok(val.error?.includes('Chain ID mismatch'));
+    });
+
+    it('rejects manifest with factory address mismatch', () => {
+      const bad = { ...sampleManifest, factory: '0x1111111111111111111111111111111111111111' };
+      const val = validateMarketMetadataManifest(bad, sampleManifest.factory, 31337);
+      assert.equal(val.ok, false);
+      assert.ok(val.error?.includes('Factory mismatch'));
+    });
+
+    it('rejects manifest missing required question or criteria', () => {
+      const bad1 = { ...sampleManifest, question: '' };
+      assert.equal(validateMarketMetadataManifest(bad1).ok, false);
+
+      const bad2 = { ...sampleManifest, resolutionCriteria: '   ' };
+      assert.equal(validateMarketMetadataManifest(bad2).ok, false);
+
+      const bad3 = { ...sampleManifest, creator: '' };
+      assert.equal(validateMarketMetadataManifest(bad3).ok, false);
+    });
+  });
+
+  describe('10. Asynchronous fetchAndVerifyMarketMetadata Pipeline (Blocker 1 & 2)', () => {
+    it('retrieves manifest from API, validates schema, verifies commitment, caches, and derives fields', async () => {
+      const mockApiClient = {
+        getMetadata: async (commitment: string) => {
+          assert.equal(commitment.toLowerCase(), validHash);
+          return {
+            simulationOnly: true,
+            data: {
+              commitment: validHash,
+              uri: validURI,
+              chainId: 31337,
+              formData: sampleManifest,
+              question: sampleManifest.question,
+              description: sampleManifest.description,
+              categorySlug: sampleManifest.category,
+              resolutionCriteria: sampleManifest.resolutionCriteria,
+              evidenceSources: sampleManifest.sources,
+            },
+          };
+        },
+      } as unknown as ApiClient;
+
+      const result = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+        apiItem: {
+          question: 'Initial question candidate',
+          metadataHash: validHash,
+          verifiedMetadata: true,
+        },
+      });
+
+      assert.equal(result.status, 'verified');
+      assert.equal(result.hasMetadata, true);
+      assert.equal(result.isTampered, false);
+      assert.equal(result.question, sampleManifest.question);
+      assert.equal(result.resolutionCriteria, sampleManifest.resolutionCriteria);
+      assert.deepEqual(result.sources, sampleManifest.sources);
+      assert.equal(result.computedHash, validHash);
+
+      // Verify it was cached in localStorage
+      const cached = getLocalManifest(validHash);
+      assert.ok(cached);
+      assert.equal(cached.question, sampleManifest.question);
+    });
+
+    it('overrides fake API list question with authentic verified manifest question (Blocker 1 & 2)', async () => {
+      const mockApiClient = {
+        getMetadata: async () => ({
+          simulationOnly: true,
+          data: {
+            commitment: validHash,
+            uri: validURI,
+            chainId: 31337,
+            formData: sampleManifest, // Real authentic manifest matching on-chain commitment!
+          },
+        }),
+      } as unknown as ApiClient;
+
+      const result = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+        apiItem: {
+          question: 'FABRICATED FAKE QUESTION: Will ETH hit 100k?', // API lied in market list!
+          metadataHash: validHash,
+          verifiedMetadata: true,
+        },
+      });
+
+      // Must derive displayed question from verified manifest, NOT the fake question!
+      assert.equal(result.status, 'verified');
+      assert.equal(result.question, sampleManifest.question);
+      assert.notEqual(result.question, 'FABRICATED FAKE QUESTION: Will ETH hit 100k?');
+    });
+
+    it('detects commitment mismatch when retrieved API manifest is altered or corrupted', async () => {
+      const corruptedManifest = {
+        ...sampleManifest,
+        question: 'CORRUPTED MANIFEST: Altered question that breaks hash!',
+      };
+
+      const mockApiClient = {
+        getMetadata: async () => ({
+          simulationOnly: true,
+          data: {
+            commitment: validHash,
+            uri: validURI,
+            chainId: 31337,
+            formData: corruptedManifest,
+          },
+        }),
+      } as unknown as ApiClient;
+
+      const result = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+      });
+
+      assert.equal(result.status, 'unverified');
+      assert.equal(result.isTampered, true);
+      assert.equal(result.hasMetadata, false);
+      assert.equal(result.question, 'Market metadata commitment mismatch');
+      assert.ok(result.reason?.includes('Metadata commitment mismatch'));
+    });
+
+    it('handles 404 / 500 endpoint errors cleanly without claiming verified', async () => {
+      const mockApiClient = {
+        getMetadata: async () => {
+          throw new Error('404 Not Found: metadata artifact missing');
+        },
+      } as unknown as ApiClient;
+
+      const resultWithApiItem = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+        apiItem: {
+          question: 'Unverified Question Candidate',
+          metadataHash: validHash,
+          verifiedMetadata: true,
+        },
+      });
+
+      // Does NOT claim verified!
+      assert.equal(resultWithApiItem.status, 'unverified');
+      assert.equal(resultWithApiItem.hasMetadata, false);
+      assert.equal(resultWithApiItem.isTampered, false);
+      assert.equal(resultWithApiItem.question, 'Unverified Question Candidate');
+
+      const resultWithoutApiItem = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+        apiItem: null,
+      });
+
+      assert.equal(resultWithoutApiItem.status, 'unavailable');
+      assert.equal(resultWithoutApiItem.hasMetadata, false);
+      assert.equal(resultWithoutApiItem.question, 'Market metadata unavailable');
+    });
+
+    it('fast-paths on valid cached manifest without hitting network', async () => {
+      saveLocalManifest(sampleManifest, validHash);
+
+      let networkHit = false;
+      const mockApiClient = {
+        getMetadata: async () => {
+          networkHit = true;
+          throw new Error('Should not call API on cache hit');
+        },
+      } as unknown as ApiClient;
+
+      const result = await fetchAndVerifyMarketMetadata({
+        apiClient: mockApiClient,
+        onchainHash: validHash,
+        onchainURI: validURI,
+        expectedFactory: sampleManifest.factory,
+        expectedChainId: 31337,
+      });
+
+      assert.equal(networkHit, false);
+      assert.equal(result.status, 'verified');
+      assert.equal(result.question, sampleManifest.question);
     });
   });
 });
