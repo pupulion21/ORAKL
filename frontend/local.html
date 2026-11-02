@@ -8,15 +8,15 @@
     <style>html { color-scheme: dark; background: #0c111b; color: #edf2fa; }</style>
     <meta
       name="description"
-      content="ORAKL Predict — local selected-protocol fixture on an isolated Anvil chain. Not a public deployment."
+      content="ORAKL — local selected-protocol fixture on an isolated Anvil chain. Not a public deployment."
     />
-    <title>ORAKL Predict — Local</title>
+    <title>ORAKL — Local Simulation</title>
   </head>
   <body>
     <div id="app"></div>
     <noscript>
       <div style="max-width: 720px; margin: 3rem auto; padding: 1rem; font-family: system-ui, sans-serif; color: #edf2fa">
-        ORAKL Predict needs JavaScript to read the local Anvil contracts and connect to your wallet.
+        ORAKL needs JavaScript to read the local Anvil contracts and connect to your wallet.
       </div>
     </noscript>
     <script>
@@ -24,11 +24,11 @@
       window.__errs = [];
       window.addEventListener('error', (event) => {
         window.__errs.push(String(event.message) + ' @ ' + event.filename + ':' + event.lineno);
-        document.title = 'ERR — ORAKL Predict Local';
+        document.title = 'ERR — ORAKL Local';
       });
       window.addEventListener('unhandledrejection', (event) => {
         window.__errs.push('rejection: ' + String((event.reason && event.reason.stack) || event.reason));
-        document.title = 'ERR — ORAKL Predict Local';
+        document.title = 'ERR — ORAKL Local';
       });
     </script>
     <script type="module" src="/src/local/main.ts"></script>

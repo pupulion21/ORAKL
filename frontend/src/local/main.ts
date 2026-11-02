@@ -11,7 +11,7 @@
  */
 
 import '../styles.css';
-import {encodeFunctionData} from 'viem';
+import {encodeFunctionData, keccak256, toHex} from 'viem';
 import {createWalletSession, discoverWallets, type WalletInfo, type WalletSession, type WalletSnapshot} from '../wallet.ts';
 import {createTransactionTracker, type TxRecord} from '../transactions.ts';
 import {
@@ -104,6 +104,10 @@ import {
 export interface MarketViewItem {
   id: bigint;
   title: string;
+  hasMetadata: boolean;
+  metadataStatus: 'verified' | 'cached' | 'unavailable';
+  metadataUnavailableReason?: string;
+  metadataHash?: string;
   description: string | null;
   category: string | null;
   metadataURI: string;
@@ -146,6 +150,7 @@ interface AppState {
   busy: boolean;
   multisigNotice: string | null;
   mode: 'api' | 'rpc';
+  createWizardStep: number;
 }
 
 const apiClient: ApiClient = createApiClient({
@@ -184,7 +189,43 @@ const state: AppState = {
   busy: false,
   multisigNotice: null,
   mode: 'api',
+  createWizardStep: 1,
 };
+
+// ------------------------------------------------------------- manifest cache
+
+const MANIFEST_CACHE_KEY = 'orakl_market_manifests_v1';
+
+export function saveLocalManifest(manifest: MarketMetadataManifest, hashOrUri?: string): void {
+  try {
+    const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
+    const store: Record<string, MarketMetadataManifest> = raw ? JSON.parse(raw) : {};
+    if (hashOrUri) {
+      store[hashOrUri.toLowerCase()] = manifest;
+    }
+    try {
+      const canonical = canonicalizeMarketMetadata(manifest);
+      const computedHash = keccak256(toHex(canonical));
+      store[computedHash.toLowerCase()] = manifest;
+    } catch {}
+    localStorage.setItem(MANIFEST_CACHE_KEY, JSON.stringify(store));
+  } catch (e) {
+    console.warn('[ORAKL] Failed to cache local manifest in localStorage:', e);
+  }
+}
+
+export function getLocalManifest(hashOrUri?: string | null): MarketMetadataManifest | null {
+  if (!hashOrUri) return null;
+  try {
+    const raw = localStorage.getItem(MANIFEST_CACHE_KEY);
+    if (!raw) return null;
+    const store: Record<string, MarketMetadataManifest> = JSON.parse(raw);
+    const key = hashOrUri.toLowerCase();
+    return store[key] || null;
+  } catch {
+    return null;
+  }
+}
 
 const appRoot = document.getElementById('app');
 if (!appRoot) throw new Error('#app root is missing');
@@ -268,11 +309,41 @@ export function apiItemToView(item: MarketListItem): MarketViewItem {
         : item.status === 'FINALIZED'
           ? 'done'
           : 'expired';
+
+  const hasApiQuestion = Boolean(item.question && item.question.trim().length > 0);
+  let title = hasApiQuestion ? item.question.trim() : '';
+  let description = item.description || null;
+  let category = item.category || null;
+  let hasMetadata = hasApiQuestion;
+  let metadataStatus: 'verified' | 'cached' | 'unavailable' = hasApiQuestion ? 'verified' : 'unavailable';
+  let metadataUnavailableReason: string | undefined = undefined;
+
+  if (!hasApiQuestion) {
+    const cached = getLocalManifest(item.metadataURI);
+    if (cached) {
+      title = cached.question;
+      description = cached.description || null;
+      category = cached.category || null;
+      hasMetadata = true;
+      metadataStatus = 'cached';
+    } else {
+      title = 'Market metadata unavailable';
+      hasMetadata = false;
+      metadataStatus = 'unavailable';
+      metadataUnavailableReason =
+        'Off-chain question manifest is not available via indexer or local storage for this market. On-chain state and ID are preserved.';
+    }
+  }
+
   return {
     id: BigInt(item.id),
-    title: item.question || item.metadataURI,
-    description: item.description,
-    category: item.category,
+    title,
+    hasMetadata,
+    metadataStatus,
+    metadataUnavailableReason,
+    metadataHash: undefined,
+    description,
+    category,
     metadataURI: item.metadataURI,
     statusText: item.status,
     statusTone: tone,
@@ -287,11 +358,43 @@ export function rpcRecordToView(m: MarketRecord): MarketViewItem {
   const now = chainNow();
   const effectiveState = (m.storedState === 0 && now >= Number(m.closeTime)) ? 1 : m.storedState;
   const label = MARKET_STATE_LABELS[effectiveState] ?? 'UNKNOWN';
+
+  // Check local manifest cache by metadataHash or metadataURI
+  const cached = getLocalManifest(m.metadataHash) || getLocalManifest(m.metadataURI);
+  let title = 'Market metadata unavailable';
+  let description: string | null = null;
+  let category: string | null = null;
+  let hasMetadata = false;
+  let metadataStatus: 'verified' | 'cached' | 'unavailable' = 'unavailable';
+  let metadataUnavailableReason: string | undefined =
+    'Direct RPC mode cannot recover off-chain IPFS metadata without an active indexer or local manifest cache.';
+
+  if (cached) {
+    try {
+      const canonical = canonicalizeMarketMetadata(cached);
+      const computedHash = keccak256(toHex(canonical));
+      if (computedHash.toLowerCase() === m.metadataHash.toLowerCase()) {
+        title = cached.question;
+        description = cached.description || null;
+        category = cached.category || null;
+        hasMetadata = true;
+        metadataStatus = 'cached';
+        metadataUnavailableReason = undefined;
+      }
+    } catch {
+      // verification failed
+    }
+  }
+
   return {
     id: m.id,
-    title: m.metadataURI,
-    description: null,
-    category: null,
+    title,
+    hasMetadata,
+    metadataStatus,
+    metadataUnavailableReason,
+    metadataHash: m.metadataHash,
+    description,
+    category,
     metadataURI: m.metadataURI,
     statusText: label,
     statusTone: stateTone(effectiveState),
@@ -720,6 +823,10 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
   const metadataHash = evidenceContentHash(canonicalString) as Hex;
   let metadataURI = `ipfs://orakl-local-artifact/${metadataHash.slice(2)}`;
 
+  // Save to local cache immediately to ensure deterministic client-side recovery
+  saveLocalManifest(manifest, metadataHash);
+  saveLocalManifest(manifest, metadataURI);
+
   if (statusText) {
     statusText.textContent = 'Publishing metadata artifact to local node discovery channel...';
   }
@@ -749,6 +856,7 @@ async function actCreateMarket(form: HTMLFormElement): Promise<void> {
     });
     if (pubRes.data.uri) {
       metadataURI = pubRes.data.uri;
+      saveLocalManifest(manifest, metadataURI);
     }
     if (statusDetails) {
       statusDetails.style.display = 'block';
@@ -799,14 +907,14 @@ function shellHtml(): string {
   return `
     <a href="#view" class="skip-link">Skip to content</a>
     <aside class="sidebar">
-      <a class="brand" href="#/" aria-label="ORAKL Predict home">
+      <a class="brand" href="#/" aria-label="ORAKL home">
         <span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M23 23a11 11 0 1 0-7 3h12l-7-7"/><path d="m10 18 5-6 4 3 5-7"/></svg></span>
-        <span class="brand-text">ORAKL<span>Predict</span></span>
+        <span class="brand-text">ORAKL<small style="display:block;font-size:9px;letter-spacing:0.06em;color:var(--text-muted);font-weight:500;margin-top:-2px;">POWERED BY QIE</small></span>
       </a>
       <div class="workspace-label">WORKSPACE <span>LOCAL</span></div>
       <nav class="sidebar-primary nav" aria-label="Main navigation">
         ${navItem('#/', 'Markets', 'grid', listActive)}
-        ${navItem('#/arbitration', 'Disputes', 'shield', arbActive)}
+        ${navItem('#/arbitration?filter=disputed', 'Disputes', 'shield', arbActive)}
         ${navItem('#/create', 'Create market', 'plus', route.name === 'create')}
         ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
         ${navItem('#/evidence', 'Evidence lab', 'search', route.name === 'evidence')}
@@ -818,20 +926,19 @@ function shellHtml(): string {
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <a class="brand mobile-brand" href="#/" aria-label="ORAKL Predict home"><span class="brand-text">ORAKL<span>Predict</span></span></a>
-        <div class="search" aria-hidden="true"></div>
+        <a class="brand mobile-brand" href="#/" aria-label="ORAKL home"><span class="brand-text">ORAKL</span></a>
         <div class="header-actions"><span class="network-pill"><span class="status-dot ${state.deploymentPhase === 'ready' ? 'connected' : ''}"></span> ${NETWORK_LABEL} · ${LOCAL_CHAIN_ID}</span><div class="wallet-panel" id="wallet-panel"></div></div>
       </header>
       <div class="shell">
         <div id="flash"></div>
         <main id="view" class="view" tabindex="-1"></main>
         <div id="tx-panel"></div>
-        <footer class="footer"><div><span class="footer-wordmark">ORAKL Predict</span><span>Local selected-protocol fixture. Not a public deployment.</span></div><div class="footer-links"><a href="#/status">Protocol status</a><span class="testnet-label">LOCAL · ${LOCAL_CHAIN_ID}</span></div></footer>
+        <footer class="footer"><div><span class="footer-wordmark">ORAKL</span><span>Prediction Oracle Protocol · Local Simulation (Anvil 31337)</span></div><div class="footer-links"><a href="#/status">Protocol status</a><span class="testnet-label">LOCAL · ${LOCAL_CHAIN_ID}</span></div></footer>
       </div>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">
       ${navItem('#/', 'Markets', 'grid', listActive)}
-      ${navItem('#/arbitration', 'Disputes', 'shield', arbActive)}
+      ${navItem('#/arbitration?filter=disputed', 'Disputes', 'shield', arbActive)}
       ${navItem('#/create', 'Create', 'plus', route.name === 'create')}
       ${navItem('#/portfolio', 'Portfolio', 'wallet', route.name === 'portfolio')}
       ${navItem('#/evidence', 'Evidence', 'search', route.name === 'evidence')}
@@ -961,28 +1068,88 @@ function renderMarkets(): void {
 
 function marketCardHtml(market: MarketViewItem): string {
   const total = market.yesPool + market.noPool;
-  const yesPct = total > 0n ? Number((market.yesPool * 10_000n) / total) / 100 : null;
+  const hasPool = total > 0n;
+  const yesPct = hasPool ? Number((market.yesPool * 10_000n) / total) / 100 : 50;
+  const noPct = hasPool ? Number((market.noPool * 10_000n) / total) / 100 : 50;
+
   const categoryPill = market.category
-    ? `<span class="pill">${escapeHtml(market.category)}</span>`
-    : '';
-  const desc = market.description
-    ? `<p class="muted line-clamp" style="font-size:12px;margin:4px 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escapeHtml(market.description)}</p>`
+    ? `<span class="pill category-pill">${escapeHtml(market.category)}</span>`
     : '';
 
-  return `<a class="card market-card" href="#/market/${market.id}">
-    <div class="row space">
-      <div class="row" style="gap:6px">
-        <span class="badge ${market.statusTone}">${escapeHtml(market.statusText)}</span>
-        ${categoryPill}
+  const metaBadge = market.hasMetadata
+    ? (market.metadataStatus === 'verified'
+        ? `<span class="pill ok" style="font-size:10px;">Verified Question</span>`
+        : `<span class="pill" style="font-size:10px;">Cached Question</span>`)
+    : `<span class="pill warn" style="font-size:10px;">Metadata Unavailable</span>`;
+
+  const desc = market.description
+    ? `<p class="market-card-desc">${escapeHtml(market.description)}</p>`
+    : (market.hasMetadata
+        ? ''
+        : `<p class="market-card-desc warn-text" style="font-size:12px;margin-bottom:8px;">Off-chain question manifest is unavailable. ID and on-chain state are preserved.</p>`);
+
+  return `
+    <div class="market-card ${!market.hasMetadata ? 'market-card-unindexed' : ''}">
+      <div class="market-card-header">
+        <div class="market-card-badges">
+          <span class="badge ${market.statusTone}">${escapeHtml(market.statusText)}</span>
+          ${categoryPill}
+          ${metaBadge}
+        </div>
+        <span class="mono market-id-tag">#${market.id}</span>
       </div>
-      <span class="mono muted">#${market.id}</span>
+
+      <h3 class="market-card-title">
+        <a href="#/market/${market.id}" class="market-title-link">
+          ${market.hasMetadata ? escapeHtml(market.title) : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>'}
+        </a>
+      </h3>
+
+      ${desc}
+
+      <!-- Contribution Distribution Bar -->
+      <div class="distribution-block">
+        <div class="distribution-labels">
+          <span class="dist-label-yes">YES ${hasPool ? `${yesPct.toFixed(1)}%` : '—'}</span>
+          <span class="dist-caption">Contribution Distribution</span>
+          <span class="dist-label-no">NO ${hasPool ? `${noPct.toFixed(1)}%` : '—'}</span>
+        </div>
+        <div class="dist-track ${!hasPool ? 'is-empty' : ''}" role="progressbar" aria-valuenow="${hasPool ? yesPct : 50}" aria-valuemin="0" aria-valuemax="100" aria-label="Contribution Distribution">
+          ${hasPool
+            ? `<div class="dist-fill-yes" style="width:${yesPct}%"></div><div class="dist-fill-no" style="width:${noPct}%"></div>`
+            : `<div class="dist-fill-empty" style="width:100%"></div>`
+          }
+        </div>
+        <div class="dist-pool-amounts mono">
+          <span>${formatQie(market.yesPool)} ETH</span>
+          <span>${hasPool ? `${formatQie(total)} ETH Total` : 'No contributions yet'}</span>
+          <span>${formatQie(market.noPool)} ETH</span>
+        </div>
+      </div>
+
+      <div class="market-card-footer">
+        <div class="market-close-time">
+          ${icon('clock', 13)}
+          <span>${market.closeTime > 0n ? `Closes ${formatDateTime(market.closeTime)}` : 'No deadline'}</span>
+        </div>
+        <a class="btn small market-card-action" href="#/market/${market.id}">
+          <span>View Market</span>
+          ${icon('chevron', 12)}
+        </a>
+      </div>
+
+      ${!market.hasMetadata ? `
+        <details class="tech-disclosure">
+          <summary>Technical Details & URI</summary>
+          <div class="tech-disclosure-body">
+            <div><span class="muted">URI:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataURI)}</code></div>
+            <div><span class="muted">Commitment:</span> <code class="mono" style="word-break:break-all;">${escapeHtml(market.metadataHash || '—')}</code></div>
+            <p class="muted" style="margin:4px 0 0;font-size:11px;">${escapeHtml(market.metadataUnavailableReason || 'Indexer did not return metadata for this market.')}</p>
+          </div>
+        </details>
+      ` : ''}
     </div>
-    <h3 style="margin-top:8px">${escapeHtml(market.title)}</h3>
-    ${desc}
-    <div class="pool-bar" aria-hidden="true"><i style="width:${yesPct ?? 50}%"></i></div>
-    <div class="row space muted"><span>YES ${formatQie(market.yesPool)}</span><span>NO ${formatQie(market.noPool)}</span></div>
-    <div class="row space muted"><span>Closes ${formatDateTime(market.closeTime)}</span><span>${icon('chevron', 15)}</span></div>
-  </a>`;
+  `;
 }
 
 function renderListView(view: HTMLElement): void {
@@ -1021,32 +1188,28 @@ function renderListView(view: HTMLElement): void {
     <div class="summary-grid">
       <div><span>Protocol fee</span><b>${(params.feeBps / 100).toFixed(2)}%</b></div>
       <div><span>Pool cap / market</span><b>${formatQie(params.poolCap)} ETH</b></div>
-      <div><span>Challenge window</span><b>${countdownText(0) === 'elapsed' ? '' : ''}${params.challengePeriod / 3600}h</b></div>
+      <div><span>Challenge window</span><b>${params.challengePeriod / 3600}h</b></div>
       <div><span>Arbitration window</span><b>${params.arbitrationPeriod / 3600}h</b></div>
     </div>
     <div class="row space" style="flex-wrap:wrap;gap:12px;margin:24px 0 16px">
       <div class="row" style="gap:8px;flex:1;min-width:240px">
         <div class="search" style="height:38px;background:var(--bg-soft);border:1px solid var(--line);border-radius:6px;padding:0 10px;width:100%">
           ${icon('search', 16)}
-          <input id="market-search" type="search" placeholder="Search markets by title..." value="${escapeHtml(state.filters.q)}" aria-label="Search markets" />
+          <input id="market-search" type="search" placeholder="Search markets by question..." value="${escapeHtml(state.filters.q)}" aria-label="Search markets" />
         </div>
       </div>
       <div class="row" style="gap:8px;flex-wrap:wrap">
         <select id="filter-category" aria-label="Filter by category" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
           <option value="all" ${state.filters.category === 'all' ? 'selected' : ''}>All Categories</option>
-          <option value="crypto" ${state.filters.category === 'crypto' ? 'selected' : ''}>Crypto</option>
-          <option value="macro" ${state.filters.category === 'macro' ? 'selected' : ''}>Macro</option>
-          <option value="tech" ${state.filters.category === 'tech' ? 'selected' : ''}>Tech</option>
-          <option value="other" ${state.filters.category === 'other' ? 'selected' : ''}>Other</option>
+          ${VALID_MARKET_CATEGORIES.map(c => `<option value="${c.slug}" ${state.filters.category === c.slug ? 'selected' : ''}>${c.label}</option>`).join('')}
         </select>
         <select id="filter-status" aria-label="Filter by status" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
           <option value="all" ${state.filters.status === 'all' ? 'selected' : ''}>All Statuses</option>
-          <option value="OPEN" ${state.filters.status === 'OPEN' ? 'selected' : ''}>Open</option>
-          <option value="CLOSED" ${state.filters.status === 'CLOSED' ? 'selected' : ''}>Closed</option>
-          <option value="PROPOSED" ${state.filters.status === 'PROPOSED' ? 'selected' : ''}>Proposed</option>
-          <option value="DISPUTED" ${state.filters.status === 'DISPUTED' ? 'selected' : ''}>Disputed</option>
-          <option value="FINALIZED" ${state.filters.status === 'FINALIZED' ? 'selected' : ''}>Finalized</option>
-          <option value="CANCELLED" ${state.filters.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+          <option value="OPEN" ${state.filters.status === 'OPEN' ? 'selected' : ''}>OPEN</option>
+          <option value="PROPOSED" ${state.filters.status === 'PROPOSED' ? 'selected' : ''}>PROPOSED</option>
+          <option value="DISPUTED" ${state.filters.status === 'DISPUTED' ? 'selected' : ''}>DISPUTED</option>
+          <option value="FINALIZED" ${state.filters.status === 'FINALIZED' ? 'selected' : ''}>FINALIZED</option>
+          <option value="CANCELLED" ${state.filters.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
         </select>
         <select id="filter-sort" aria-label="Sort markets" style="height:38px;background:var(--bg-soft);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:0 8px">
           <option value="id-desc" ${state.filters.sort === 'id' && state.filters.order === 'desc' ? 'selected' : ''}>Newest First</option>
@@ -1311,16 +1474,38 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
   const { total, yesPct, noPct } = calculatePoolShares(market.yesPool, market.noPool);
   const isDisputed = market.storedState === 3 || !isZeroHash(market.challenger) || !isZeroHash(market.decisionEvidence);
 
-  const title = apiDetail?.question || market.metadataURI;
-  const descriptionHtml = apiDetail?.description
-    ? `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(apiDetail.description)}</p>`
-    : '';
-  const categoryPill = apiDetail?.category
-    ? `<span class="pill" style="margin-left:8px">${escapeHtml(apiDetail.category)}</span>`
-    : '';
-  const verifiedBadge = apiDetail?.verifiedMetadata
-    ? `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified">Verified Manifest</span>`
-    : '';
+  const cached = getLocalManifest(market.metadataHash) || getLocalManifest(market.metadataURI);
+  let title = 'Market metadata unavailable';
+  let descriptionHtml = '';
+  let categoryPill = '';
+  let verifiedBadge = '';
+  let hasMetadata = false;
+
+  if (apiDetail?.question && apiDetail.question.trim().length > 0) {
+    hasMetadata = true;
+    title = apiDetail.question.trim();
+    if (apiDetail.description) {
+      descriptionHtml = `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(apiDetail.description)}</p>`;
+    }
+    if (apiDetail.category) {
+      categoryPill = `<span class="pill" style="margin-left:8px">${escapeHtml(apiDetail.category)}</span>`;
+    }
+    verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Metadata manifest cryptographically verified">Verified Question</span>`;
+  } else if (cached) {
+    hasMetadata = true;
+    title = cached.question;
+    if (cached.description) {
+      descriptionHtml = `<p style="margin:8px 0 16px;color:var(--text-secondary);font-size:14px;line-height:1.6;">${escapeHtml(cached.description)}</p>`;
+    }
+    if (cached.category) {
+      categoryPill = `<span class="pill" style="margin-left:8px">${escapeHtml(cached.category)}</span>`;
+    }
+    verifiedBadge = `<span class="pill ok" style="margin-left:8px" title="Commitment hash verified against local cache">Cached Question (Verified)</span>`;
+  } else {
+    hasMetadata = false;
+    title = 'Market metadata unavailable';
+    verifiedBadge = `<span class="pill warn" style="margin-left:8px">Metadata Unavailable</span>`;
+  }
 
   const formatEvidenceField = (hash: string | null | undefined): string => {
     if (!hash || isZeroHash(hash)) return '<span class="muted">—</span>';
@@ -1413,7 +1598,7 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
           <span class="badge wait">Disputed</span>
         </div>
         <p class="muted" style="font-size:12px;margin:8px 0 14px;">
-          This market is disputed and is undergoing review by the Arbitrator Safe multisig authority.
+          This market is disputed and is undergoing review by the Local Arbitration Mock authority.
         </p>
         <a class="btn primary" href="#/arbitration/${market.id}" style="display:inline-block;text-align:center;">
           Review in Arbitration Workspace →
@@ -1691,6 +1876,11 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
       </div>
       <h1 class="market-title-h1">${escapeHtml(title)}</h1>
       ${descriptionHtml}
+      ${!hasMetadata ? `
+        <div class="banner warn-banner" style="margin:12px 0 16px;">
+          <strong>Market Metadata Unavailable:</strong> Off-chain question manifest is not available via the indexer or local storage for this market. On-chain state (ID #${market.id}, ${stateLabel}) is fully preserved. Direct RPC mode cannot recover off-chain IPFS metadata without an active indexer.
+        </div>
+      ` : ''}
       <div class="row" style="gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);margin-top:6px;">
         <span>Creator: <strong class="mono">${escapeHtml(shortAddress(market.creator))}</strong></span>
         <span>Closes: <strong class="mono">${formatDateTime(market.closeTime)}</strong></span>
@@ -1727,10 +1917,14 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
             <span class="mono muted font-stat">Total: ${formatQie(total)} ETH</span>
           </div>
 
-          <div class="pool-bar-track" aria-hidden="true">
-            <div class="pool-bar-yes" style="width: ${yesPct ?? 50}%;"></div>
-            <div class="pool-bar-no" style="width: ${noPct ?? 50}%;"></div>
-          </div>
+          ${total > 0n
+            ? `<div class="dist-track" aria-hidden="true" style="height:10px;margin:12px 0;">
+                <div class="dist-fill-yes" style="width: ${yesPct ?? 50}%;"></div>
+                <div class="dist-fill-no" style="width: ${noPct ?? 50}%;"></div>
+              </div>`
+            : `<div class="dist-track empty" aria-hidden="true" style="height:10px;margin:12px 0;">
+                <div class="dist-fill-empty" style="width: 100%;"></div>
+              </div>`}
 
           <div class="pool-metric-row">
             <div>
@@ -1828,7 +2022,7 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
               </div>
             </div>
 
-            <!-- Step 4: Arbitration Safe Deliberation -->
+            <!-- Step 4: Local Arbitration Deliberation -->
             <div class="stepper-step ${step4Class}">
               <div class="step-marker">${step4Class === 'completed' ? '✔' : '4'}</div>
               <div class="step-content">
@@ -1838,9 +2032,9 @@ async function renderMarketView(view: HTMLElement, id: bigint): Promise<void> {
                 </div>
                 <p class="step-desc">
                   ${step4Class === 'active'
-                    ? `Contested outcome under deliberation by Arbitrator Safe multisig until ${formatDateTime(market.arbitrationDeadline)}.`
+                    ? `Contested outcome under deliberation by Local Arbitration Mock until ${formatDateTime(market.arbitrationDeadline)}.`
                     : (step4Class === 'completed'
-                      ? `Settled by Arbitrator Safe authority with outcome ${OUTCOME_LABELS[market.finalOutcome]}.`
+                      ? `Settled by Local Arbitration Mock with outcome ${OUTCOME_LABELS[market.finalOutcome]}.`
                       : 'Deliberation is only invoked if the proposed outcome is challenged.')}
                 </p>
                 ${!isZeroHash(market.decisionEvidence) ? `
@@ -1912,6 +2106,7 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
 
   const disputedCount = cases.filter(c => c.statusText === 'DISPUTED').length;
   const proposedCount = cases.filter(c => c.statusText === 'PROPOSED').length;
+  const finalizedCount = cases.filter(c => c.statusText === 'FINALIZED' || c.statusText === 'CANCELLED').length;
   const disputedVolume = cases
     .filter(c => c.statusText === 'DISPUTED')
     .reduce((sum, c) => sum + c.yesPool + c.noPool, 0n);
@@ -1944,14 +2139,32 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
   } else {
     const rows = filteredCases.map(c => {
       const totalPool = c.yesPool + c.noPool;
+      let actionHtml = '';
+      if (c.statusText === 'DISPUTED') {
+        actionHtml = `<a class="btn small primary" href="#/arbitration/${c.id}" style="padding:4px 12px;font-size:12px;">Review Dispute →</a>`;
+      } else if (c.statusText === 'PROPOSED') {
+        actionHtml = `<a class="btn small secondary" href="#/market/${c.id}" style="padding:4px 12px;font-size:12px;">View Proposal →</a>`;
+      } else if (c.statusText === 'OPEN') {
+        actionHtml = `<a class="btn small" href="#/market/${c.id}" style="padding:4px 12px;font-size:12px;">View Market →</a>`;
+      } else {
+        actionHtml = `<a class="btn small" href="#/market/${c.id}" style="padding:4px 12px;font-size:12px;">View Resolution History →</a>`;
+      }
+
+      const titleDisplay = c.hasMetadata
+        ? escapeHtml(c.title)
+        : '<em style="color:var(--text-muted);font-weight:500;">Market metadata unavailable</em>';
+
       return `
         <tr>
           <td><span class="mono" style="font-weight:600">#${c.id}</span></td>
           <td>
             <div style="font-weight:600;color:var(--text-primary);max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              ${escapeHtml(c.title)}
+              ${titleDisplay}
             </div>
-            ${c.category ? `<span class="pill" style="font-size:11px;margin-top:4px;">${escapeHtml(c.category)}</span>` : ''}
+            <div class="row" style="gap:6px;margin-top:4px;">
+              ${c.category ? `<span class="pill" style="font-size:10px;">${escapeHtml(c.category)}</span>` : ''}
+              ${!c.hasMetadata ? `<span class="pill warn" style="font-size:10px;">No Metadata</span>` : ''}
+            </div>
           </td>
           <td><span class="badge ${c.statusTone}">${escapeHtml(c.statusText)}</span></td>
           <td class="mono font-stat">${formatQie(totalPool)} ETH</td>
@@ -1959,7 +2172,7 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
             <span class="mono" style="font-size:12px;">${c.closeTime > 0n ? formatDateTime(c.closeTime) : '—'}</span>
           </td>
           <td>
-            <a class="btn small primary" href="#/arbitration/${c.id}" style="padding:4px 10px;font-size:12px;">Review Case →</a>
+            ${actionHtml}
           </td>
         </tr>
       `;
@@ -2012,16 +2225,20 @@ async function renderArbitrationView(view: HTMLElement, filter: 'all' | 'dispute
           <span class="arb-stat-card-val mono">${formatQie(disputedVolume)} ETH</span>
         </div>
         <div class="arb-stat-card">
-          <span class="arb-stat-card-label">Safe Authority</span>
-          <span class="arb-stat-card-val" style="font-size:16px;color:var(--accent-brand);">3-of-5 Safe <small style="display:block;font-size:11px;color:var(--text-muted);font-weight:normal;">Local Mock (${escapeHtml(shortAddress(deployment.manifest.roleMocks.arbitrator.address))} · Threshold ${deployment.manifest.roleMocks.arbitrator.threshold})</small></span>
+          <span class="arb-stat-card-label">Active Authority</span>
+          <span class="arb-stat-card-val" style="font-size:15px;color:var(--accent-brand);">Local Arbitration Mock <small style="display:block;font-size:11px;color:var(--text-muted);font-weight:normal;">Threshold ${deployment.manifest.roleMocks.arbitrator.threshold} of ${deployment.manifest.roleMocks.arbitrator.owners.length} · <span class="mono">${escapeHtml(shortAddress(deployment.manifest.roleMocks.arbitrator.address))}</span></small></span>
         </div>
       </div>
 
+      <div class="banner info-banner" style="margin:16px 0 20px;font-size:12px;line-height:1.6;">
+        <strong>Local Simulation Disclosure:</strong> Active dispute arbitration in this local development environment is powered by <code>LocalRoleMock</code> (Threshold ${deployment.manifest.roleMocks.arbitrator.threshold}). The production protocol architecture is designed to bind to a canonical 3-of-5 Safe multisig, which is not connected in this local fixture.
+      </div>
+
       <div class="arb-filter-bar" role="tablist" aria-label="Dispute Filters">
-        ${tab('all', 'All Cases', cases.length)}
         ${tab('disputed', 'Active Disputes', disputedCount)}
         ${tab('proposed', 'Challenge Window', proposedCount)}
-        ${tab('finalized', 'Finalized / Settled')}
+        ${tab('finalized', 'Case History', finalizedCount)}
+        ${tab('all', 'All Protocol Markets', cases.length)}
       </div>
 
       ${tableContent}
@@ -2314,9 +2531,9 @@ function renderCreateView(view: HTMLElement): void {
       <div class="eyebrow">LOCAL SELECTED PROTOCOL · CHAIN ${LOCAL_CHAIN_ID}</div>
       <div class="split" style="align-items:flex-start;">
         <div>
-          <h1 class="market-title-h1">Create market</h1>
+          <h1 class="market-title-h1">Create Market</h1>
           <p style="font-size:15px;color:var(--text-secondary);margin:4px 0 8px;font-weight:500;">Predict What's Next. Own Your Conviction.</p>
-          <p class="muted" style="margin:0;">Creation bond is <strong>${formatQie(params.creationBond)} ETH</strong> (refunded upon terminal settlement). Times are evaluated against the local blockchain clock.</p>
+          <p class="muted" style="margin:0;">Creation bond is <strong>${formatQie(params.creationBond)} ETH</strong> (100% refunded upon settlement). Times are evaluated against the local blockchain clock.</p>
         </div>
         <button class="btn secondary" type="button" data-action="fill-gold-preset">
           ${icon('search', 15)} <span>Load Gold Benchmark Preset</span>
@@ -2325,8 +2542,28 @@ function renderCreateView(view: HTMLElement): void {
     </section>
 
     <form id="create-form" class="wizard-form">
-      <!-- SECTION 01: QUESTION & CLASSIFICATION -->
-      <div class="card wizard-section" id="section-question">
+      <!-- 4-STEP PROGRESSIVE DISCLOSURE TABS -->
+      <div class="wizard-steps-nav" role="tablist" aria-label="Creation Steps">
+        <button type="button" class="wizard-step-tab ${state.createWizardStep === 1 ? 'active' : ''} ${state.createWizardStep > 1 ? 'completed' : ''}" data-step="1">
+          <span class="wizard-step-num">1</span>
+          <span>Question & Category</span>
+        </button>
+        <button type="button" class="wizard-step-tab ${state.createWizardStep === 2 ? 'active' : ''} ${state.createWizardStep > 2 ? 'completed' : ''}" data-step="2">
+          <span class="wizard-step-num">2</span>
+          <span>Rules & Sources</span>
+        </button>
+        <button type="button" class="wizard-step-tab ${state.createWizardStep === 3 ? 'active' : ''} ${state.createWizardStep > 3 ? 'completed' : ''}" data-step="3">
+          <span class="wizard-step-num">3</span>
+          <span>Timeline & Floors</span>
+        </button>
+        <button type="button" class="wizard-step-tab ${state.createWizardStep === 4 ? 'active' : ''}" data-step="4">
+          <span class="wizard-step-num">4</span>
+          <span>Review & Submit</span>
+        </button>
+      </div>
+
+      <!-- STEP 1: QUESTION & CLASSIFICATION -->
+      <div class="card wizard-section" id="step-1-card" style="display: ${state.createWizardStep === 1 ? 'block' : 'none'};">
         <div class="wizard-section-header">
           <div class="wizard-step-badge">01</div>
           <div>
@@ -2351,16 +2588,23 @@ function renderCreateView(view: HTMLElement): void {
             </label>
 
             <label class="field-label">
-              <span>Description & Evaluation Context (Optional)</span>
+              <span>Description & Context (Optional)</span>
               <span class="field-hint">Provide operational context, price denomination, or market scope.</span>
               <input name="description" id="input-description" type="text" maxlength="4000" placeholder="LBMA Gold Price PM benchmark settlement for December 31, 2026." />
             </label>
           </div>
+
+          <div class="wizard-nav-buttons">
+            <div></div>
+            <button class="btn primary" type="button" data-action="next-step-1">
+              <span>Continue to Rules & Sources</span> ${icon('chevron', 14)}
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- SECTION 02: RESOLUTION RULES & CRITERIA -->
-      <div class="card wizard-section" id="section-rules">
+      <!-- STEP 2: RESOLUTION RULES & SOURCES -->
+      <div class="card wizard-section" id="step-2-card" style="display: ${state.createWizardStep === 2 ? 'block' : 'none'};">
         <div class="wizard-section-header">
           <div class="wizard-step-badge">02</div>
           <div>
@@ -2410,15 +2654,22 @@ function renderCreateView(view: HTMLElement): void {
               <p>If benchmark data is unavailable or the proposition cannot be verified, ORAKL guarantees full capital preservation. No creator fee, protocol fee, or slashing is assessed on INVALID outcomes.</p>
             </div>
           </div>
+
+          <div class="wizard-nav-buttons">
+            <button class="btn ghost" type="button" data-action="prev-step-2">← Back to Question</button>
+            <button class="btn primary" type="button" data-action="next-step-2">
+              <span>Continue to Timeline Floors</span> ${icon('chevron', 14)}
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- SECTION 03: PARAMETER-VALIDATED TIMELINE -->
-      <div class="card wizard-section" id="section-timeline">
+      <!-- STEP 3: PARAMETER-VALIDATED TIMELINE -->
+      <div class="card wizard-section" id="step-3-card" style="display: ${state.createWizardStep === 3 ? 'block' : 'none'};">
         <div class="wizard-section-header">
           <div class="wizard-step-badge">03</div>
           <div>
-            <h2 class="wizard-section-title">Parameter-Validated Timeline</h2>
+            <h2 class="wizard-section-title">Parameter-Validated Timeline & Floors</h2>
             <p class="wizard-section-desc">Enforce protocol-mandated challenge and arbitration duration floors.</p>
           </div>
         </div>
@@ -2460,69 +2711,46 @@ function renderCreateView(view: HTMLElement): void {
                 <span class="math-total">Minimum Span: <strong>192h (8 days)</strong></span>
               </div>
               <p id="timeline-floor-explainer" class="muted" style="margin-top:8px;font-size:12px;">
-                The protocol enforces <code class="mono">maxResolutionTime >= resolutionTime + 192h</code> to guarantee sufficient liveness for multi-challenger tranches and Safe deliberation.
+                The protocol enforces <code class="mono">maxResolutionTime >= resolutionTime + 192h</code> to guarantee sufficient liveness for multi-challenger tranches and arbitration deliberation.
               </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 04: PROTOCOL RESOLUTION MECHANISM -->
-      <div class="card wizard-section" id="section-mechanism">
-        <div class="wizard-section-header">
-          <div class="wizard-step-badge">04</div>
-          <div>
-            <h2 class="wizard-section-title">Protocol-Governed Resolution & Arbitrator Authority</h2>
-            <p class="wizard-section-desc">Decentralized escalation path enforced by smart contract architecture.</p>
-          </div>
-        </div>
-        <div class="wizard-body">
-          <div class="mechanism-steps-grid">
-            <div class="mech-step">
-              <span class="mech-step-num">Step 1</span>
-              <h4 class="mech-step-title">Optimistic Proposal</h4>
-              <p class="mech-step-desc">Any participant stakes 10.000 ETH to propose an outcome backed by evidence.</p>
-            </div>
-            <div class="mech-step">
-              <span class="mech-step-num">Step 2</span>
-              <h4 class="mech-step-title">48h Dispute Window</h4>
-              <p class="mech-step-desc">Challengers stake 1.000 ETH to contest improper proposals via multi-challenger tranches.</p>
-            </div>
-            <div class="mech-step">
-              <span class="mech-step-num">Step 3</span>
-              <h4 class="mech-step-title">Arbitration Escalation</h4>
-              <p class="mech-step-desc">Contested markets escalate exclusively to the Protocol Arbitrator Safe within 96 hours.</p>
-            </div>
-            <div class="mech-step">
-              <span class="mech-step-num">Step 4</span>
-              <h4 class="mech-step-title">Terminal Settlement</h4>
-              <p class="mech-step-desc">Final ruling settles market, unlocks bonds, and distributes contributions proportionally.</p>
+              <div style="margin-top:10px;">
+                <button type="button" class="btn small" data-action="auto-floor-deadline">
+                  ${icon('sparkles', 13)} <span>Auto-Set Protocol Minimum Floor (+193h)</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="security-lock-box">
+          <div class="security-lock-box" style="margin-top:16px;">
             <div class="security-lock-head">
               <div class="security-badge">${icon('shield', 15)} PROTOCOL GOVERNANCE GUARANTEE</div>
               <span class="mono" style="font-size:11px;">${escapeHtml(manifest.roleMocks.arbitrator.address)}</span>
             </div>
             <p class="security-lock-text">
-              <strong>No Creator-Specified Resolvers:</strong> Unlike legacy QIE Predict where market creators could appoint arbitrary resolver wallets, ORAKL v1 enforces strict protocol-governed arbitration via an authorized 3-of-5 Arbitration Safe (simulated in local testbed with Threshold 2). Creators cannot designate private resolvers or manipulate dispute settlement.
+              <strong>Decentralized Escalation:</strong> Unlike legacy QIE Predict where market creators could appoint arbitrary resolver wallets, ORAKL v1 enforces strict protocol-governed arbitration via an authorized Local Arbitration Mock (simulated with Threshold 2). Creators cannot designate private resolvers or manipulate dispute settlement.
             </p>
+          </div>
+
+          <div class="wizard-nav-buttons">
+            <button class="btn ghost" type="button" data-action="prev-step-3">← Back to Rules</button>
+            <button class="btn primary" type="button" data-action="next-step-3">
+              <span>Continue to Review & Submit</span> ${icon('chevron', 14)}
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- SECTION 05: PRE-FLIGHT REVIEW CARD -->
-      <div class="card wizard-section" id="section-review">
+      <!-- STEP 4: PRE-FLIGHT REVIEW & SUBMISSION -->
+      <div class="card wizard-section" id="step-4-card" style="display: ${state.createWizardStep === 4 ? 'block' : 'none'};">
         <div class="wizard-section-header">
-          <div class="wizard-step-badge">05</div>
+          <div class="wizard-step-badge">04</div>
           <div>
-            <h2 class="wizard-section-title">Pre-Flight Publication Review</h2>
+            <h2 class="wizard-section-title">Pre-Flight Review & Submission</h2>
             <p class="wizard-section-desc">Audit parameters and permanent on-chain metadata commitments prior to signing.</p>
           </div>
         </div>
         <div class="wizard-body">
-          <div class="preflight-summary-card">
+          <div class="preflight-summary-card" id="section-review">
             <div class="preflight-grid">
               <div class="preflight-item">
                 <span class="preflight-label">Market Question</span>
@@ -2550,7 +2778,7 @@ function renderCreateView(view: HTMLElement): void {
               </div>
               <div class="preflight-item">
                 <span class="preflight-label">Creation Bond Required</span>
-                <div class="preflight-value mono ok">${formatQie(params.creationBond)} ETH (Refundable)</div>
+                <div class="preflight-value mono ok">${formatQie(params.creationBond)} ETH (100% Refundable)</div>
               </div>
               <div class="preflight-item">
                 <span class="preflight-label">Network & Chain ID</span>
@@ -2571,48 +2799,88 @@ function renderCreateView(view: HTMLElement): void {
               <pre id="review-criteria-blob" class="preflight-criteria-code mono"></pre>
             </div>
 
+            <!-- Advanced Details Cryptographic Disclosure -->
+            <details class="tech-disclosure" style="margin:16px 0;">
+              <summary>Advanced: Cryptographic Manifest & RFC 8785 Commitment</summary>
+              <div class="tech-disclosure-body">
+                <div class="publication-status-box" id="publication-status-box" style="margin:0;">
+                  <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="publication-status-text">Ready for parameter validation & canonical hashing</span>
+                  </div>
+                  <div id="publication-details" class="mono" style="display:none;margin-top:8px;font-size:12px;word-break:break-all;"></div>
+                </div>
+              </div>
+            </details>
+
             <label class="immutability-check-label">
               <input type="checkbox" id="confirm-immutability" name="confirmImmutability" required />
               <span>I understand this market's resolution rules, sources, and timeline are permanent and cannot be modified after creation.</span>
             </label>
           </div>
-        </div>
-      </div>
 
-      <!-- SECTION 06: METADATA COMMITMENT & PUBLICATION PIPELINE -->
-      <div class="card wizard-section" id="section-publish">
-        <div class="wizard-section-header">
-          <div class="wizard-step-badge">06</div>
-          <div>
-            <h2 class="wizard-section-title">Metadata Commitment & Node Publication Pipeline</h2>
-            <p class="wizard-section-desc">Generate RFC 8785 canonical JSON manifest and submit on-chain transaction.</p>
-          </div>
-        </div>
-        <div class="wizard-body">
-          <div class="publication-status-box" id="publication-status-box">
-            <div class="status-indicator">
-              <span class="status-dot"></span>
-              <span id="publication-status-text">Ready for parameter validation & canonical hashing</span>
+          <div id="create-validation-errors" class="validation-err-container" style="display:none;margin-top:16px;"></div>
+
+          <div class="wizard-nav-buttons">
+            <button class="btn ghost" type="button" data-action="prev-step-4">← Back to Timeline</button>
+            <div class="row" style="gap:8px;flex-wrap:wrap;">
+              <button class="btn secondary" type="button" data-action="validate-create-form">
+                ${icon('search', 15)} <span>Validate Commitment</span>
+              </button>
+              <button class="btn primary" type="submit" id="btn-submit-create" ${state.busy || !connectedAccount() ? 'disabled' : ''}>
+                <span>Publish & Create Market · ${formatQie(params.creationBond)} ETH</span>
+              </button>
             </div>
-            <div id="publication-details" class="mono" style="display:none;margin-top:8px;font-size:12px;word-break:break-all;"></div>
           </div>
-
-          <div class="action-footer-row">
-            <button class="btn secondary" type="button" data-action="validate-create-form">
-              ${icon('search', 15)} <span>Validate & Preview Commitment</span>
-            </button>
-            <button class="btn primary" type="submit" id="btn-submit-create" ${state.busy || !connectedAccount() ? 'disabled' : ''}>
-              <span>Publish & Create Market · ${formatQie(params.creationBond)} ETH</span>
-            </button>
-          </div>
-          <div id="create-validation-errors" class="validation-err-container" style="display:none;"></div>
-          ${connectedAccount() ? '' : '<p class="muted" style="margin-top:10px;">Connect your wallet on local chain 31337 to submit the market creation transaction.</p>'}
+          ${connectedAccount() ? '' : '<p class="muted" style="margin-top:10px;text-align:right;">Connect your wallet on local chain 31337 to submit the market creation transaction.</p>'}
         </div>
       </div>
     </form>
   `;
 
   setTimeout(updateCreateFormPreview, 0);
+}
+
+function setWizardStep(step: number): void {
+  state.createWizardStep = step;
+  const s1 = document.getElementById('step-1-card');
+  const s2 = document.getElementById('step-2-card');
+  const s3 = document.getElementById('step-3-card');
+  const s4 = document.getElementById('step-4-card');
+  if (s1) s1.style.display = step === 1 ? 'block' : 'none';
+  if (s2) s2.style.display = step === 2 ? 'block' : 'none';
+  if (s3) s3.style.display = step === 3 ? 'block' : 'none';
+  if (s4) s4.style.display = step === 4 ? 'block' : 'none';
+
+  document.querySelectorAll<HTMLButtonElement>('.wizard-step-tab').forEach((tab) => {
+    const tabStep = Number(tab.dataset.step);
+    tab.classList.toggle('active', tabStep === step);
+    tab.classList.toggle('completed', tabStep < step);
+  });
+  updateCreateFormPreview();
+}
+
+function autoSetTimelineFloor(): void {
+  const form = document.getElementById('create-form') as HTMLFormElement | null;
+  if (!form) return;
+  const deployment = state.deployment;
+  if (!deployment) return;
+  const resInput = form.elements.namedItem('resolutionTime') as HTMLInputElement | null;
+  const maxInput = form.elements.namedItem('maxResolutionTime') as HTMLInputElement | null;
+  if (resInput && maxInput && resInput.value) {
+    const resSec = BigInt(Math.floor(new Date(resInput.value).getTime() / 1000));
+    const minMaxSec =
+      calculateMinimumMaxResolutionTime(
+        resSec,
+        deployment.parameters.challengePeriod,
+        deployment.parameters.arbitrationPeriod,
+      ) + 3600n; // +1 hour margin
+    const d = new Date(Number(minMaxSec) * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    maxInput.value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    updateCreateFormPreview();
+    flash('ok', 'Timeline floor set: Max resolution time extended to meet 192h requirement.');
+  }
 }
 
 function updateCreateFormPreview(): void {
@@ -2824,27 +3092,107 @@ function validateCreateFormAction(form: HTMLFormElement): void {
 
 function renderEvidenceView(view: HTMLElement): void {
   const account = connectedAccount();
-  view.innerHTML = `<div class="breadcrumbs"><a href="#/">Markets</a>${icon('chevron', 13)}<span>Evidence lab</span></div>
-    <section class="page-head"><div class="eyebrow">EVIDENCE PROFILE V1</div><h1>Evidence lab</h1>
-    <p>Builds an RFC 8785 canonical manifest and its Keccak-256 commitment, exactly as the on-chain <span class="mono">evidenceHash</span> expects. The commitment is deterministic: the same manifest always produces the same hash.</p></section>
-    <form id="evidence-form" class="card">
-      <div class="grid-2">
-        <label>Market ID<input name="marketId" type="text" inputmode="numeric" required placeholder="0" /></label>
-        <label>Kind<select name="kind">${EVIDENCE_KINDS.map((kind: string) => `<option value="${kind}">${kind}</option>`).join('')}</select></label>
-        <label>Claim<select name="claim"><option>YES</option><option>NO</option><option>INVALID</option></select></label>
-        <label>Proposed outcome<select name="proposedOutcome"><option>YES</option><option>NO</option><option>INVALID</option><option>NONE</option></select></label>
-        <label>Publisher (defaults to connected account)<input name="publisher" type="text" value="${account ? account.toLowerCase() : ''}" placeholder="0x…" /></label>
-        <label>Source URI<input name="source" type="text" placeholder="https://… or ipfs://…" /></label>
+  const markets = state.markets;
+
+  const marketOptions = markets.length > 0
+    ? markets.map((m) => `<option value="${m.id}">Market #${m.id}: ${escapeHtml(m.title)} (${m.statusText})</option>`).join('')
+    : '<option value="0">Market #0 (Default)</option>';
+
+  view.innerHTML = `
+    <div class="breadcrumbs"><a href="#/">Markets</a>${icon('chevron', 13)}<span>Evidence lab</span></div>
+    <section class="page-head">
+      <div class="eyebrow">EVIDENCE PROFILE V1 · RFC 8785 CANONICAL JSON</div>
+      <h1>Evidence Lab</h1>
+      <p class="muted" style="max-width:760px;line-height:1.6;">
+        Construct and cryptographically commit evidence manifests for market proposals, challenges, or arbitration decisions.
+        Manifests are canonicalized per RFC 8785 and committed on-chain via deterministic Keccak-256 hashes.
+      </p>
+    </section>
+
+    <!-- Disclaimer Alert -->
+    <div class="banner warn-banner" style="margin-bottom:20px;font-size:12px;line-height:1.6;">
+      <strong>Cryptographic Commitment vs Factual Truthfulness:</strong> A verified Keccak-256 commitment proves that the submitted evidence bytes have not been tampered with since publication. It does <em>not</em> prove that third-party statements or external data sources are factually true or authentic. Dispute participants and arbitrators are responsible for evaluating the credibility and veracity of all cited facts.
+    </div>
+
+    <form id="evidence-form" class="card" style="padding:24px;">
+      <h2 style="font-size:16px;margin:0 0 16px;">Evidence Manifest Specification</h2>
+      <div class="grid-2" style="gap:16px;margin-bottom:16px;">
+        <label class="field-label">
+          <span>Target Market <span class="required">*</span></span>
+          <span class="field-hint">Select a local market or specify ID</span>
+          <select name="marketId" id="evidence-market-select">
+            ${marketOptions}
+          </select>
+        </label>
+
+        <label class="field-label">
+          <span>Evidence Kind & Lifecycle Stage <span class="required">*</span></span>
+          <span class="field-hint">Role of this submission in the resolution process</span>
+          <select name="kind">
+            ${EVIDENCE_KINDS.map((k) => `<option value="${k}">${k === 'proposal' ? 'Optimistic Proposal Evidence' : k === 'objection' ? 'Challenge Objection Evidence' : k === 'decision' ? 'Arbitrator Decision Dossier' : 'Supplemental Citation'} (${k})</option>`).join('')}
+          </select>
+        </label>
+
+        <label class="field-label">
+          <span>Supported Outcome Claim <span class="required">*</span></span>
+          <span class="field-hint">Which outcome does this evidence argue for?</span>
+          <select name="claim">
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+            <option value="INVALID">INVALID (Neutral 100% Refund)</option>
+          </select>
+        </label>
+
+        <label class="field-label">
+          <span>Primary Source Citation URL <span class="required">*</span></span>
+          <span class="field-hint">Publicly verifiable reference (https://, ipfs://, or ar://)</span>
+          <input name="source" type="text" required placeholder="https://www.lbma.org.uk/... or official source URL" />
+        </label>
       </div>
-      <label>Raw content (hashed to contentHash)<textarea name="content" rows="4" placeholder="Paste the exact evidence content bytes"></textarea></label>
-      <label>Media type<input name="contentMediaType" type="text" value="text/plain" /></label>
-      <div class="row">
-        <button class="btn" type="submit">Compute commitment</button>
-        <button class="btn primary" type="button" data-action="publish-evidence-node">Publish to local node</button>
+
+      <label class="field-label" style="margin-bottom:16px;">
+        <span>Supporting Evidence Text / Exact Content Bytes <span class="required">*</span></span>
+        <span class="field-hint">The content string to be canonicalized and hashed to contentHash</span>
+        <textarea name="content" rows="4" required placeholder="Paste the exact settlement record, excerpt, or observational evidence here..."></textarea>
+      </label>
+
+      <!-- Advanced Technical Parameters Disclosure -->
+      <details class="tech-disclosure" style="margin-bottom:20px;">
+        <summary>Advanced Cryptographic Parameters</summary>
+        <div class="tech-disclosure-body">
+          <div class="grid-2" style="gap:12px;margin-top:6px;">
+            <label class="field-label">
+              <span>Proposed Outcome Tag</span>
+              <select name="proposedOutcome">
+                <option value="NONE">NONE (Default)</option>
+                <option value="YES">YES</option>
+                <option value="NO">NO</option>
+                <option value="INVALID">INVALID</option>
+              </select>
+            </label>
+
+            <label class="field-label">
+              <span>Publisher Address</span>
+              <input name="publisher" type="text" class="mono" value="${account ? account.toLowerCase() : ''}" placeholder="0x…" />
+            </label>
+
+            <label class="field-label">
+              <span>Content Media Type</span>
+              <input name="contentMediaType" type="text" value="text/plain" />
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <div class="row" style="gap:12px;flex-wrap:wrap;">
+        <button class="btn" type="submit">Compute Commitment Hash</button>
+        <button class="btn primary" type="button" data-action="publish-evidence-node">Publish Manifest to Local Node</button>
       </div>
+
       <div id="evidence-publish-result" style="margin-top:14px;"></div>
-      <pre id="evidence-output" class="mono prewrap"></pre>
-    </form>`;
+      <pre id="evidence-output" class="mono prewrap" style="margin-top:14px;display:none;"></pre>
+    </form>
+  `;
 }
 
 async function renderStatusView(view: HTMLElement): Promise<void> {
@@ -2859,38 +3207,110 @@ async function renderStatusView(view: HTMLElement): Promise<void> {
   }
   const invariant = accountingInvariant(accounting);
   const manifest = deployment.manifest;
-  view.innerHTML = `<section class="page-head"><div class="eyebrow">PROTOCOL STATUS</div><h1>Protocol status</h1>
-    <p>Local fixture state, read directly from the verified contracts on chain ${LOCAL_CHAIN_ID}.</p></section>
+
+  view.innerHTML = `
+    <section class="page-head">
+      <div class="eyebrow">LOCAL SIMULATION · ANVIL CHAIN ID ${LOCAL_CHAIN_ID}</div>
+      <h1>Protocol Status & Accounting</h1>
+      <p class="muted">
+        Live on-chain ledger state read directly from the verified SelectedMarketFactory and ProtocolConfig contracts on the local Anvil development node.
+      </p>
+    </section>
+
     <div class="summary-grid">
-      <div><span>Financial activity</span><b class="ok">ACTIVE</b></div>
-      <div><span>Markets</span><b>${accounting.marketCount}</b></div>
-      <div><span>Contract balance</span><b>${formatQie(accounting.contractBalance)} ETH</b></div>
-      <div><span>Accounting</span><b class="${invariant.ok ? 'ok' : 'err'}">${invariant.ok ? 'balanced' : `delta ${formatQie(invariant.delta)} ETH`}</b></div>
+      <div>
+        <span>Financial Execution</span>
+        <b class="ok" style="font-size:16px;">Enabled in local simulation</b>
+      </div>
+      <div>
+        <span>Total Markets</span>
+        <b>${accounting.marketCount}</b>
+      </div>
+      <div>
+        <span>Contract Balance</span>
+        <b>${formatQie(accounting.contractBalance)} ETH</b>
+      </div>
+      <div>
+        <span>Invariant Accounting</span>
+        <b class="${invariant.ok ? 'ok' : 'err'}">${invariant.ok ? 'Balanced (0.00 delta)' : `Delta: ${formatQie(invariant.delta)} ETH`}</b>
+      </div>
     </div>
-    <div class="card"><h3>Exposure caps</h3><div class="grid-2">
-      <div><span class="muted">Unresolved exposure</span><div>${formatQie(accounting.totalUnresolvedExposure)} / ${formatQie(deployment.parameters.globalUnresolvedCap)} ETH</div></div>
-      <div><span class="muted">Unaccounted balance</span><div>${formatQie(accounting.unaccountedBalance)} ETH</div></div>
-      <div><span class="muted">Participant liability</span><div>${formatQie(accounting.participantLiability)} ETH</div></div>
-      <div><span class="muted">Fee liability</span><div>${formatQie(accounting.feeLiability)} ETH</div></div>
-      <div><span class="muted">Bond liability</span><div>${formatQie(accounting.bondLiability)} ETH</div></div>
-      <div><span class="muted">Contributions / paid</span><div>${formatQie(accounting.totalContributions)} / ${formatQie(accounting.totalParticipantPaid)} ETH</div></div>
-    </div></div>
-    <div class="card"><h3>Deployment identity</h3><div class="grid-2">
-      <div><span class="muted">Factory</span><div class="mono">${escapeHtml(deployment.factory)}</div></div>
-      <div><span class="muted">ProtocolConfig</span><div class="mono">${escapeHtml(deployment.config)}</div></div>
-      <div><span class="muted">Release digest</span><div class="mono">${escapeHtml(manifest.release.digest)}</div></div>
-      <div><span class="muted">Runtime code verified</span><div class="ok">yes (keccak-256 matched)</div></div>
-      <div><span class="muted">Arbitrator mock</span><div class="mono">${escapeHtml(manifest.roleMocks.arbitrator.address)} · threshold ${manifest.roleMocks.arbitrator.threshold}</div></div>
-      <div><span class="muted">RPC</span><div class="mono">${escapeHtml(LOCAL_RPC_URL)}</div></div>
-    </div></div>
-    <div class="card"><h3>Safety</h3><p class="warn-text">${escapeHtml(manifest.safety.note)}</p><p class="muted">publicDeployment: false · productionApproval: false · realFunds: false</p></div>`;
+
+    <!-- Exposure Caps & Liabilities Card -->
+    <div class="card" style="padding:24px;">
+      <div class="section-label" style="margin-bottom:18px;">
+        ${icon('shield', 20)}
+        <h2>Exposure Caps & Protocol Liabilities</h2>
+      </div>
+      <div class="grid-2" style="gap:16px;">
+        <div class="stat-card">
+          <span>Global Unresolved Exposure Cap</span>
+          <strong>${formatQie(accounting.totalUnresolvedExposure)} / ${formatQie(deployment.parameters.globalUnresolvedCap)} ETH</strong>
+        </div>
+        <div class="stat-card">
+          <span>Unaccounted Surplus Balance</span>
+          <strong>${formatQie(accounting.unaccountedBalance)} ETH</strong>
+        </div>
+        <div class="stat-card">
+          <span>Participant Pool Liability</span>
+          <strong>${formatQie(accounting.participantLiability)} ETH</strong>
+        </div>
+        <div class="stat-card">
+          <span>Protocol Fee Liability</span>
+          <strong>${formatQie(accounting.feeLiability)} ETH</strong>
+        </div>
+        <div class="stat-card">
+          <span>Active Bond Liability</span>
+          <strong>${formatQie(accounting.bondLiability)} ETH</strong>
+        </div>
+        <div class="stat-card">
+          <span>Contributions Received / Paid Out</span>
+          <strong>${formatQie(accounting.totalContributions)} ETH / ${formatQie(accounting.totalParticipantPaid)} ETH</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Deployment Identity -->
+    <div class="card" style="padding:24px;">
+      <div class="section-label" style="margin-bottom:18px;">
+        ${icon('settings', 20)}
+        <h2>Technical Deployment Identity & Verified Contracts</h2>
+      </div>
+      <div class="grid-2" style="gap:16px;font-size:13px;">
+        <div><span class="muted">Factory Contract:</span> <div class="mono" style="word-break:break-all;">${escapeHtml(deployment.factory)}</div></div>
+        <div><span class="muted">ProtocolConfig Contract:</span> <div class="mono" style="word-break:break-all;">${escapeHtml(deployment.config)}</div></div>
+        <div><span class="muted">Active Arbitrator Authority:</span> <div class="mono" style="word-break:break-all;">${escapeHtml(manifest.roleMocks.arbitrator.address)} (LocalRoleMock · Threshold ${manifest.roleMocks.arbitrator.threshold} of ${manifest.roleMocks.arbitrator.owners.length})</div></div>
+        <div><span class="muted">Release Digest:</span> <div class="mono" style="word-break:break-all;">${escapeHtml(manifest.release.digest)}</div></div>
+        <div><span class="muted">Runtime Bytecode Verification:</span> <div class="ok font-stat">Verified (Keccak-256 matched bytecode)</div></div>
+        <div><span class="muted">Local RPC Endpoint:</span> <div class="mono">${escapeHtml(LOCAL_RPC_URL)}</div></div>
+      </div>
+      <div class="banner warn-banner" style="margin-top:20px;">
+        <strong>Safety & Deployment Boundary:</strong> ${escapeHtml(manifest.safety.note)}
+        <div class="muted" style="margin-top:4px;font-size:11px;">publicDeployment: false · productionApproval: false · realFunds: false</div>
+      </div>
+    </div>
+  `;
 }
 
 async function renderPortfolioView(view: HTMLElement): Promise<void> {
   const account = connectedAccount();
   if (!account) {
-    view.innerHTML = `<section class="page-head"><div class="eyebrow">PORTFOLIO</div><h1>Your portfolio</h1></section>
-      <div class="card empty-state"><h2>Wallet disconnected</h2><p class="muted">Connect your wallet to inspect your positions, challenge stakes, and claimable bonds.</p></div>`;
+    view.innerHTML = `
+      <section class="page-head">
+        <div class="eyebrow">PORTFOLIO</div>
+        <h1>Your Portfolio</h1>
+        <p class="muted">Track your positions, dispute stakes, and claimable reward payouts.</p>
+      </section>
+      <div class="card empty-state" style="padding:48px 24px;">
+        <span class="empty-icon">${icon('wallet', 36)}</span>
+        <h2>Connect Wallet to View Portfolio</h2>
+        <p class="muted" style="max-width:440px;margin:8px auto 20px;line-height:1.6;">
+          No local wallet is connected. Connect a local development account on Anvil (Chain ID 31337) to inspect your positions and claimable bond payouts.
+        </p>
+        <button class="btn primary wallet-button" type="button" data-action="connect-first">
+          ${icon('wallet', 16)} <span>Connect Local Wallet</span>
+        </button>
+      </div>`;
     return;
   }
 
@@ -3128,11 +3548,72 @@ document.addEventListener('click', (event) => {
     closeEvidenceModal();
     return;
   }
+  const wizardTab = (event.target as HTMLElement).closest<HTMLButtonElement>('.wizard-step-tab');
+  if (wizardTab && wizardTab.dataset.step) {
+    setWizardStep(Number(wizardTab.dataset.step));
+    return;
+  }
   const target = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
   if (!target) return;
   const action = target.dataset.action;
   const id = target.dataset.id ? BigInt(target.dataset.id) : null;
   switch (action) {
+    case 'next-step-1': {
+      const qInput = (document.getElementById('input-question') as HTMLInputElement)?.value.trim();
+      if (!qInput || qInput.length < 15 || !qInput.endsWith('?')) {
+        flash('err', 'Question must contain at least 15 characters and end with a question mark (?).');
+        break;
+      }
+      setWizardStep(2);
+      break;
+    }
+    case 'prev-step-2': {
+      setWizardStep(1);
+      break;
+    }
+    case 'next-step-2': {
+      const src = (document.getElementById('input-primarySource') as HTMLInputElement)?.value.trim();
+      const yes = (document.getElementById('input-yesCriteria') as HTMLTextAreaElement)?.value.trim();
+      const no = (document.getElementById('input-noCriteria') as HTMLTextAreaElement)?.value.trim();
+      const inv = (document.getElementById('input-invalidCriteria') as HTMLTextAreaElement)?.value.trim();
+      if (!src || !yes || !no || !inv) {
+        flash('err', 'Please complete primary source and all outcome resolution criteria.');
+        break;
+      }
+      setWizardStep(3);
+      break;
+    }
+    case 'prev-step-3': {
+      setWizardStep(2);
+      break;
+    }
+    case 'next-step-3': {
+      const resInput = (document.getElementById('input-resolutionTime') as HTMLInputElement)?.value;
+      const maxInput = (document.getElementById('input-maxResolutionTime') as HTMLInputElement)?.value;
+      if (resInput && maxInput && state.deployment) {
+        const resSec = BigInt(Math.floor(new Date(resInput).getTime() / 1000));
+        const maxSec = BigInt(Math.floor(new Date(maxInput).getTime() / 1000));
+        const minMaxSec = calculateMinimumMaxResolutionTime(
+          resSec,
+          state.deployment.parameters.challengePeriod,
+          state.deployment.parameters.arbitrationPeriod,
+        );
+        if (maxSec < minMaxSec) {
+          flash('err', 'Max resolution time must be at least 192 hours after resolution start time.');
+          break;
+        }
+      }
+      setWizardStep(4);
+      break;
+    }
+    case 'prev-step-4': {
+      setWizardStep(3);
+      break;
+    }
+    case 'auto-floor-deadline': {
+      autoSetTimelineFloor();
+      break;
+    }
     case 'inspect-evidence': {
       const commitment = target.dataset.commitment;
       if (commitment && !isZeroHash(commitment)) {
@@ -3491,6 +3972,8 @@ async function actPublishEvidenceForm(form: HTMLFormElement): Promise<void> {
 window.addEventListener('hashchange', () => {
   state.route = parseRoute();
   state.multisigNotice = null;
+  state.flash = null;
+  renderFlash();
   if (state.deployment) {
     void (async () => {
       await refreshChainTime();

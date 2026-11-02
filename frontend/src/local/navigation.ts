@@ -1,4 +1,4 @@
-/** ORAKL Predict — Local Navigation & Resolution State Helpers */
+/** ORAKL — Local Navigation & Resolution State Helpers */
 
 export type Route =
   | {name: 'list'}
@@ -76,10 +76,10 @@ export function isArbitratorOwner(account: string | null | undefined, owners: re
 // ---------------------------------------------------------------------- Create Market
 
 export const VALID_MARKET_CATEGORIES = [
-  {slug: 'crypto', label: 'Crypto'},
-  {slug: 'finance', label: 'Macro / Finance'},
-  {slug: 'tech', label: 'Science / Technology'},
-  {slug: 'geopolitics', label: 'Geopolitics'},
+  {slug: 'crypto', label: 'Crypto & Digital Assets'},
+  {slug: 'finance', label: 'Commodities, Macro & Finance'},
+  {slug: 'tech', label: 'Technology, Science & AI'},
+  {slug: 'geopolitics', label: 'Geopolitics & World Events'},
   {slug: 'governance', label: 'Protocol Governance'},
 ] as const;
 

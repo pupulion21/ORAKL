@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-/** Capture high-resolution visual inspection screenshots across all 14 mandatory viewpoints.
- *  Uses Playwright with Google Chrome for Testing across Desktop, Laptop, Tablet, and Mobile viewports.
+/** Capture high-resolution visual inspection screenshots across all mandatory viewpoints.
+ *  Uses Playwright with Google Chrome for Testing across Desktop and Mobile viewports.
  */
 
 import { resolve } from 'node:path';
@@ -44,23 +44,29 @@ async function run() {
   await snap('01-market-discovery.png');
 
   // 02. Market Detail (Desktop 1440px) - Market #4 (Disputed)
-  console.log('[capture] 02. Market Detail');
+  console.log('[capture] 02. Market Detail (Market #4 - Disputed)');
   await page.goto(`${BASE_URL}#/market/4`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   await snap('02-market-detail.png');
 
-  // 03. Create Market Empty State (Desktop 1440px)
+  // 03. Create Market Empty State (Desktop 1440px - Step 1)
   console.log('[capture] 03. Create Market Empty State');
   await page.goto(`${BASE_URL}#/create`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   await snap('03-create-market-empty.png');
 
   // 04. Create Market With Validated Input (Gold Benchmark Preset)
-  console.log('[capture] 04. Create Market Validated Input');
+  console.log('[capture] 04. Create Market Validated Input (Gold Benchmark Preset)');
   const presetBtn = await page.$('[data-action="fill-gold-preset"]');
   if (presetBtn) {
     await presetBtn.click();
     await page.waitForTimeout(600);
+  }
+  // Navigate to Step 4 tab (Review & Submit)
+  const step4Tab = await page.$('[data-step="4"]');
+  if (step4Tab) {
+    await step4Tab.click();
+    await page.waitForTimeout(400);
   }
   const validateBtn = await page.$('[data-action="validate-create-form"]');
   if (validateBtn) {
@@ -70,7 +76,7 @@ async function run() {
   await snap('04-create-market-validated.png');
 
   // 05. Publication Review Card Element
-  console.log('[capture] 05. Publication Review');
+  console.log('[capture] 05. Publication Review Card');
   const reviewCard = await page.$('#section-review');
   if (reviewCard) {
     await reviewCard.screenshot({ path: resolve(OUT_DIR, '05-publication-review.png') });
@@ -79,9 +85,9 @@ async function run() {
     await snap('05-publication-review.png');
   }
 
-  // 06. Resolution Timeline (Market #2 - Proposed)
+  // 06. Resolution Timeline (Market #5 - Proposed)
   console.log('[capture] 06. Resolution Timeline');
-  await page.goto(`${BASE_URL}#/market/2`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE_URL}#/market/5`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   const stepper = await page.$('.resolution-stepper-card');
   if (stepper) {
@@ -107,11 +113,17 @@ async function run() {
     await snap('07-evidence-details.png');
   }
 
-  // 08. Dispute Queue (Arbitration Workspace #/arbitration)
-  console.log('[capture] 08. Dispute Queue');
-  await page.goto(`${BASE_URL}#/arbitration`, { waitUntil: 'networkidle' });
+  // 08. Dispute Queue (Arbitration Workspace - Filtered to Disputed Cases)
+  console.log('[capture] 08. Dispute Queue (Active Disputes)');
+  await page.goto(`${BASE_URL}#/arbitration?filter=disputed`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   await snap('08-dispute-queue.png');
+
+  // 08b. Arbitration Queue (All Protocol Markets)
+  console.log('[capture] 08b. Arbitration Queue (All Markets)');
+  await page.goto(`${BASE_URL}#/arbitration?filter=all`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await snap('08b-arbitration-all-markets.png');
 
   // 09. Arbitration Case Detail (#/arbitration/4)
   console.log('[capture] 09. Arbitration Case Detail');
@@ -124,6 +136,24 @@ async function run() {
   await page.goto(`${BASE_URL}#/portfolio`, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
   await snap('10-wallet-disconnected.png');
+
+  // 15. Repositioned Evidence Lab
+  console.log('[capture] 15. Repositioned Evidence Lab');
+  await page.goto(`${BASE_URL}#/evidence`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await snap('15-evidence-lab.png');
+
+  // 16. Protocol Status Page
+  console.log('[capture] 16. Protocol Status (Local Simulation)');
+  await page.goto(`${BASE_URL}#/status`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await snap('16-protocol-status.png');
+
+  // 17. Unindexed Market Detail (Market #6 - Missing Metadata)
+  console.log('[capture] 17. Unindexed Market Detail (Market #6)');
+  await page.goto(`${BASE_URL}#/market/6`, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+  await snap('17-market-detail-unindexed.png');
 
   await desktopContext.close();
 
@@ -183,6 +213,16 @@ async function run() {
   console.log('[capture] 14. Mobile Create Form Validation');
   await mobilePage.goto(`${BASE_URL}#/create`, { waitUntil: 'networkidle' });
   await mobilePage.waitForTimeout(1000);
+  const mobPresetBtn = await mobilePage.$('[data-action="fill-gold-preset"]');
+  if (mobPresetBtn) {
+    await mobPresetBtn.click();
+    await mobilePage.waitForTimeout(600);
+  }
+  const mobStep4Tab = await mobilePage.$('[data-step="4"]');
+  if (mobStep4Tab) {
+    await mobStep4Tab.click();
+    await mobilePage.waitForTimeout(400);
+  }
   const mobValidateBtn = await mobilePage.$('[data-action="validate-create-form"]');
   if (mobValidateBtn) {
     await mobValidateBtn.click();
@@ -194,7 +234,7 @@ async function run() {
   await browser.close();
 
   console.log('\n======================================================');
-  console.log('[capture] ALL 14 MANDATORY VIEWPOINTS SUCCESSFULLY CAPTURED!');
+  console.log('[capture] ALL SCREENSHOTS SUCCESSFULLY CAPTURED!');
   console.log('Location:', OUT_DIR);
   console.log('======================================================\n');
 }
